@@ -1,0 +1,3 @@
+{
+  "extends": "@korex/config/tsconfig.base.json"
+}
