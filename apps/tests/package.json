@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@korex/api": "workspace:*",
+    "@korex/integrations": "workspace:*",
     "dotenv": "catalog:",
     "effect": "catalog:"
   },

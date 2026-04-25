@@ -5,6 +5,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  serial,
   text,
   timestamp,
   uniqueIndex,
@@ -44,7 +45,7 @@ export const providerAuthType = pgEnum("provider_auth_type", [
 export const providerConnections = pgTable(
   "provider_connections",
   {
-    id: text("id").primaryKey(),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -85,7 +86,7 @@ export const providerConnections = pgTable(
 export const syncRuns = pgTable(
   "sync_runs",
   {
-    id: text("id").primaryKey(),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -120,7 +121,7 @@ export const syncRuns = pgTable(
 export const externalActivities = pgTable(
   "external_activities",
   {
-    id: text("id").primaryKey(),
+    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -138,7 +139,7 @@ export const externalActivities = pgTable(
     firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
     lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
     deletedAt: timestamp("deleted_at"),
-    lastSyncRunId: text("last_sync_run_id").references(() => syncRuns.id, {
+    lastSyncRunId: integer("last_sync_run_id").references(() => syncRuns.id, {
       onDelete: "set null",
     }),
     createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -1,0 +1,86 @@
+import { db, providerConnections } from "@korex/db";
+import { and, eq } from "drizzle-orm";
+
+type UpsertProviderConnectionInput = {
+  userId: string;
+  providerUserId: string;
+  providerUserName: string | null;
+  authUsername: string;
+  authSecretEncrypted: string;
+  metadata?: unknown;
+};
+
+export async function upsertIntervalsIcuProviderConnection({
+  authSecretEncrypted,
+  authUsername,
+  metadata,
+  providerUserId,
+  providerUserName,
+  userId,
+}: UpsertProviderConnectionInput) {
+  const [connection] = await db
+    .insert(providerConnections)
+    .values({
+      authSecretEncrypted,
+      authType: "basic",
+      authUsername,
+      disconnectedAt: null,
+      metadata,
+      provider: "intervals_icu",
+      providerUserId,
+      providerUserName,
+      status: "active",
+      userId,
+    })
+    .onConflictDoUpdate({
+      target: [
+        providerConnections.userId,
+        providerConnections.provider,
+        providerConnections.providerUserId,
+      ],
+      set: {
+        authSecretEncrypted,
+        authType: "basic",
+        authUsername,
+        disconnectedAt: null,
+        metadata,
+        providerUserName,
+        status: "active",
+        updatedAt: new Date(),
+      },
+    })
+    .returning({
+      id: providerConnections.id,
+      provider: providerConnections.provider,
+      providerUserId: providerConnections.providerUserId,
+      providerUserName: providerConnections.providerUserName,
+      status: providerConnections.status,
+    });
+
+  if (!connection) {
+    throw new Error("Failed to upsert Intervals.icu provider connection");
+  }
+
+  return connection;
+}
+
+export async function getIntervalsIcuProviderConnectionForUser(userId: string) {
+  const [connection] = await db
+    .select({
+      id: providerConnections.id,
+      provider: providerConnections.provider,
+      providerUserId: providerConnections.providerUserId,
+      providerUserName: providerConnections.providerUserName,
+      status: providerConnections.status,
+    })
+    .from(providerConnections)
+    .where(
+      and(
+        eq(providerConnections.userId, userId),
+        eq(providerConnections.provider, "intervals_icu"),
+      ),
+    )
+    .limit(1);
+
+  return connection ?? null;
+}
