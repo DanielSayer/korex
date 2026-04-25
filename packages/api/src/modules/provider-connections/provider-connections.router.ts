@@ -1,9 +1,9 @@
 import { IntervalsIcuClientLive } from "@korex/integrations/intervals-icu/live";
-import { ORPCError } from "@orpc/server";
 import { Effect } from "effect";
 import { z } from "zod";
 
 import { protectedProcedure } from "../../index";
+import { runProviderConnectionEffect } from "./provider-connections.errors";
 import { connectIntervalsIcu } from "./provider-connections.service";
 
 const connectIntervalsIcuInput = z.object({
@@ -16,18 +16,11 @@ export const providerConnectionsRouter = {
     .handler(async ({ context, input }) => {
       const userId = context.session.user.id;
 
-      try {
-        return await Effect.runPromise(
-          connectIntervalsIcu({
-            apiKey: input.apiKey,
-            userId,
-          }).pipe(Effect.provide(IntervalsIcuClientLive)),
-        );
-      } catch (cause) {
-        throw new ORPCError("BAD_REQUEST", {
-          message: "Failed to connect Intervals.icu",
-          cause,
-        });
-      }
+      return runProviderConnectionEffect(
+        connectIntervalsIcu({
+          apiKey: input.apiKey,
+          userId,
+        }).pipe(Effect.provide(IntervalsIcuClientLive)),
+      );
     }),
 };
