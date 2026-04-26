@@ -29,6 +29,8 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "check-types": "turbo check-types",
+    "test:integration": "turbo -F tests test:integration",
+    "test:integration:clean": "tutegration:clean",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
     "test": "turbo test",
