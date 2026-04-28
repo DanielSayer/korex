@@ -1,4 +1,3 @@
-import { authClient } from "@/lib/auth-client";
 import { Button } from "@korex/ui/components/button";
 import { Input } from "@korex/ui/components/input";
 import { Label } from "@korex/ui/components/label";
@@ -7,6 +6,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { toast } from "sonner";
 import z from "zod";
+import { authClient } from "@/lib/auth-client";
 import { ErrorMessage } from "../error-message";
 
 const SignUpSchema = z.object({
@@ -150,8 +150,10 @@ function SignIn() {
                     type="submit"
                     className="w-full"
                     disabled={!canSubmit || isSubmitting}
+                    loading={isSubmitting}
+                    loadingText="Submitting..."
                   >
-                    {isSubmitting ? "Submitting..." : "Sign In"}
+                    Sign In
                   </Button>
                 )}
               </form.Subscribe>
