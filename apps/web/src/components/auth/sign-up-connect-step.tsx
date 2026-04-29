@@ -1,43 +1,40 @@
 import { Button } from "@korex/ui/components/button";
 import { Input } from "@korex/ui/components/input";
 import { Label } from "@korex/ui/components/label";
+import { Separator } from "@korex/ui/components/separator";
 import { cn } from "@korex/ui/lib/utils";
-import {
-  ArrowRight,
-  Clock3,
-  PlugZap,
-  RadioTower,
-  Waypoints,
-} from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { ArrowRight, Clock3Icon } from "lucide-react";
 import { motion } from "motion/react";
+import type { ComponentType, SVGProps } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { orpc } from "@/utils/orpc";
 
-const providers = [
+type Provider = {
+  id: "intervals" | "to-do";
+  name: string;
+  enabled: boolean;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  logoSrc?: string;
+};
+
+const providers: Provider[] = [
   {
     id: "intervals",
     name: "Intervals",
-    description: "Connect time, task, and project data.",
-    icon: Clock3,
+    logoSrc: "/logos/intervals-icu-logo.svg",
     enabled: true,
   },
   {
-    id: "linear",
-    name: "Provider",
-    description: "Coming soon",
-    icon: Waypoints,
-    enabled: false,
-  },
-  {
-    id: "warehouse",
-    name: "Provider",
-    description: "Coming soon",
-    icon: RadioTower,
+    id: "to-do",
+    name: "Coming soon",
+    icon: Clock3Icon,
     enabled: false,
   },
 ] as const;
 
-type ProviderId = (typeof providers)[number]["id"];
+type ProviderId = Provider["id"];
 
 function SignUpConnectStep({
   onConnected,
@@ -49,22 +46,27 @@ function SignUpConnectStep({
   const [selectedProvider, setSelectedProvider] =
     useState<ProviderId>("intervals");
   const [apiKey, setApiKey] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const selectedProviderDetails = providers.find(
-    (provider) => provider.id === selectedProvider,
+  const connectIntervalsIcuMutation = useMutation(
+    orpc.providerConnections.connectIntervalsIcu.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSuccess: () => {
+        toast.success("API key connected");
+        onConnected();
+      },
+    }),
   );
 
-  const completeConnection = async () => {
+  const completeConnection = () => {
     if (!apiKey.trim()) {
       toast.error("Enter an API key to continue");
       return;
     }
 
-    setIsConnecting(true);
-    await new Promise((resolve) => setTimeout(resolve, 650));
-    setIsConnecting(false);
-    toast.success("API key connected");
-    onConnected();
+    connectIntervalsIcuMutation.mutate({
+      apiKey: apiKey.trim(),
+    });
   };
 
   return (
@@ -85,60 +87,43 @@ function SignUpConnectStep({
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="rounded-lg border bg-muted/20 p-4">
-          <div className="mb-4 flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-              {selectedProviderDetails ? (
-                <selectedProviderDetails.icon className="size-5" />
-              ) : (
-                <PlugZap className="size-5" />
-              )}
-            </div>
-            <div>
-              <h2 className="font-semibold">{selectedProviderDetails?.name}</h2>
-              <p className="text-muted-foreground text-sm">
-                Paste your API key to prepare the first sync.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="api-key">API key</Label>
-            <Input
-              id="api-key"
-              type="password"
-              value={apiKey}
-              placeholder="int_live_..."
-              onChange={(event) => setApiKey(event.target.value)}
-            />
-          </div>
-
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <Button
-              type="button"
-              className="flex-1"
-              onClick={completeConnection}
-              disabled={isConnecting}
-              loading={isConnecting}
-              loadingText="Connecting"
-            >
-              Connect key
-              <ArrowRight className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="flex-1"
-              onClick={onSkip}
-            >
-              I&apos;ll do this later
-            </Button>
-          </div>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="api-key">API key</Label>
+          <Input
+            id="api-key"
+            type="password"
+            value={apiKey}
+            placeholder="int_live_..."
+            onChange={(event) => setApiKey(event.target.value)}
+          />
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <Button
+            type="button"
+            className="group flex-1"
+            onClick={completeConnection}
+            loading={connectIntervalsIcuMutation.isPending}
+            loadingText="Connecting"
+          >
+            Connect key
+            <ArrowRight className="size-4 transition-all duration-200 group-hover:translate-x-1" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="flex-1"
+            onClick={onSkip}
+            disabled={connectIntervalsIcuMutation.isPending}
+          >
+            I&apos;ll do this later
+          </Button>
+        </div>
+
+        <Separator className="my-4" />
+
+        <div className="grid grid-cols-2 gap-2">
           {providers.map((provider) => {
-            const ProviderIcon = provider.icon;
             const isSelected = provider.id === selectedProvider;
 
             return (
@@ -148,7 +133,7 @@ function SignUpConnectStep({
                 disabled={!provider.enabled}
                 onClick={() => setSelectedProvider(provider.id)}
                 className={cn(
-                  "flex min-h-24 flex-col items-center justify-center gap-2 rounded-lg border bg-muted/20 p-2 text-center text-sm transition-all",
+                  "flex items-center justify-center gap-2 rounded-lg border bg-muted/20 p-2 text-center text-sm transition-all",
                   isSelected
                     ? "border-primary shadow-md shadow-primary/10 ring-2 ring-primary/15"
                     : "border-border hover:border-foreground/30",
@@ -156,19 +141,11 @@ function SignUpConnectStep({
                     "cursor-not-allowed opacity-55 hover:border-border",
                 )}
               >
-                <span
-                  className={cn(
-                    "flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground",
-                    isSelected && "bg-primary text-primary-foreground",
-                  )}
-                >
-                  <ProviderIcon className="size-4" />
+                <span className="flex size-9 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                  <ProviderLogo provider={provider} />
                 </span>
                 <span className="font-medium leading-tight">
                   {provider.name}
-                </span>
-                <span className="text-muted-foreground text-xs leading-tight">
-                  {provider.description}
                 </span>
               </button>
             );
@@ -177,6 +154,23 @@ function SignUpConnectStep({
       </div>
     </motion.div>
   );
+}
+
+function ProviderLogo({ provider }: { provider: Provider }) {
+  if (provider.logoSrc) {
+    return (
+      <img
+        src={provider.logoSrc}
+        alt={`${provider.name} logo`}
+        className="size-5 object-contain"
+        aria-hidden="true"
+      />
+    );
+  }
+
+  const Icon = provider.icon;
+
+  return Icon ? <Icon className="size-4" /> : null;
 }
 
 export { SignUpConnectStep };

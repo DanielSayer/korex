@@ -36,7 +36,7 @@ function RouteComponent() {
         </div>
       </div>
 
-      <div className="col-span-2 hidden overflow-hidden bg-black lg:flex lg:items-center lg:justify-center">
+      <div className="col-span-2 hidden overflow-hidden bg-background lg:flex lg:items-center lg:justify-center">
         <img
           src={authImages[step]}
           alt=""
