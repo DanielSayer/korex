@@ -18,44 +18,62 @@ export async function upsertIntervalsIcuProviderConnection({
   providerUserName,
   userId,
 }: UpsertProviderConnectionInput) {
-  const [connection] = await db
-    .insert(providerConnections)
-    .values({
-      authSecretEncrypted,
-      authType: "basic",
-      authUsername,
-      disconnectedAt: null,
-      metadata,
-      provider: "intervals_icu",
-      providerUserId,
-      providerUserName,
-      status: "active",
-      userId,
-    })
-    .onConflictDoUpdate({
-      target: [
-        providerConnections.userId,
-        providerConnections.provider,
-        providerConnections.providerUserId,
-      ],
-      set: {
+  const connection = await db.transaction(async (tx) => {
+    await tx
+      .update(providerConnections)
+      .set({
+        disconnectedAt: new Date(),
+        status: "disconnected",
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(providerConnections.userId, userId),
+          eq(providerConnections.status, "active"),
+        ),
+      );
+
+    const [upsertedConnection] = await tx
+      .insert(providerConnections)
+      .values({
         authSecretEncrypted,
         authType: "basic",
         authUsername,
         disconnectedAt: null,
         metadata,
+        provider: "intervals_icu",
+        providerUserId,
         providerUserName,
         status: "active",
-        updatedAt: new Date(),
-      },
-    })
-    .returning({
-      id: providerConnections.id,
-      provider: providerConnections.provider,
-      providerUserId: providerConnections.providerUserId,
-      providerUserName: providerConnections.providerUserName,
-      status: providerConnections.status,
-    });
+        userId,
+      })
+      .onConflictDoUpdate({
+        target: [
+          providerConnections.userId,
+          providerConnections.provider,
+          providerConnections.providerUserId,
+        ],
+        set: {
+          authSecretEncrypted,
+          authType: "basic",
+          authUsername,
+          disconnectedAt: null,
+          metadata,
+          providerUserName,
+          status: "active",
+          updatedAt: new Date(),
+        },
+      })
+      .returning({
+        id: providerConnections.id,
+        provider: providerConnections.provider,
+        providerUserId: providerConnections.providerUserId,
+        providerUserName: providerConnections.providerUserName,
+        status: providerConnections.status,
+      });
+
+    return upsertedConnection;
+  });
 
   if (!connection) {
     throw new Error("Failed to upsert Intervals.icu provider connection");

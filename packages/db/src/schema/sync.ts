@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   index,
   integer,
@@ -74,6 +74,9 @@ export const providerConnections = pgTable(
       table.provider,
       table.providerUserId,
     ),
+    uniqueIndex("provider_connections_active_user_id_idx")
+      .on(table.userId)
+      .where(sql`${table.status} = 'active'`),
     index("provider_connections_user_id_idx").on(table.userId),
     index("provider_connections_user_provider_idx").on(
       table.userId,
@@ -134,7 +137,6 @@ export const externalActivities = pgTable(
     sportType: text("sport_type"),
     sourceType: text("source_type"),
     rawData: jsonb("raw_data").notNull(),
-    normalizedData: jsonb("normalized_data"),
     payloadHash: text("payload_hash"),
     firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
     lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),

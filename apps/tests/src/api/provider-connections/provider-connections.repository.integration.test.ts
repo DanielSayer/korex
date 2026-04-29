@@ -41,6 +41,51 @@ describe("provider connections repository", () => {
     });
   });
 
+  it("keeps only one active provider connection for a user", async () => {
+    const existingConnection = ProviderConnectionBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    )
+      .withProviderUserId("athlete-1")
+      .withProviderUserName("Previous Athlete")
+      .build();
+
+    await DataSeedAsync.withProviderConnections(existingConnection).seedAsync();
+
+    const upserted = await upsertIntervalsIcuProviderConnection({
+      authSecretEncrypted: "new-encrypted-api-key",
+      authUsername: "API_KEY",
+      providerUserId: "athlete-2",
+      providerUserName: "New Athlete",
+      userId: userDataExtensions.HughJass.id,
+    });
+
+    const connections = await db
+      .select({
+        id: providerConnections.id,
+        providerUserId: providerConnections.providerUserId,
+        status: providerConnections.status,
+      })
+      .from(providerConnections)
+      .where(eq(providerConnections.userId, userDataExtensions.HughJass.id));
+
+    expect(connections).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          providerUserId: existingConnection.providerUserId,
+          status: "disconnected",
+        }),
+        expect.objectContaining({
+          id: upserted.id,
+          providerUserId: "athlete-2",
+          status: "active",
+        }),
+      ]),
+    );
+    expect(
+      connections.filter((connection) => connection.status === "active"),
+    ).toHaveLength(1);
+  });
+
   it("gets an Intervals.icu provider connection for a user", async () => {
     const providerConnection = ProviderConnectionBuilder.initWithUser(
       userDataExtensions.HughJass.id,
