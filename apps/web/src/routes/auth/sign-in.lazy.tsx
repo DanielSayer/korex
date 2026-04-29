@@ -29,8 +29,14 @@ function RouteComponent() {
         </div>
       </div>
 
-      {/* Right side - Background Image */}
-      <div className="col-span-2 hidden bg-accent lg:block" />
+      <div className="col-span-2 hidden overflow-hidden bg-black lg:block">
+        <img
+          src="/auth/auth-login-run-route-v2.webp"
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-cover"
+        />
+      </div>
     </main>
   );
 }

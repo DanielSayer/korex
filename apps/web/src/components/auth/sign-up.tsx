@@ -1,6 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, MotionConfig } from "motion/react";
-import { useState } from "react";
 import Loader from "@/components/loader";
 import { authClient } from "@/lib/auth-client";
 import { SignUpAccountStep } from "./sign-up-account-step";
@@ -8,10 +7,14 @@ import { SignUpConnectStep } from "./sign-up-connect-step";
 import { SignUpStepper } from "./sign-up-stepper";
 import { SignUpSyncStep } from "./sign-up-sync-step";
 
-function SignUp() {
+type SignUpProps = {
+  step: number;
+  setStep: (step: number) => void;
+};
+
+function SignUp({ step, setStep }: SignUpProps) {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
-  const [step, setStep] = useState(0);
 
   if (isPending) {
     return <Loader />;
