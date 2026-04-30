@@ -1,14 +1,13 @@
-import { IntervalsIcuClient } from "@korex/integrations/intervals-icu/client";
-import type { IntervalsIcuHttpClient } from "@korex/integrations/intervals-icu/http-client";
-import { IntervalsIcuClientLayer } from "@korex/integrations/intervals-icu/live";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
+import { intervalsIcuActivityHttpClientSuccess } from "../../../mocks/integrations/intervals-icu/activity-http-client";
 import {
   intervalsIcuHttpClientInvalidProfile,
   intervalsIcuHttpClientNetworkFailure,
   intervalsIcuHttpClientSuccess,
   intervalsIcuHttpClientUnauthorized,
 } from "../../../mocks/integrations/intervals-icu/http-client";
+import { runActivityClient, runClient } from "./client-runners";
 
 describe("Intervals.icu client", () => {
   it("fetches and parses an athlete profile", async () => {
@@ -49,21 +48,23 @@ describe("Intervals.icu client", () => {
 
     expect(result._tag).toBe("Failure");
   });
-});
 
-function runClient(
-  apiKey: string,
-  httpClientLayer: Layer.Layer<IntervalsIcuHttpClient>,
-) {
-  return Effect.gen(function* () {
-    const client = yield* IntervalsIcuClient;
+  it("fetches activity detail, map, and streams for a date range", async () => {
+    const result = await Effect.runPromise(
+      runActivityClient(intervalsIcuActivityHttpClientSuccess),
+    );
 
-    return yield* client.getAthleteProfile({
-      apiKey,
+    expect(result.activities).toEqual([{ id: "activity-1", name: "Run" }]);
+    expect(result.detail).toEqual({
+      id: "activity-1",
+      name: "Run",
+      start_date_local: "2026-04-01T06:00:00.000Z",
+      type: "Run",
     });
-  }).pipe(
-    Effect.provide(
-      IntervalsIcuClientLayer.pipe(Layer.provide(httpClientLayer)),
-    ),
-  );
-}
+    expect(result.map).toEqual({ polyline: "abc123" });
+    expect(result.streams).toEqual({
+      hr: [140, 142],
+      time: [0, 1],
+    });
+  });
+});

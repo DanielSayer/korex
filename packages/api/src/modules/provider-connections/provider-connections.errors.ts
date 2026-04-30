@@ -16,7 +16,14 @@ export class ProviderUnavailableError extends Data.TaggedError(
   message: string;
 }> {}
 
+export class ActiveProviderConnectionNotFoundError extends Data.TaggedError(
+  "ActiveProviderConnectionNotFoundError",
+)<{
+  message: string;
+}> {}
+
 type ProviderConnectionError =
+  | ActiveProviderConnectionNotFoundError
   | InvalidProviderCredentialError
   | ProviderSecretEncryptionError
   | ProviderUnavailableError;
@@ -25,9 +32,14 @@ type ProviderConnectionErrorTag = ProviderConnectionError["_tag"];
 type ProviderConnectionOrpcCode =
   | "BAD_GATEWAY"
   | "BAD_REQUEST"
+  | "NOT_FOUND"
   | "INTERNAL_SERVER_ERROR";
 
 const providerConnectionErrorMap = {
+  ActiveProviderConnectionNotFoundError: {
+    code: "NOT_FOUND",
+    message: "Active provider connection not found",
+  },
   InvalidProviderCredentialError: {
     code: "BAD_REQUEST",
     message: "Invalid provider credentials",

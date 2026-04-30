@@ -1,5 +1,6 @@
 import { db, providerConnections } from "@korex/db";
 import { and, eq } from "drizzle-orm";
+import type { Provider } from "./provider-session";
 
 type UpsertProviderConnectionInput = {
   userId: string;
@@ -96,6 +97,37 @@ export async function getIntervalsIcuProviderConnectionForUser(userId: string) {
       and(
         eq(providerConnections.userId, userId),
         eq(providerConnections.provider, "intervals_icu"),
+        eq(providerConnections.status, "active"),
+      ),
+    )
+    .limit(1);
+
+  return connection ?? null;
+}
+
+export async function getActiveProviderConnectionForUser({
+  provider,
+  userId,
+}: {
+  provider: Provider;
+  userId: string;
+}) {
+  const [connection] = await db
+    .select({
+      authSecretEncrypted: providerConnections.authSecretEncrypted,
+      authType: providerConnections.authType,
+      authUsername: providerConnections.authUsername,
+      id: providerConnections.id,
+      provider: providerConnections.provider,
+      providerUserId: providerConnections.providerUserId,
+      userId: providerConnections.userId,
+    })
+    .from(providerConnections)
+    .where(
+      and(
+        eq(providerConnections.userId, userId),
+        eq(providerConnections.provider, provider),
+        eq(providerConnections.status, "active"),
       ),
     )
     .limit(1);

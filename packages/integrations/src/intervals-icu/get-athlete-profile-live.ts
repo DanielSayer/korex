@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { createBasicAuthHeader } from "./auth";
 import {
   type GetIntervalsIcuAthleteProfileInput,
   IntervalsIcuClientError,
@@ -60,8 +61,4 @@ export function getIntervalsIcuAthleteProfileLive(
         }),
     });
   });
-}
-
-function createBasicAuthHeader(username: string, password: string) {
-  return `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
 }

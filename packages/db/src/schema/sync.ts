@@ -173,12 +173,96 @@ export const externalActivities = pgTable(
   ],
 );
 
+export const externalActivityMaps = pgTable(
+  "external_activity_maps",
+  {
+    id: serial("id").primaryKey(),
+    externalActivityId: integer("external_activity_id")
+      .notNull()
+      .references(() => externalActivities.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    provider: externalProvider("provider").notNull(),
+    providerActivityId: text("provider_activity_id").notNull(),
+    rawData: jsonb("raw_data").notNull(),
+    payloadHash: text("payload_hash"),
+    firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
+    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+    lastSyncRunId: integer("last_sync_run_id").references(() => syncRuns.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("external_activity_maps_activity_id_idx").on(
+      table.externalActivityId,
+    ),
+    index("external_activity_maps_user_provider_activity_id_idx").on(
+      table.userId,
+      table.provider,
+      table.providerActivityId,
+    ),
+    index("external_activity_maps_last_sync_run_id_idx").on(
+      table.lastSyncRunId,
+    ),
+  ],
+);
+
+export const externalActivityStreams = pgTable(
+  "external_activity_streams",
+  {
+    id: serial("id").primaryKey(),
+    externalActivityId: integer("external_activity_id")
+      .notNull()
+      .references(() => externalActivities.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    provider: externalProvider("provider").notNull(),
+    providerActivityId: text("provider_activity_id").notNull(),
+    streamType: text("stream_type").notNull(),
+    rawData: jsonb("raw_data").notNull(),
+    payloadHash: text("payload_hash"),
+    firstSeenAt: timestamp("first_seen_at").defaultNow().notNull(),
+    lastSeenAt: timestamp("last_seen_at").defaultNow().notNull(),
+    lastSyncRunId: integer("last_sync_run_id").references(() => syncRuns.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("external_activity_streams_activity_type_idx").on(
+      table.externalActivityId,
+      table.streamType,
+    ),
+    index("external_activity_streams_user_provider_activity_id_idx").on(
+      table.userId,
+      table.provider,
+      table.providerActivityId,
+    ),
+    index("external_activity_streams_last_sync_run_id_idx").on(
+      table.lastSyncRunId,
+    ),
+  ],
+);
+
 export const syncRunsRelations = relations(syncRuns, ({ many, one }) => ({
   user: one(user, {
     fields: [syncRuns.userId],
     references: [user.id],
   }),
   externalActivities: many(externalActivities),
+  externalActivityMaps: many(externalActivityMaps),
+  externalActivityStreams: many(externalActivityStreams),
 }));
 
 export const providerConnectionsRelations = relations(
@@ -193,7 +277,7 @@ export const providerConnectionsRelations = relations(
 
 export const externalActivitiesRelations = relations(
   externalActivities,
-  ({ one }) => ({
+  ({ many, one }) => ({
     user: one(user, {
       fields: [externalActivities.userId],
       references: [user.id],
@@ -201,6 +285,44 @@ export const externalActivitiesRelations = relations(
     lastSyncRun: one(syncRuns, {
       fields: [externalActivities.lastSyncRunId],
       references: [syncRuns.id],
+    }),
+    map: one(externalActivityMaps),
+    streams: many(externalActivityStreams),
+  }),
+);
+
+export const externalActivityMapsRelations = relations(
+  externalActivityMaps,
+  ({ one }) => ({
+    externalActivity: one(externalActivities, {
+      fields: [externalActivityMaps.externalActivityId],
+      references: [externalActivities.id],
+    }),
+    lastSyncRun: one(syncRuns, {
+      fields: [externalActivityMaps.lastSyncRunId],
+      references: [syncRuns.id],
+    }),
+    user: one(user, {
+      fields: [externalActivityMaps.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const externalActivityStreamsRelations = relations(
+  externalActivityStreams,
+  ({ one }) => ({
+    externalActivity: one(externalActivities, {
+      fields: [externalActivityStreams.externalActivityId],
+      references: [externalActivities.id],
+    }),
+    lastSyncRun: one(syncRuns, {
+      fields: [externalActivityStreams.lastSyncRunId],
+      references: [syncRuns.id],
+    }),
+    user: one(user, {
+      fields: [externalActivityStreams.userId],
+      references: [user.id],
     }),
   }),
 );

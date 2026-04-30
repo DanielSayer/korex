@@ -1,0 +1,66 @@
+import { db, syncRuns } from "@korex/db";
+import { eq } from "drizzle-orm";
+
+type SyncRunStatus = "pending" | "running" | "success" | "failed" | "partial";
+type SyncType = "initial" | "incremental" | "manual" | "backfill";
+
+export async function createActivitySyncRun({
+  provider,
+  syncType,
+  userId,
+}: {
+  provider: "intervals_icu";
+  syncType: SyncType;
+  userId: string;
+}) {
+  const [syncRun] = await db
+    .insert(syncRuns)
+    .values({
+      provider,
+      status: "running",
+      syncType,
+      userId,
+    })
+    .returning({ id: syncRuns.id });
+
+  if (!syncRun) {
+    throw new Error("Failed to create activity sync run");
+  }
+
+  return syncRun;
+}
+
+export async function finishActivitySyncRun({
+  activitiesCreated,
+  activitiesSeen,
+  activitiesUpdated,
+  errorCode,
+  errorMessage,
+  metadata,
+  status,
+  syncRunId,
+}: {
+  activitiesCreated: number;
+  activitiesSeen: number;
+  activitiesUpdated: number;
+  errorCode?: string;
+  errorMessage?: string;
+  metadata?: unknown;
+  status: SyncRunStatus;
+  syncRunId: number;
+}) {
+  await db
+    .update(syncRuns)
+    .set({
+      activitiesCreated,
+      activitiesSeen,
+      activitiesUpdated,
+      errorCode,
+      errorMessage,
+      finishedAt: new Date(),
+      metadata,
+      status,
+      updatedAt: new Date(),
+    })
+    .where(eq(syncRuns.id, syncRunId));
+}
