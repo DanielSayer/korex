@@ -1,5 +1,5 @@
 import { db, syncRuns } from "@korex/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 type SyncRunStatus = "pending" | "running" | "success" | "failed" | "partial";
 type SyncType = "initial" | "incremental" | "manual" | "backfill";
@@ -63,4 +63,14 @@ export async function finishActivitySyncRun({
       updatedAt: new Date(),
     })
     .where(eq(syncRuns.id, syncRunId));
+}
+
+export async function hasSuccessfulActivitySyncRunForUser(userId: string) {
+  const [syncRun] = await db
+    .select({ id: syncRuns.id })
+    .from(syncRuns)
+    .where(and(eq(syncRuns.userId, userId), eq(syncRuns.status, "success")))
+    .limit(1);
+
+  return syncRun !== undefined;
 }

@@ -1,18 +1,25 @@
 import { Button } from "@korex/ui/components/button";
+import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, Check, CircleDashed } from "lucide-react";
 import { motion } from "motion/react";
-import { useState } from "react";
 import { toast } from "sonner";
+import { orpc } from "@/utils/orpc";
 
 function SignUpSyncStep({ onComplete }: { onComplete: () => void }) {
-  const [isSyncing, setIsSyncing] = useState(false);
+  const initialSyncMutation = useMutation(
+    orpc.syncs.initial.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSuccess: () => {
+        toast.success("Sync started");
+        onComplete();
+      },
+    }),
+  );
 
   const startSync = async () => {
-    setIsSyncing(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsSyncing(false);
-    toast.success("Sync started");
-    onComplete();
+    initialSyncMutation.mutate(undefined);
   };
 
   return (
@@ -38,7 +45,7 @@ function SignUpSyncStep({ onComplete }: { onComplete: () => void }) {
               key={item}
               className="flex flex-col items-center gap-2 rounded-lg bg-background px-2 py-3 text-sm"
             >
-              {isSyncing && index === 1 ? (
+              {initialSyncMutation.isPending && index === 1 ? (
                 <CircleDashed className="size-4 animate-spin text-primary" />
               ) : (
                 <Check className="size-4 text-primary" />
@@ -54,8 +61,8 @@ function SignUpSyncStep({ onComplete }: { onComplete: () => void }) {
         size="lg"
         className="w-full"
         onClick={startSync}
-        disabled={isSyncing}
-        loading={isSyncing}
+        disabled={initialSyncMutation.isPending}
+        loading={initialSyncMutation.isPending}
         loadingText="Starting sync"
       >
         Start sync

@@ -4,6 +4,12 @@ export type FetchIntervalsIcuActivitiesInput = {
   userId: string;
 };
 
+export type SyncUserActivitiesInput = {
+  endDate: Date;
+  startDate: Date;
+  userId: string;
+};
+
 export type ActivitySyncStage =
   | "decrypt"
   | "detail"

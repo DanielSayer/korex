@@ -8,6 +8,7 @@ import { syncIntervalsIcuActivity } from "./providers/intervals-icu/intervals-ic
 import {
   createActivitySyncRun,
   finishActivitySyncRun,
+  hasSuccessfulActivitySyncRunForUser,
 } from "./repositories/sync-runs.repository";
 
 export const ActivitySyncRepositoryLive = Layer.succeed(
@@ -15,6 +16,7 @@ export const ActivitySyncRepositoryLive = Layer.succeed(
   {
     createActivitySyncRun,
     finishActivitySyncRun,
+    hasSuccessfulActivitySyncRunForUser,
   },
 );
 

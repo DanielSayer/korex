@@ -22,6 +22,7 @@ export type ActivitySyncRepositoryService = {
     status: "failed" | "partial" | "success";
     syncRunId: number;
   }) => Promise<void>;
+  hasSuccessfulActivitySyncRunForUser: (userId: string) => Promise<boolean>;
 };
 
 export class ActivitySyncRepository extends Context.Tag(

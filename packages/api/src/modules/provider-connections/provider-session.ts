@@ -19,6 +19,12 @@ export type ProviderSessionService = {
     ProviderSession,
     ActiveProviderConnectionNotFoundError | ProviderSecretEncryptionError
   >;
+  getActiveProviderSessionForUser: (input: {
+    userId: string;
+  }) => Effect.Effect<
+    ProviderSession,
+    ActiveProviderConnectionNotFoundError | ProviderSecretEncryptionError
+  >;
 };
 
 export class ProviderSessionContext extends Context.Tag(

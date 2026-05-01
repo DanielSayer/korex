@@ -134,3 +134,26 @@ export async function getActiveProviderConnectionForUser({
 
   return connection ?? null;
 }
+
+export async function getActiveProviderConnectionForUserId(userId: string) {
+  const [connection] = await db
+    .select({
+      authSecretEncrypted: providerConnections.authSecretEncrypted,
+      authType: providerConnections.authType,
+      authUsername: providerConnections.authUsername,
+      id: providerConnections.id,
+      provider: providerConnections.provider,
+      providerUserId: providerConnections.providerUserId,
+      userId: providerConnections.userId,
+    })
+    .from(providerConnections)
+    .where(
+      and(
+        eq(providerConnections.userId, userId),
+        eq(providerConnections.status, "active"),
+      ),
+    )
+    .limit(1);
+
+  return connection ?? null;
+}

@@ -1,22 +1,54 @@
 import { IntervalsIcuClient } from "@korex/integrations/intervals-icu/client";
 import { Effect } from "effect";
+import type {
+  Provider,
+  ProviderSession,
+} from "../provider-connections/provider-session";
 import { ProviderSessionContext } from "../provider-connections/provider-session";
 import {
   ActivitySyncRepository,
   type ActivitySyncRepositoryService,
   IntervalsIcuActivitySync,
 } from "./activity-sync.dependencies";
-import { ActivitySyncError } from "./activity-sync.errors";
+import {
+  ActivitySyncError,
+  ActivitySyncProviderNotSupportedError,
+} from "./activity-sync.errors";
 import type {
   ActivitySyncCounters,
   ActivitySyncFailure,
   FetchIntervalsIcuActivitiesInput,
+  SyncUserActivitiesInput,
 } from "./activity-sync.types";
 
 export type {
   FetchIntervalsIcuActivitiesInput,
   FetchIntervalsIcuActivitiesResult,
+  SyncUserActivitiesInput,
 } from "./activity-sync.types";
+
+export function syncUserActivities(input: SyncUserActivitiesInput) {
+  return Effect.gen(function* () {
+    const providerSession = yield* ProviderSessionContext;
+    const session = yield* providerSession.getActiveProviderSessionForUser({
+      userId: input.userId,
+    });
+
+    switch (getActivitySyncProvider(session.provider)) {
+      case "intervals_icu":
+        return yield* fetchIntervalsIcuActivitiesForSession(input, session);
+    }
+  });
+}
+
+export function getActivitySyncProvider(provider: Provider) {
+  switch (provider) {
+    case "intervals_icu":
+      return provider;
+    default:
+      throw new ActivitySyncProviderNotSupportedError({ provider });
+  }
+}
 
 export function fetchIntervalsIcuActivities({
   endDate,
@@ -24,15 +56,27 @@ export function fetchIntervalsIcuActivities({
   userId,
 }: FetchIntervalsIcuActivitiesInput) {
   return Effect.gen(function* () {
-    const repository = yield* ActivitySyncRepository;
     const providerSession = yield* ProviderSessionContext;
-    const activitySync = yield* IntervalsIcuActivitySync;
-    const intervalsIcuClient = yield* IntervalsIcuClient;
-
     const session = yield* providerSession.getActiveProviderSession({
       provider: "intervals_icu",
       userId,
     });
+
+    return yield* fetchIntervalsIcuActivitiesForSession(
+      { endDate, startDate, userId },
+      session,
+    );
+  });
+}
+
+function fetchIntervalsIcuActivitiesForSession(
+  { endDate, startDate, userId }: FetchIntervalsIcuActivitiesInput,
+  session: ProviderSession,
+) {
+  return Effect.gen(function* () {
+    const repository = yield* ActivitySyncRepository;
+    const activitySync = yield* IntervalsIcuActivitySync;
+    const intervalsIcuClient = yield* IntervalsIcuClient;
 
     const syncRun = yield* Effect.promise(() =>
       repository.createActivitySyncRun({
