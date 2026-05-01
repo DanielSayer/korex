@@ -2,6 +2,31 @@
 
 `bun run test` runs unit and integration tests through Vitest.
 
+## Conventions
+
+Test behavior at the boundary where it matters.
+
+- Unit test pure domain logic, mappers, validators, parsers, error mapping, and
+  other deterministic functions.
+- Do not unit test application services by mocking every dependency. That tends
+  to test choreography instead of behavior.
+- Test repositories with integration tests. Their behavior depends on database
+  constraints, conflict targets, defaults, and generated values.
+- Test application services with integration tests when the useful behavior is
+  the full workflow. Use real internal services and persistence.
+- Mock external systems at the edge only. For example, use a fake HTTP client to
+  avoid calling a third-party API while keeping the real integration client,
+  parser, service, and repository code.
+
+Assertions should prove semantic behavior, not incidental implementation
+details. Prefer checking meaningful fields such as status, counters, ownership,
+foreign keys, stored payloads, and conflict behavior. Avoid asserting generated
+timestamps, hashes, and audit fields unless they are the behavior under test.
+
+Keep fixtures explicit. Prefer builders in `src/setup/integration/test-data`
+over private helper functions hidden in test files when setup is reused or has
+domain meaning.
+
 Integration tests are files named `*.integration.test.ts`. They run against an
 isolated Postgres container from `docker-compose.integration.yml`.
 

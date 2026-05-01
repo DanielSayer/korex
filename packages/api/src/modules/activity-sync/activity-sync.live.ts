@@ -4,11 +4,11 @@ import {
   ActivitySyncRepository,
   IntervalsIcuActivitySync,
 } from "./activity-sync.dependencies";
+import { syncIntervalsIcuActivity } from "./providers/intervals-icu/intervals-icu-sync";
 import {
   createActivitySyncRun,
   finishActivitySyncRun,
 } from "./repositories/sync-runs.repository";
-import { syncIntervalsIcuActivity } from "./providers/intervals-icu/intervals-icu-sync";
 
 export const ActivitySyncRepositoryLive = Layer.succeed(
   ActivitySyncRepository,
