@@ -1,11 +1,26 @@
 import { Button } from "@korex/ui/components/button";
 import { useMutation } from "@tanstack/react-query";
-import { ArrowRight, Check, CircleDashed } from "lucide-react";
+import { ArrowRight, CloudSyncIcon } from "lucide-react";
 import { motion } from "motion/react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { LoadingProgress } from "@/components/loading-progress";
 import { orpc } from "@/utils/orpc";
 
-function SignUpSyncStep({ onComplete }: { onComplete: () => void }) {
+const syncLoadingMessages = [
+  "Fetching your runs",
+  "Reading workout history",
+  "Generating charts",
+  "Preparing your dashboard",
+];
+
+function SignUpSyncStep({
+  onComplete,
+  onProgressChange,
+}: {
+  onComplete: () => void;
+  onProgressChange?: (progress?: number) => void;
+}) {
   const initialSyncMutation = useMutation(
     orpc.syncs.initial.mutationOptions({
       onError: (error) => {
@@ -33,42 +48,115 @@ function SignUpSyncStep({ onComplete }: { onComplete: () => void }) {
       <div>
         <h1 className="font-bold text-3xl tracking-tight">Ready to sync</h1>
         <p className="text-muted-foreground text-sm">
-          Your Intervals key is connected. Start a mocked first sync and
-          continue to the dashboard.
+          Your Intervals key is connected.
         </p>
       </div>
 
-      <div className="grid w-full grid-cols-3 gap-2 rounded-xl border bg-muted/30 p-2">
-        {["Validate key", "Queue import", "Prepare dashboard"].map(
-          (item, index) => (
-            <div
-              key={item}
-              className="flex flex-col items-center gap-2 rounded-lg bg-background px-2 py-3 text-sm"
-            >
-              {initialSyncMutation.isPending && index === 1 ? (
-                <CircleDashed className="size-4 animate-spin text-primary" />
-              ) : (
-                <Check className="size-4 text-primary" />
-              )}
-              <span className="leading-tight">{item}</span>
+      {initialSyncMutation.isPending ? (
+        <SignUpSyncLoader onProgressChange={onProgressChange} />
+      ) : (
+        <div className="my-4 flex flex-col items-center gap-2 text-center">
+          <div className="relative flex size-28 items-center justify-center">
+            <div className="relative flex size-20 items-center justify-center rounded-2xl border bg-muted/30 shadow-sm">
+              <CloudSyncIcon className="size-9 text-muted-foreground" />
             </div>
-          ),
-        )}
-      </div>
+          </div>
+          <p>Sync this year&apos;s data to your dashboard.</p>
+        </div>
+      )}
 
-      <Button
-        type="button"
-        size="lg"
-        className="w-full"
-        onClick={startSync}
-        disabled={initialSyncMutation.isPending}
-        loading={initialSyncMutation.isPending}
-        loadingText="Starting sync"
-      >
-        Start sync
-        <ArrowRight className="size-4" />
-      </Button>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          type="button"
+          size="lg"
+          onClick={startSync}
+          loading={initialSyncMutation.isPending}
+          loadingText="Starting sync"
+          className="group flex-1"
+        >
+          Start sync
+          <ArrowRight className="size-4 transition-all duration-200 group-hover:translate-x-1" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          className="flex-1"
+          disabled={initialSyncMutation.isPending}
+        >
+          I&apos;ll do this later
+        </Button>
+      </div>
     </motion.div>
+  );
+}
+
+function SignUpSyncLoader({
+  onProgressChange,
+}: {
+  onProgressChange?: (progress?: number) => void;
+}) {
+  const [mockProgress, setMockProgress] = useState(8);
+
+  useEffect(() => {
+    setMockProgress(8);
+    onProgressChange?.(8);
+
+    const progressInterval = window.setInterval(() => {
+      setMockProgress((currentProgress) => {
+        const nextProgress = Math.min(currentProgress + 4, 96);
+        onProgressChange?.(nextProgress);
+        return nextProgress;
+      });
+    }, 650);
+
+    return () => {
+      window.clearInterval(progressInterval);
+      onProgressChange?.(undefined);
+    };
+  }, [onProgressChange]);
+
+  return (
+    <div className="my-4 flex flex-col items-center gap-2 text-center">
+      <div className="relative flex size-28 items-center justify-center">
+        <motion.span
+          className="absolute inset-0 rounded-full border border-primary/20"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0, 0.6] }}
+          transition={{
+            duration: 1.8,
+            ease: "easeInOut",
+            repeat: Number.POSITIVE_INFINITY,
+          }}
+        />
+        <motion.span
+          className="absolute inset-3 rounded-full border border-primary/15"
+          animate={{ rotate: 360 }}
+          transition={{
+            duration: 3.2,
+            ease: "linear",
+            repeat: Number.POSITIVE_INFINITY,
+          }}
+        />
+        <motion.div
+          className="relative flex size-20 items-center justify-center rounded-2xl border bg-muted/30 shadow-sm"
+          animate={{ y: [0, -4, 0], borderColor: "hsl(var(--primary) / 0.35)" }}
+          transition={{
+            duration: 1.6,
+            ease: "easeInOut",
+            repeat: Number.POSITIVE_INFINITY,
+          }}
+        >
+          <CloudSyncIcon className="size-9 text-muted-foreground" />
+        </motion.div>
+      </div>
+      <div className="space-y-1">
+        <p>Syncing your data to the dashboard.</p>
+        <p className="text-muted-foreground text-sm">
+          This can take a moment. Keep this tab open while we prepare your
+          workspace.
+        </p>
+      </div>
+      <LoadingProgress messages={syncLoadingMessages} progress={mockProgress} />
+    </div>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, MotionConfig } from "motion/react";
+import { useState } from "react";
 import Loader from "@/components/loader";
 import { authClient } from "@/lib/auth-client";
 import { SignUpAccountStep } from "./sign-up-account-step";
@@ -14,6 +15,7 @@ type SignUpProps = {
 
 function SignUp({ step, setStep }: SignUpProps) {
   const navigate = useNavigate();
+  const [syncProgress, setSyncProgress] = useState<number>();
   const { isPending } = authClient.useSession();
 
   if (isPending) {
@@ -35,7 +37,7 @@ function SignUp({ step, setStep }: SignUpProps) {
       }}
     >
       <div className="flex w-full max-w-sm flex-col gap-6 md:max-w-md">
-        <SignUpStepper currentStep={step} />
+        <SignUpStepper currentStep={step} syncProgress={syncProgress} />
 
         <div className="overflow-hidden">
           <AnimatePresence mode="wait" initial={false}>
@@ -50,7 +52,12 @@ function SignUp({ step, setStep }: SignUpProps) {
               />
             ) : null}
 
-            {step === 2 ? <SignUpSyncStep onComplete={goToDashboard} /> : null}
+            {step === 2 ? (
+              <SignUpSyncStep
+                onComplete={goToDashboard}
+                onProgressChange={setSyncProgress}
+              />
+            ) : null}
           </AnimatePresence>
         </div>
       </div>
