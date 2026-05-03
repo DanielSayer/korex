@@ -16,6 +16,12 @@ export const intervalsIcuHttpClientSuccess = Layer.succeed(
             id: "123",
             lastname: "Athlete",
             name: "Test Athlete",
+            sportsSettings: [
+              {
+                hr_zone_names: ["Recovery", "Aerobic"],
+                hr_zones: [153, 170],
+              },
+            ],
             timezone: "Australia/Brisbane",
           }),
           { status: 200 },

@@ -2,6 +2,13 @@ import { z } from "zod";
 
 const nullableString = z.string().nullable().optional();
 
+const intervalsIcuSportsSettingsSchema = z
+  .object({
+    hr_zone_names: z.array(z.string()).optional(),
+    hr_zones: z.array(z.number().int().positive()).optional(),
+  })
+  .loose();
+
 export const intervalsIcuAthleteProfileSchema = z
   .object({
     email: nullableString,
@@ -9,6 +16,7 @@ export const intervalsIcuAthleteProfileSchema = z
     id: z.string().min(1),
     lastname: nullableString,
     name: nullableString,
+    sportsSettings: z.array(intervalsIcuSportsSettingsSchema).optional(),
     timezone: nullableString,
   })
   .loose();
