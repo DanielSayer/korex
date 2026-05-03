@@ -16,7 +16,7 @@ export const intervalsIcuAthleteProfileSchema = z
     id: z.string().min(1),
     lastname: nullableString,
     name: nullableString,
-    sportsSettings: z.array(intervalsIcuSportsSettingsSchema).optional(),
+    sportSettings: z.array(intervalsIcuSportsSettingsSchema).optional(),
     timezone: nullableString,
   })
   .loose();

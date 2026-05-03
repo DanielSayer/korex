@@ -4,9 +4,9 @@ import type { HeartRateZoneSeedInput } from "../heart-rate-zones.types";
 export function toHeartRateZoneSeedInputsFromIntervalsIcuProfile(
   profile: IntervalsIcuAthleteProfile,
 ): HeartRateZoneSeedInput[] {
-  const sportsSettings = profile.sportsSettings?.[0];
-  const hrZones = sportsSettings?.hr_zones;
-  const hrZoneNames = sportsSettings?.hr_zone_names;
+  const sportSettings = profile.sportSettings?.[0];
+  const hrZones = sportSettings?.hr_zones;
+  const hrZoneNames = sportSettings?.hr_zone_names;
 
   if (!hrZones?.length || !hrZoneNames?.length) {
     return [];

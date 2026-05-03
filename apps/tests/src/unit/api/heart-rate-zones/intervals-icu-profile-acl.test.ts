@@ -5,7 +5,7 @@ describe("Intervals.icu profile heart-rate zone ACL", () => {
   it("maps the first sports settings heart-rate zones to seed inputs", () => {
     const zones = toHeartRateZoneSeedInputsFromIntervalsIcuProfile({
       id: "athlete-1",
-      sportsSettings: [
+      sportSettings: [
         {
           hr_zone_names: [
             "Recovery",
@@ -67,7 +67,7 @@ describe("Intervals.icu profile heart-rate zone ACL", () => {
     expect(
       toHeartRateZoneSeedInputsFromIntervalsIcuProfile({
         id: "athlete-1",
-        sportsSettings: [{ hr_zone_names: ["Recovery"], hr_zones: [] }],
+        sportSettings: [{ hr_zone_names: ["Recovery"], hr_zones: [] }],
       }),
     ).toEqual([]);
   });
