@@ -10,7 +10,7 @@ import {
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-
+import { activities } from "./activities";
 import { user } from "./auth";
 
 export const externalProvider = pgEnum("external_provider", ["intervals_icu"]);
@@ -131,6 +131,9 @@ export const externalActivities = pgTable(
     provider: externalProvider("provider").notNull(),
     providerActivityId: text("provider_activity_id").notNull(),
     providerAthleteId: text("provider_athlete_id"),
+    activityId: integer("activity_id").references(() => activities.id, {
+      onDelete: "set null",
+    }),
     activityStartAt: timestamp("activity_start_at").notNull(),
     activityEndAt: timestamp("activity_end_at"),
     providerUpdatedAt: timestamp("provider_updated_at"),
@@ -285,6 +288,10 @@ export const externalActivitiesRelations = relations(
     lastSyncRun: one(syncRuns, {
       fields: [externalActivities.lastSyncRunId],
       references: [syncRuns.id],
+    }),
+    activity: one(activities, {
+      fields: [externalActivities.activityId],
+      references: [activities.id],
     }),
     map: one(externalActivityMaps),
     streams: many(externalActivityStreams),

@@ -22,6 +22,7 @@ export type UpsertExternalActivityInput = {
 };
 
 export type UpsertExternalActivityResult = {
+  activityId: number | null;
   created: boolean;
   externalActivityId: number;
   updated: boolean;
@@ -43,6 +44,7 @@ export async function upsertExternalActivity({
   const payloadHash = hashPayload(rawData);
   const [existing] = await db
     .select({
+      activityId: externalActivities.activityId,
       id: externalActivities.id,
       payloadHash: externalActivities.payloadHash,
     })
@@ -80,7 +82,12 @@ export async function upsertExternalActivity({
       throw new Error("Failed to insert external activity");
     }
 
-    return { created: true, externalActivityId: inserted.id, updated: false };
+    return {
+      activityId: null,
+      created: true,
+      externalActivityId: inserted.id,
+      updated: false,
+    };
   }
 
   await db
@@ -103,9 +110,38 @@ export async function upsertExternalActivity({
 
   return {
     created: false,
+    activityId: existing.activityId,
     externalActivityId: existing.id,
     updated: existing.payloadHash !== payloadHash,
   };
+}
+
+export async function linkExternalActivityToActivity({
+  activityId,
+  externalActivityId,
+}: {
+  activityId: number;
+  externalActivityId: number;
+}) {
+  await db
+    .update(externalActivities)
+    .set({
+      activityId,
+      updatedAt: new Date(),
+    })
+    .where(eq(externalActivities.id, externalActivityId));
+}
+
+export async function clearExternalActivityActivityLink(
+  externalActivityId: number,
+) {
+  await db
+    .update(externalActivities)
+    .set({
+      activityId: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(externalActivities.id, externalActivityId));
 }
 
 export async function upsertExternalActivityMap({

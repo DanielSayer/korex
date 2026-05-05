@@ -39,16 +39,19 @@ describe("external activities repository", () => {
     );
 
     expect(created).toEqual({
+      activityId: null,
       created: true,
       externalActivityId: expect.any(Number),
       updated: false,
     });
     expect(unchanged).toEqual({
+      activityId: null,
       created: false,
       externalActivityId: created.externalActivityId,
       updated: false,
     });
     expect(changed).toEqual({
+      activityId: null,
       created: false,
       externalActivityId: created.externalActivityId,
       updated: true,
@@ -105,7 +108,10 @@ describe("external activities repository", () => {
       .select()
       .from(externalActivityMaps)
       .where(
-        eq(externalActivityMaps.externalActivityId, activity.externalActivityId),
+        eq(
+          externalActivityMaps.externalActivityId,
+          activity.externalActivityId,
+        ),
       );
 
     expect(maps).toHaveLength(1);

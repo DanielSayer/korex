@@ -8,8 +8,9 @@ describe("getActivitySyncProvider", () => {
   });
 
   it("throws when the provider is not supported", () => {
-    expect(() => getActivitySyncProvider("unsupported_provider")).toThrow(
-      ActivitySyncProviderNotSupportedError,
-    );
+    expect(() =>
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation> for testing unsupported provider
+      getActivitySyncProvider("unsupported_provider" as any),
+    ).toThrow(ActivitySyncProviderNotSupportedError);
   });
 });

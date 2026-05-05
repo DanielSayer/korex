@@ -2,6 +2,7 @@ import { ActivitySyncLive } from "@korex/api/modules/activity-sync/activity-sync
 import { fetchIntervalsIcuActivities } from "@korex/api/modules/activity-sync/activity-sync.service";
 import { encryptProviderSecret } from "@korex/api/modules/provider-connections/provider-secret-encryption";
 import {
+  activities,
   db,
   externalActivities,
   externalActivityMaps,
@@ -9,8 +10,8 @@ import {
   syncRuns,
 } from "@korex/db";
 import { IntervalsIcuClientLayer } from "@korex/integrations/intervals-icu/live";
-import { Effect, Layer } from "effect";
 import { eq } from "drizzle-orm";
+import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { intervalsIcuActivityHttpClientSuccess } from "../../mocks/integrations/intervals-icu/activity-http-client";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -81,6 +82,7 @@ describe("activity sync integration", () => {
     }
 
     expect(activity).toMatchObject({
+      activityId: expect.any(Number),
       lastSyncRunId: result.syncRunId,
       provider: "intervals_icu",
       providerActivityId: "activity-1",
@@ -90,6 +92,30 @@ describe("activity sync integration", () => {
         name: "Run",
       }),
       sportType: "Run",
+      userId: userDataExtensions.HughJass.id,
+    });
+
+    const [korexActivity] = await db
+      .select()
+      .from(activities)
+      .where(eq(activities.id, activity.activityId ?? 0));
+
+    expect(korexActivity).toMatchObject({
+      averageCadenceStepsPerMinute: 174,
+      averageHeartRateBeatsPerMinute: 151,
+      averageSpeedMetersPerSecond: 3.25,
+      deviceName: "Garmin Forerunner",
+      distanceMeters: 10001.5,
+      elapsedTimeSeconds: 3900,
+      energyKilocalories: 540,
+      maxHeartRateBeatsPerMinute: 181,
+      maxSpeedMetersPerSecond: 5.8,
+      movingTimeSeconds: 3600,
+      name: "Run",
+      sportType: "run",
+      startAt: new Date("2026-03-31T20:00:00.000Z"),
+      totalElevationGainMeters: 123.4,
+      totalElevationLossMeters: 120.2,
       userId: userDataExtensions.HughJass.id,
     });
 

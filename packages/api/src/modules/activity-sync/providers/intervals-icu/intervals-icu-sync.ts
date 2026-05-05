@@ -6,11 +6,10 @@ import type {
   ActivitySyncFailure,
 } from "../../activity-sync.types";
 import {
-  upsertExternalActivity,
   upsertExternalActivityMap,
   upsertExternalActivityStream,
 } from "../../repositories/external-activities.repository";
-import { toExternalActivityUpsertInput } from "./intervals-icu-mapper";
+import { storeIntervalsIcuActivityImport } from "./intervals-icu-activity-import";
 
 export function syncIntervalsIcuActivity({
   activityId,
@@ -48,29 +47,23 @@ export function syncIntervalsIcuActivity({
       return;
     }
 
-    const detail = detailResult.right;
-    const upsertedActivity = yield* Effect.tryPromise({
-      try: () =>
-        upsertExternalActivity(
-          toExternalActivityUpsertInput({
-            detail,
-            lastSyncRunId: syncRunId,
-            providerAthleteId: athleteId,
-            userId,
-          }),
-        ),
-      catch: (cause) =>
-        new ActivitySyncError({
-          cause,
-          message: "Failed to store external activity",
-        }),
+    const storedActivity = yield* storeIntervalsIcuActivityImport({
+      detail: detailResult.right,
+      errors,
+      lastSyncRunId: syncRunId,
+      providerAthleteId: athleteId,
+      userId,
     });
 
     counters.activitiesStored += 1;
-    if (upsertedActivity.created) {
-      counters.activitiesCreated += 1;
+
+    if (storedActivity.skipped) {
+      return;
     }
-    if (upsertedActivity.updated) {
+
+    if (storedActivity.created) {
+      counters.activitiesCreated += 1;
+    } else if (storedActivity.updated) {
       counters.activitiesUpdated += 1;
     }
 
@@ -79,8 +72,8 @@ export function syncIntervalsIcuActivity({
       apiKey,
       client,
       errors,
-      externalActivityId: upsertedActivity.externalActivityId,
-      providerActivityId: String(detail.id),
+      externalActivityId: storedActivity.externalActivityId,
+      providerActivityId: storedActivity.providerActivityId,
       syncRunId,
       userId,
     });
@@ -90,8 +83,8 @@ export function syncIntervalsIcuActivity({
       apiKey,
       client,
       errors,
-      externalActivityId: upsertedActivity.externalActivityId,
-      providerActivityId: String(detail.id),
+      externalActivityId: storedActivity.externalActivityId,
+      providerActivityId: storedActivity.providerActivityId,
       syncRunId,
       userId,
     });

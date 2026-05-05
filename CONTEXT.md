@@ -20,6 +20,22 @@ _Avoid_: Intervals, interval training
 A boundary component that translates external provider data into Korex domain data.
 _Avoid_: Normalizer, mapper, adapter, passthrough
 
+**Activity**:
+A user-owned workout or training session imported from an external provider for analysis inside Korex.
+_Avoid_: External activity, provider activity
+
+**Sport Type**:
+A Korex-owned classification for an **Activity**, initially limited to run, treadmill, and hike.
+_Avoid_: Provider sport, provider type, category
+
+**Device Name**:
+An optional display label for the device or app associated with an **Activity**.
+_Avoid_: Device identity, recording source
+
+**Provider Activity Metadata**:
+The upstream identifiers, timestamps, and raw payload retained for an imported **Activity**.
+_Avoid_: Activity fields, core activity data
+
 ## Relationships
 
 - A **Heart Rate Zone** belongs to exactly one **User**
@@ -29,6 +45,16 @@ _Avoid_: Normalizer, mapper, adapter, passthrough
 - **Heart Rate Zones** for the same **User** must not overlap; gaps are allowed.
 - A **User** has one active set of **Heart Rate Zones**.
 - An **Anti-Corruption Layer** translates **Provider Profile** heart-rate zone data into **Heart Rate Zones**.
+- An **Activity** belongs to exactly one **User**.
+- An **Activity** has exactly one **Sport Type**.
+- An **Activity** can have a **Device Name**, but **Device Name** is display-only and must not drive identity, deduplication, or analytics.
+- An **Activity** can retain **Provider Activity Metadata** as import provenance, but **Provider Activity Metadata** is not part of the **Activity** identity inside Korex.
+- An imported provider activity that maps successfully creates or updates one **Activity**; cross-provider duplicate detection is intentionally deferred.
+- **Provider Activity Metadata** may reference the **Activity** it produced, but an **Activity** does not reference provider metadata.
+- An **Anti-Corruption Layer** translates provider activity data into an **Activity**.
+- Provider activity data with an unsupported **Sport Type** is retained as **Provider Activity Metadata** but does not become an **Activity**.
+- If updated provider activity data changes to an unsupported **Sport Type**, its **Provider Activity Metadata** no longer references an **Activity**; malformed provider data leaves any existing **Activity** unchanged.
+- An **Anti-Corruption Layer** may map fields, convert units, coerce invalid optional metrics to empty values, and choose default **Activity** names; it must not calculate derived **Activity** metrics.
 
 ## Example dialogue
 
@@ -39,3 +65,4 @@ _Avoid_: Normalizer, mapper, adapter, passthrough
 
 - "heart rate bucket" was used for the same concept as **Heart Rate Zone**; resolved: use **Heart Rate Zone** in domain language.
 - "Intervals" can mean the upstream provider **Intervals.icu** or interval running training; resolved: use **Intervals.icu** for the provider and avoid bare "intervals" in domain language.
+- "activity" can mean either the provider record or the Korex-owned workout; resolved: use **Activity** for the Korex domain object and **Provider Activity Metadata** only for upstream provenance.
