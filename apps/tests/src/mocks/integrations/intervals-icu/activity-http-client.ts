@@ -85,9 +85,38 @@ export const intervalsIcuActivityHttpClientSuccess = Layer.succeed(
 
       if (path === "/api/v1/activity/activity-1/streams.json") {
         return Effect.succeed(
-          new Response(JSON.stringify({ hr: [140, 142], time: [0, 1] }), {
-            status: 200,
-          }),
+          new Response(
+            JSON.stringify({
+              cadence: {
+                data: [82, 83],
+                name: null,
+                type: "cadence",
+              },
+              distance: {
+                data: [0, 8.5],
+                name: null,
+                type: "distance",
+              },
+              fixed_altitude: {
+                data: [48.1, 48.3],
+                name: null,
+                type: "fixed_altitude",
+              },
+              heartrate: {
+                data: [140, 142],
+                name: null,
+                type: "heartrate",
+              },
+              velocity_smooth: {
+                data: [3.1, 3.2],
+                name: null,
+                type: "velocity_smooth",
+              },
+            }),
+            {
+              status: 200,
+            },
+          ),
         );
       }
 

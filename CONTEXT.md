@@ -32,6 +32,10 @@ _Avoid_: Provider lap, external lap, split
 A core-owned ordered route for an **Activity**, imported from provider map data for route display inside Korex.
 _Avoid_: Provider map, external map, raw route
 
+**Activity Stream**:
+A core-owned ordered numeric series for an **Activity**, imported from provider stream data for point-by-point analysis inside Korex.
+_Avoid_: Provider stream, external stream, raw stream
+
 **Activity Map Coordinate**:
 A latitude and longitude pair in an **Activity Map**.
 _Avoid_: Latlng, point, GPS row
@@ -61,8 +65,13 @@ _Avoid_: Activity fields, core activity data
 - An **Activity** has exactly one **Sport Type**.
 - An **Activity** can have zero or more **Activity Laps**.
 - An **Activity** can have zero or one **Activity Map**.
+- An **Activity** can have zero or more **Activity Streams**.
 - An **Activity Lap** belongs to exactly one **Activity**.
 - An **Activity Map** belongs to exactly one **Activity**.
+- An **Activity Stream** belongs to exactly one **Activity**.
+- Each **Activity** can have only one **Activity Stream** for a given stream type.
+- **Activity Streams** are initially limited to cadence, distance, altitude, heart rate, and velocity.
+- Intervals.icu cadence stream values are revolutions per minute and become steps per minute in Korex by doubling each value.
 - An **Activity Map** has one or more ordered **Activity Map Coordinates**.
 - An **Activity Map** may store nullable bounds as display metadata; coordinates are the domain value.
 - **Activity Map Coordinates** must be valid latitude and longitude pairs.
@@ -85,6 +94,7 @@ _Avoid_: Activity fields, core activity data
 - **Provider Activity Metadata** may reference the **Activity** it produced, but an **Activity** does not reference provider metadata.
 - An **Anti-Corruption Layer** translates provider activity data into an **Activity**.
 - An **Anti-Corruption Layer** translates provider lap or split data into **Activity Laps**.
+- An **Anti-Corruption Layer** translates provider stream data into **Activity Streams**.
 - Provider activity data with an unsupported **Sport Type** is retained as **Provider Activity Metadata** but does not become an **Activity**.
 - If updated provider activity data changes to an unsupported **Sport Type**, its **Provider Activity Metadata** no longer references an **Activity**; malformed provider data leaves any existing **Activity** unchanged.
 - Malformed provider lap or split data, including non-contiguous **Activity Lap** offsets, does not produce **Activity Laps**.

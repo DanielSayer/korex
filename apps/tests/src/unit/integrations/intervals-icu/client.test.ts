@@ -61,16 +61,48 @@ describe("Intervals.icu client", () => {
     );
 
     expect(result.activities).toEqual([{ id: "activity-1", name: "Run" }]);
-    expect(result.detail).toEqual({
+    expect(result.detail).toMatchObject({
       id: "activity-1",
       name: "Run",
       start_date_local: "2026-04-01T06:00:00.000Z",
       type: "Run",
     });
-    expect(result.map).toEqual({ polyline: "abc123" });
+    expect(result.map).toMatchObject({
+      bounds: [
+        [-27.590372, 153.06575],
+        [-27.58015, 153.07713],
+      ],
+      latlngs: [
+        [-27.581491, 153.06828],
+        [-27.581144, 153.06902],
+      ],
+    });
     expect(result.streams).toEqual({
-      hr: [140, 142],
-      time: [0, 1],
+      cadence: {
+        data: [82, 83],
+        name: null,
+        type: "cadence",
+      },
+      distance: {
+        data: [0, 8.5],
+        name: null,
+        type: "distance",
+      },
+      fixed_altitude: {
+        data: [48.1, 48.3],
+        name: null,
+        type: "fixed_altitude",
+      },
+      heartrate: {
+        data: [140, 142],
+        name: null,
+        type: "heartrate",
+      },
+      velocity_smooth: {
+        data: [3.1, 3.2],
+        name: null,
+        type: "velocity_smooth",
+      },
     });
   });
 });

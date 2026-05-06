@@ -1,5 +1,6 @@
 import {
   replaceActivityMap,
+  replaceActivityStreams,
   upsertActivity,
 } from "@korex/api/modules/activities/activities.repository";
 import {
@@ -10,6 +11,7 @@ import {
 import { createActivitySyncRun } from "@korex/api/modules/activity-sync/repositories/sync-runs.repository";
 import {
   activityMaps,
+  activityStreams,
   db,
   externalActivities,
   externalActivityMaps,
@@ -257,5 +259,66 @@ describe("external activities repository", () => {
         }),
       ]),
     );
+  });
+
+  it("replaces core activity streams by activity id", async () => {
+    const activity = await upsertActivity({
+      activityId: null,
+      input: {
+        averageCadenceStepsPerMinute: null,
+        averageHeartRateBeatsPerMinute: null,
+        averageSpeedMetersPerSecond: null,
+        deviceName: null,
+        distanceMeters: null,
+        elapsedTimeSeconds: null,
+        energyKilocalories: null,
+        maxHeartRateBeatsPerMinute: null,
+        maxSpeedMetersPerSecond: null,
+        movingTimeSeconds: null,
+        name: "Morning Run",
+        sportType: "run",
+        startAt: new Date("2026-04-01T00:00:00.000Z"),
+        totalElevationGainMeters: null,
+        totalElevationLossMeters: null,
+        userId: userDataExtensions.HughJass.id,
+      },
+    });
+
+    await replaceActivityStreams({
+      activityId: activity.activityId,
+      streams: [
+        {
+          data: [164, 166],
+          streamType: "cadence",
+        },
+        {
+          data: [140, 142],
+          streamType: "heartRate",
+        },
+      ],
+    });
+
+    await replaceActivityStreams({
+      activityId: activity.activityId,
+      streams: [
+        {
+          data: [0, 8.5],
+          streamType: "distance",
+        },
+      ],
+    });
+
+    const streams = await db
+      .select()
+      .from(activityStreams)
+      .where(eq(activityStreams.activityId, activity.activityId));
+
+    expect(streams).toEqual([
+      expect.objectContaining({
+        activityId: activity.activityId,
+        data: [0, 8.5],
+        streamType: "distance",
+      }),
+    ]);
   });
 });

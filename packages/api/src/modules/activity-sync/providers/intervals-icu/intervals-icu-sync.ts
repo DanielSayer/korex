@@ -1,6 +1,12 @@
-import type { IntervalsIcuClientService } from "@korex/integrations/intervals-icu/client";
+import type {
+  IntervalsIcuActivityStreams,
+  IntervalsIcuClientService,
+} from "@korex/integrations/intervals-icu/client";
 import { Effect, Either } from "effect";
-import { replaceActivityMap } from "../../../activities/activities.repository";
+import {
+  replaceActivityMap,
+  replaceActivityStreams,
+} from "../../../activities/activities.repository";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type {
   ActivitySyncCounters,
@@ -12,6 +18,7 @@ import {
 } from "../../repositories/external-activities.repository";
 import { storeIntervalsIcuActivityImport } from "./intervals-icu-activity-import";
 import { toActivityMapFromIntervalsIcuMap } from "./intervals-icu-activity-map.acl";
+import { toActivityStreamsFromIntervalsIcuStreams } from "./intervals-icu-activity-streams.acl";
 
 export function syncIntervalsIcuActivity({
   activityId,
@@ -85,6 +92,7 @@ export function syncIntervalsIcuActivity({
       activityId,
       apiKey,
       client,
+      coreActivityId: storedActivity.activityId,
       errors,
       externalActivityId: storedActivity.externalActivityId,
       providerActivityId: storedActivity.providerActivityId,
@@ -206,6 +214,7 @@ function syncIntervalsIcuActivityStreams({
   activityId,
   apiKey,
   client,
+  coreActivityId,
   errors,
   externalActivityId,
   providerActivityId,
@@ -215,6 +224,7 @@ function syncIntervalsIcuActivityStreams({
   activityId: string;
   apiKey: string;
   client: IntervalsIcuClientService;
+  coreActivityId: number;
   errors: ActivitySyncFailure[];
   externalActivityId: number;
   providerActivityId: string;
@@ -261,5 +271,52 @@ function syncIntervalsIcuActivityStreams({
           }),
       });
     }
+
+    const activityStreams = readActivityStreamsAclResult({
+      activityId,
+      errors,
+      streams: streamsResult.right,
+    });
+
+    if (!activityStreams) {
+      return;
+    }
+
+    yield* Effect.tryPromise({
+      try: () =>
+        replaceActivityStreams({
+          activityId: coreActivityId,
+          streams: activityStreams,
+        }),
+      catch: (cause) =>
+        new ActivitySyncError({
+          cause,
+          message: "Failed to store activity streams",
+        }),
+    });
   });
+}
+
+function readActivityStreamsAclResult({
+  activityId,
+  errors,
+  streams,
+}: {
+  activityId: string;
+  errors: ActivitySyncFailure[];
+  streams: IntervalsIcuActivityStreams;
+}) {
+  try {
+    return toActivityStreamsFromIntervalsIcuStreams(streams);
+  } catch (error) {
+    errors.push({
+      activityId,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to translate activity streams",
+      stage: "streams",
+    });
+    return null;
+  }
 }

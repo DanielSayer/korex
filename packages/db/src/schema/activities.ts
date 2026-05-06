@@ -20,6 +20,14 @@ export const activitySportType = pgEnum("activity_sport_type", [
   "hike",
 ]);
 
+export const activityStreamType = pgEnum("activity_stream_type", [
+  "cadence",
+  "distance",
+  "altitude",
+  "heartRate",
+  "velocity",
+]);
+
 export const activities = pgTable(
   "activities",
   {
@@ -130,9 +138,34 @@ export const activityMaps = pgTable(
   ],
 );
 
+export const activityStreams = pgTable(
+  "activity_streams",
+  {
+    id: serial("id").primaryKey(),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    streamType: activityStreamType("stream_type").notNull(),
+    data: jsonb("data").$type<number[]>().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_streams_activity_type_idx").on(
+      table.activityId,
+      table.streamType,
+    ),
+    index("activity_streams_activity_id_idx").on(table.activityId),
+  ],
+);
+
 export const activitiesRelations = relations(activities, ({ many, one }) => ({
   laps: many(activityLaps),
   map: one(activityMaps),
+  streams: many(activityStreams),
   user: one(user, {
     fields: [activities.userId],
     references: [user.id],
@@ -152,3 +185,13 @@ export const activityMapsRelations = relations(activityMaps, ({ one }) => ({
     references: [activities.id],
   }),
 }));
+
+export const activityStreamsRelations = relations(
+  activityStreams,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [activityStreams.activityId],
+      references: [activities.id],
+    }),
+  }),
+);

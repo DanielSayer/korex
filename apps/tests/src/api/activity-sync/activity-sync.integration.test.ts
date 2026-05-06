@@ -5,6 +5,7 @@ import {
   activities,
   activityLaps,
   activityMaps,
+  activityStreams,
   db,
   externalActivities,
   externalActivityMaps,
@@ -215,17 +216,45 @@ describe("activity sync integration", () => {
       expect.arrayContaining([
         expect.objectContaining({
           lastSyncRunId: result.syncRunId,
-          rawData: [140, 142],
-          streamType: "hr",
+          rawData: expect.objectContaining({
+            data: [82, 83],
+            type: "cadence",
+          }),
+          streamType: "cadence",
         }),
         expect.objectContaining({
           lastSyncRunId: result.syncRunId,
-          rawData: [0, 1],
-          streamType: "time",
+          rawData: expect.objectContaining({
+            data: [140, 142],
+            type: "heartrate",
+          }),
+          streamType: "heartrate",
         }),
       ]),
     );
-    expect(streams).toHaveLength(2);
+    expect(streams).toHaveLength(5);
+
+    const coreStreams = await db
+      .select()
+      .from(activityStreams)
+      .where(eq(activityStreams.activityId, activity.activityId ?? 0))
+      .orderBy(asc(activityStreams.streamType));
+
+    expect(coreStreams).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          activityId: activity.activityId,
+          data: [164, 166],
+          streamType: "cadence",
+        }),
+        expect.objectContaining({
+          activityId: activity.activityId,
+          data: [140, 142],
+          streamType: "heartRate",
+        }),
+      ]),
+    );
+    expect(coreStreams).toHaveLength(5);
   });
 });
 

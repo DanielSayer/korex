@@ -1,5 +1,12 @@
 export type SportType = "run" | "treadmill" | "hike";
 
+export type ActivityStreamType =
+  | "cadence"
+  | "distance"
+  | "altitude"
+  | "heartRate"
+  | "velocity";
+
 export type ActivityInput = {
   averageCadenceStepsPerMinute: number | null;
   averageHeartRateBeatsPerMinute: number | null;
@@ -48,4 +55,9 @@ export type ActivityMapBoundsInput = {
 export type ActivityMapInput = {
   bounds: ActivityMapBoundsInput | null;
   coordinates: ActivityMapCoordinateInput[];
+};
+
+export type ActivityStreamInput = {
+  data: number[];
+  streamType: ActivityStreamType;
 };
