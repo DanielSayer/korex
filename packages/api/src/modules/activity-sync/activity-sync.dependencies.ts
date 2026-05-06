@@ -3,6 +3,8 @@ import { Context, type Effect } from "effect";
 import type {
   ActivityInput,
   ActivityLapInput,
+  ActivityMapInput,
+  ActivityStreamInput,
 } from "../activities/activities.types";
 import type { ActivitySyncError } from "./activity-sync.errors";
 import type {
@@ -59,6 +61,40 @@ export type ActivityImportWriterService = {
 export class ActivityImportWriter extends Context.Tag("ActivityImportWriter")<
   ActivityImportWriter,
   ActivityImportWriterService
+>() {}
+
+export type ActivityArtifactStoreService = {
+  storeExternalMap: (input: {
+    externalActivityId: number;
+    lastSyncRunId: number;
+    provider: "intervals_icu";
+    providerActivityId: string;
+    rawData: unknown;
+    userId: string;
+  }) => Promise<void>;
+  replaceCoreMap: (input: {
+    activityId: number;
+    map: ActivityMapInput;
+  }) => Promise<void>;
+  storeExternalStream: (input: {
+    externalActivityId: number;
+    lastSyncRunId: number;
+    provider: "intervals_icu";
+    providerActivityId: string;
+    rawData: unknown;
+    streamType: string;
+    userId: string;
+  }) => Promise<void>;
+  replaceCoreStreamsAndQueueCalculation: (input: {
+    activityId: number;
+    streams: ActivityStreamInput[];
+    userId: string;
+  }) => Promise<void>;
+};
+
+export class ActivityArtifactStore extends Context.Tag("ActivityArtifactStore")<
+  ActivityArtifactStore,
+  ActivityArtifactStoreService
 >() {}
 
 export type IntervalsIcuActivitySyncService = {

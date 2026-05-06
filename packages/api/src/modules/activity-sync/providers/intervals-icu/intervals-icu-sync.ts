@@ -3,19 +3,12 @@ import type {
   IntervalsIcuClientService,
 } from "@korex/integrations/intervals-icu/client";
 import { Effect, Either } from "effect";
-import {
-  replaceActivityMap,
-  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
-} from "../../../activities/activities.repository";
+import { ActivityArtifactStore } from "../../activity-sync.dependencies";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type {
   ActivitySyncCounters,
   ActivitySyncFailure,
 } from "../../activity-sync.types";
-import {
-  upsertExternalActivityMap,
-  upsertExternalActivityStream,
-} from "../../repositories/external-activities.repository";
 import { storeIntervalsIcuActivityImport } from "./intervals-icu-activity-import";
 import { toActivityMapFromIntervalsIcuMap } from "./intervals-icu-activity-map.acl";
 import { toActivityStreamsFromIntervalsIcuStreams } from "./intervals-icu-activity-streams.acl";
@@ -124,6 +117,7 @@ function syncIntervalsIcuActivityMap({
   userId: string;
 }) {
   return Effect.gen(function* () {
+    const artifactStore = yield* ActivityArtifactStore;
     const mapResult = yield* Effect.either(
       client.getActivityMap({
         activityId: providerRequestActivityId,
@@ -146,7 +140,7 @@ function syncIntervalsIcuActivityMap({
 
     yield* Effect.tryPromise({
       try: () =>
-        upsertExternalActivityMap({
+        artifactStore.storeExternalMap({
           externalActivityId,
           lastSyncRunId: syncRunId,
           provider: "intervals_icu",
@@ -173,7 +167,7 @@ function syncIntervalsIcuActivityMap({
 
     yield* Effect.tryPromise({
       try: () =>
-        replaceActivityMap({
+        artifactStore.replaceCoreMap({
           activityId: coreActivityId,
           map: activityMap,
         }),
@@ -232,6 +226,7 @@ function syncIntervalsIcuActivityStreams({
   userId: string;
 }) {
   return Effect.gen(function* () {
+    const artifactStore = yield* ActivityArtifactStore;
     const streamsResult = yield* Effect.either(
       client.getActivityStreams({
         activityId,
@@ -255,7 +250,7 @@ function syncIntervalsIcuActivityStreams({
     for (const [streamType, rawData] of Object.entries(streamsResult.right)) {
       yield* Effect.tryPromise({
         try: () =>
-          upsertExternalActivityStream({
+          artifactStore.storeExternalStream({
             externalActivityId,
             lastSyncRunId: syncRunId,
             provider: "intervals_icu",
@@ -284,7 +279,7 @@ function syncIntervalsIcuActivityStreams({
 
     yield* Effect.tryPromise({
       try: () =>
-        replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+        artifactStore.replaceCoreStreamsAndQueueCalculation({
           activityId: coreActivityId,
           streams: activityStreams,
           userId,

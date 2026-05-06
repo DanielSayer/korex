@@ -3,10 +3,13 @@ import { Effect, Layer } from "effect";
 import {
   deleteActivity,
   replaceActivityLaps,
+  replaceActivityMap,
+  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
   upsertActivity,
 } from "../activities/activities.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
 import {
+  ActivityArtifactStore,
   ActivityImportWriter,
   ActivitySyncRepository,
   IntervalsIcuActivitySync,
@@ -16,6 +19,8 @@ import {
   clearExternalActivityActivityLink,
   linkExternalActivityToActivity,
   upsertExternalActivity,
+  upsertExternalActivityMap,
+  upsertExternalActivityStream,
 } from "./repositories/external-activities.repository";
 import {
   createActivitySyncRun,
@@ -63,17 +68,28 @@ export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {
     }),
 });
 
+export const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
+  storeExternalMap: upsertExternalActivityMap,
+  replaceCoreMap: replaceActivityMap,
+  storeExternalStream: upsertExternalActivityStream,
+  replaceCoreStreamsAndQueueCalculation:
+    replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
+});
+
 export const IntervalsIcuActivitySyncLive = Layer.succeed(
   IntervalsIcuActivitySync,
   {
     syncActivity: (input) =>
       syncIntervalsIcuActivity(input).pipe(
-        Effect.provide(ActivityImportWriterLive),
+        Effect.provide(
+          Layer.mergeAll(ActivityArtifactStoreLive, ActivityImportWriterLive),
+        ),
       ),
   },
 );
 
 export const ActivitySyncLive = Layer.mergeAll(
+  ActivityArtifactStoreLive,
   ActivityImportWriterLive,
   ActivitySyncRepositoryLive,
   ProviderSessionLive,
