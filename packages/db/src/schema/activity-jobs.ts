@@ -1,0 +1,62 @@
+import { relations } from "drizzle-orm";
+import {
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
+
+import { activities } from "./activities";
+
+export const activityHeartRateZoneTimeCalculationJobStatus = pgEnum(
+  "activity_heart_rate_zone_time_calculation_job_status",
+  ["pending", "processing", "succeeded", "failed"],
+);
+
+export const activityHeartRateZoneTimeCalculationJobs = pgTable(
+  "activity_heart_rate_zone_time_calculation_jobs",
+  {
+    id: serial("id").primaryKey(),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    status: activityHeartRateZoneTimeCalculationJobStatus("status")
+      .default("pending")
+      .notNull(),
+    attemptCount: integer("attempt_count").default(0).notNull(),
+    lastError: text("last_error"),
+    runAfter: timestamp("run_after").defaultNow().notNull(),
+    lockedAt: timestamp("locked_at"),
+    lockedBy: text("locked_by"),
+    finishedAt: timestamp("finished_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_hr_zone_time_jobs_activity_id_idx").on(
+      table.activityId,
+    ),
+    index("activity_hr_zone_time_jobs_status_run_after_idx").on(
+      table.status,
+      table.runAfter,
+    ),
+    index("activity_hr_zone_time_jobs_locked_at_idx").on(table.lockedAt),
+  ],
+);
+
+export const activityHeartRateZoneTimeCalculationJobsRelations = relations(
+  activityHeartRateZoneTimeCalculationJobs,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [activityHeartRateZoneTimeCalculationJobs.activityId],
+      references: [activities.id],
+    }),
+  }),
+);

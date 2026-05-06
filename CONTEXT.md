@@ -36,6 +36,14 @@ _Avoid_: Provider map, external map, raw route
 A core-owned ordered numeric series for an **Activity**, imported from provider stream data for point-by-point analysis inside Korex.
 _Avoid_: Provider stream, external stream, raw stream
 
+**Activity Heart Rate Zone Time**:
+A point-in-time duration summary for an **Activity** calculated from heart-rate data using a snapshot of the user's **Heart Rate Zones** at calculation time.
+_Avoid_: Provider zone time, live zone time
+
+**Activity Heart Rate Zone Snapshot**:
+The historical **Heart Rate Zone** name, position, and beats-per-minute bounds captured for an **Activity** before zone-time calculation.
+_Avoid_: Pending zone time, copied zone
+
 **Activity Map Coordinate**:
 A latitude and longitude pair in an **Activity Map**.
 _Avoid_: Latlng, point, GPS row
@@ -72,6 +80,21 @@ _Avoid_: Activity fields, core activity data
 - Each **Activity** can have only one **Activity Stream** for a given stream type.
 - **Activity Streams** are initially limited to cadence, distance, altitude, heart rate, and velocity.
 - Intervals.icu cadence stream values are revolutions per minute and become steps per minute in Korex by doubling each value.
+- An **Activity** can have zero or more **Activity Heart Rate Zone Times**.
+- An **Activity** can have zero or more **Activity Heart Rate Zone Snapshots**.
+- An **Activity Heart Rate Zone Snapshot** belongs to exactly one **Activity**.
+- An **Activity Heart Rate Zone Time** belongs to exactly one **Activity**.
+- **Activity Heart Rate Zone Snapshots** preserve the **Heart Rate Zone** name, position, and beats-per-minute bounds used for calculation.
+- **Activity Heart Rate Zone Times** are calculated from **Activity Heart Rate Zone Snapshots** and the heart-rate **Activity Stream**.
+- **Activity Heart Rate Zone Snapshots** and **Activity Heart Rate Zone Times** are historical data and must not change when the user's active **Heart Rate Zones** change later.
+- **Activity Heart Rate Zone Snapshots** are captured when the heart-rate **Activity Stream** is successfully stored during import.
+- An **Activity** without a heart-rate **Activity Stream** does not have **Activity Heart Rate Zone Snapshots**.
+- **Activity Heart Rate Zone Times** may be materialized after import, but delayed calculation must use the captured **Activity Heart Rate Zone Snapshots**.
+- When a heart-rate **Activity Stream** changes on re-sync, Korex replaces the **Activity Heart Rate Zone Snapshots** and **Activity Heart Rate Zone Times** for that **Activity** as a set.
+- Heart-rate samples outside all captured **Activity Heart Rate Zone Snapshots** do not contribute to **Activity Heart Rate Zone Times**.
+- **Activity Heart Rate Zone Times** calculate sample duration from the **Activity** moving duration divided by the number of heart-rate samples, rounded to the nearest whole second.
+- Heart-rate sample frequency is treated as recording-device behavior, not provider behavior.
+- Provider-reported heart-rate zone durations are not **Activity Heart Rate Zone Times** unless Korex can prove they were calculated from the same **Heart Rate Zones**.
 - An **Activity Map** has one or more ordered **Activity Map Coordinates**.
 - An **Activity Map** may store nullable bounds as display metadata; coordinates are the domain value.
 - **Activity Map Coordinates** must be valid latitude and longitude pairs.
@@ -114,3 +137,5 @@ _Avoid_: Activity fields, core activity data
 - "Intervals" can mean the upstream provider **Intervals.icu** or interval running training; resolved: use **Intervals.icu** for the provider and avoid bare "intervals" in domain language.
 - "activity" can mean either the provider record or the Korex-owned workout; resolved: use **Activity** for the Korex domain object and **Provider Activity Metadata** only for upstream provenance.
 - "lap" and "split" can refer to provider-shaped segment records; resolved: use **Activity Lap** for the Korex-owned segment of an **Activity**.
+- "zone time" can mean provider-reported durations or Korex-calculated activity summaries; resolved: use **Activity Heart Rate Zone Time** only for point-in-time durations calculated by Korex.
+- "pending zone time" was considered for captured zones awaiting calculation; resolved: use **Activity Heart Rate Zone Snapshot** for the captured historical zone definition and **Activity Heart Rate Zone Time** only for calculated durations.

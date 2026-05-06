@@ -61,3 +61,15 @@ export type ActivityStreamInput = {
   data: number[];
   streamType: ActivityStreamType;
 };
+
+export type ActivityHeartRateZoneSnapshotInput = {
+  maxBpm: number | null;
+  minBpm: number;
+  name: string;
+  position: number;
+};
+
+export type ActivityHeartRateZoneTimeInput = {
+  position: number;
+  timeSeconds: number;
+};

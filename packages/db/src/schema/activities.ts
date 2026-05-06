@@ -162,7 +162,59 @@ export const activityStreams = pgTable(
   ],
 );
 
+export const activityHeartRateZoneSnapshots = pgTable(
+  "activity_heart_rate_zone_snapshots",
+  {
+    id: serial("id").primaryKey(),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    name: text("name").notNull(),
+    minBpm: integer("min_bpm").notNull(),
+    maxBpm: integer("max_bpm"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_hr_zone_snapshots_activity_position_idx").on(
+      table.activityId,
+      table.position,
+    ),
+    index("activity_hr_zone_snapshots_activity_id_idx").on(table.activityId),
+  ],
+);
+
+export const activityHeartRateZoneTimes = pgTable(
+  "activity_heart_rate_zone_times",
+  {
+    id: serial("id").primaryKey(),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    timeSeconds: integer("time_seconds").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_hr_zone_times_activity_position_idx").on(
+      table.activityId,
+      table.position,
+    ),
+    index("activity_hr_zone_times_activity_id_idx").on(table.activityId),
+  ],
+);
+
 export const activitiesRelations = relations(activities, ({ many, one }) => ({
+  heartRateZoneSnapshots: many(activityHeartRateZoneSnapshots),
+  heartRateZoneTimes: many(activityHeartRateZoneTimes),
   laps: many(activityLaps),
   map: one(activityMaps),
   streams: many(activityStreams),
@@ -191,6 +243,26 @@ export const activityStreamsRelations = relations(
   ({ one }) => ({
     activity: one(activities, {
       fields: [activityStreams.activityId],
+      references: [activities.id],
+    }),
+  }),
+);
+
+export const activityHeartRateZoneSnapshotsRelations = relations(
+  activityHeartRateZoneSnapshots,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [activityHeartRateZoneSnapshots.activityId],
+      references: [activities.id],
+    }),
+  }),
+);
+
+export const activityHeartRateZoneTimesRelations = relations(
+  activityHeartRateZoneTimes,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [activityHeartRateZoneTimes.activityId],
       references: [activities.id],
     }),
   }),
