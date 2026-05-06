@@ -5,7 +5,7 @@ import type {
 import { Effect, Either } from "effect";
 import {
   replaceActivityMap,
-  replaceActivityStreams,
+  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
 } from "../../../activities/activities.repository";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type {
@@ -284,9 +284,10 @@ function syncIntervalsIcuActivityStreams({
 
     yield* Effect.tryPromise({
       try: () =>
-        replaceActivityStreams({
+        replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
           activityId: coreActivityId,
           streams: activityStreams,
+          userId,
         }),
       catch: (cause) =>
         new ActivitySyncError({

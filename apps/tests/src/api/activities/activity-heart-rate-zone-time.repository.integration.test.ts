@@ -1,13 +1,14 @@
 import {
+  replaceActivityHeartRateZoneSnapshotsAndQueueCalculation,
+  replaceActivityHeartRateZoneTimes,
+  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
+} from "@korex/api/modules/activities/activities.repository";
+import {
   claimActivityHeartRateZoneTimeCalculationJobs,
   enqueueActivityHeartRateZoneTimeCalculation,
   markActivityHeartRateZoneTimeCalculationFailed,
   markActivityHeartRateZoneTimeCalculationSucceeded,
 } from "@korex/api/modules/activities/activity-heart-rate-zone-time-jobs.repository";
-import {
-  replaceActivityHeartRateZoneSnapshotsAndQueueCalculation,
-  replaceActivityHeartRateZoneTimes,
-} from "@korex/api/modules/activities/activities.repository";
 import {
   activityHeartRateZoneSnapshots,
   activityHeartRateZoneTimeCalculationJobs,
@@ -18,6 +19,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
+import { HeartRateZoneBuilder } from "../../setup/integration/test-data/heart-rate-zone-builder";
 import { userDataExtensions } from "../../setup/integration/test-data/user-data-extensions";
 
 describe("activity heart rate zone time repositories", () => {
@@ -61,9 +63,7 @@ describe("activity heart rate zone time repositories", () => {
     const snapshots = await db
       .select()
       .from(activityHeartRateZoneSnapshots)
-      .where(
-        eq(activityHeartRateZoneSnapshots.activityId, activity.id),
-      );
+      .where(eq(activityHeartRateZoneSnapshots.activityId, activity.id));
     const times = await db
       .select()
       .from(activityHeartRateZoneTimes)
@@ -72,10 +72,7 @@ describe("activity heart rate zone time repositories", () => {
       .select()
       .from(activityHeartRateZoneTimeCalculationJobs)
       .where(
-        eq(
-          activityHeartRateZoneTimeCalculationJobs.activityId,
-          activity.id,
-        ),
+        eq(activityHeartRateZoneTimeCalculationJobs.activityId, activity.id),
       );
 
     expect(snapshots).toEqual([
@@ -222,6 +219,119 @@ describe("activity heart rate zone time repositories", () => {
       status: "failed",
     });
     expect(finalClaim).toEqual([]);
+  });
+
+  it("replaces streams, captures current heart rate zones, and queues calculation", async () => {
+    const activity = ActivityBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    ).build();
+    const easyZone = HeartRateZoneBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    ).build();
+    const hardZone = HeartRateZoneBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    )
+      .withId(1002)
+      .withMaxBpm(null)
+      .withMinBpm(140)
+      .withName("Hard")
+      .withPosition(2)
+      .build();
+    await DataSeedAsync.withActivities(activity)
+      .withHeartRateZones(easyZone, hardZone)
+      .seedAsync();
+
+    await replaceActivityHeartRateZoneTimes({
+      activityId: activity.id,
+      times: [{ position: 1, timeSeconds: 123 }],
+    });
+
+    await replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+      activityId: activity.id,
+      streams: [{ data: [130, 150], streamType: "heartRate" }],
+      userId: userDataExtensions.HughJass.id,
+    });
+
+    const snapshots = await db
+      .select()
+      .from(activityHeartRateZoneSnapshots)
+      .where(eq(activityHeartRateZoneSnapshots.activityId, activity.id));
+    const times = await db
+      .select()
+      .from(activityHeartRateZoneTimes)
+      .where(eq(activityHeartRateZoneTimes.activityId, activity.id));
+    const [job] = await db
+      .select()
+      .from(activityHeartRateZoneTimeCalculationJobs)
+      .where(
+        eq(activityHeartRateZoneTimeCalculationJobs.activityId, activity.id),
+      );
+
+    expect(snapshots).toEqual([
+      expect.objectContaining({
+        maxBpm: 140,
+        minBpm: 120,
+        name: "Easy",
+        position: 1,
+      }),
+      expect.objectContaining({
+        maxBpm: null,
+        minBpm: 140,
+        name: "Hard",
+        position: 2,
+      }),
+    ]);
+    expect(times).toEqual([]);
+    expect(job).toMatchObject({
+      activityId: activity.id,
+      attemptCount: 0,
+      status: "pending",
+    });
+  });
+
+  it("clears snapshots, stale times, and queued work when replacement has no heart rate stream", async () => {
+    const activity = ActivityBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    ).build();
+    const zone = HeartRateZoneBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    ).build();
+    await DataSeedAsync.withActivities(activity)
+      .withHeartRateZones(zone)
+      .seedAsync();
+    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+      activityId: activity.id,
+      snapshots: [zone],
+    });
+    await replaceActivityHeartRateZoneTimes({
+      activityId: activity.id,
+      times: [{ position: 1, timeSeconds: 123 }],
+    });
+
+    await replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+      activityId: activity.id,
+      streams: [{ data: [0, 10], streamType: "distance" }],
+      userId: userDataExtensions.HughJass.id,
+    });
+
+    const snapshots = await db
+      .select()
+      .from(activityHeartRateZoneSnapshots)
+      .where(eq(activityHeartRateZoneSnapshots.activityId, activity.id));
+    const times = await db
+      .select()
+      .from(activityHeartRateZoneTimes)
+      .where(eq(activityHeartRateZoneTimes.activityId, activity.id));
+    const [job] = await db
+      .select()
+      .from(activityHeartRateZoneTimeCalculationJobs)
+      .where(
+        eq(activityHeartRateZoneTimeCalculationJobs.activityId, activity.id),
+      );
+
+    expect(snapshots).toEqual([]);
+    expect(times).toEqual([]);
+    expect(job).toBeUndefined();
   });
 });
 

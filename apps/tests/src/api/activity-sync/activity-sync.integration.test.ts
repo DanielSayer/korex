@@ -3,6 +3,8 @@ import { fetchIntervalsIcuActivities } from "@korex/api/modules/activity-sync/ac
 import { encryptProviderSecret } from "@korex/api/modules/provider-connections/provider-secret-encryption";
 import {
   activities,
+  activityHeartRateZoneSnapshots,
+  activityHeartRateZoneTimeCalculationJobs,
   activityLaps,
   activityMaps,
   activityStreams,
@@ -18,6 +20,7 @@ import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { intervalsIcuActivityHttpClientSuccess } from "../../mocks/integrations/intervals-icu/activity-http-client";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
+import { HeartRateZoneBuilder } from "../../setup/integration/test-data/heart-rate-zone-builder";
 import { ProviderConnectionBuilder } from "../../setup/integration/test-data/provider-connection-builder";
 import { userDataExtensions } from "../../setup/integration/test-data/user-data-extensions";
 
@@ -26,12 +29,27 @@ describe("activity sync integration", () => {
     const encryptedApiKey = await Effect.runPromise(
       encryptProviderSecret("intervals-api-key"),
     );
-    await DataSeedAsync.withProviderConnections(
-      ProviderConnectionBuilder.initWithUser(userDataExtensions.HughJass.id)
-        .withAuthSecretEncrypted(encryptedApiKey)
-        .withProviderUserId("athlete-1")
-        .build(),
-    ).seedAsync();
+    const providerConnection = ProviderConnectionBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    )
+      .withAuthSecretEncrypted(encryptedApiKey)
+      .withProviderUserId("athlete-1")
+      .build();
+    const easyZone = HeartRateZoneBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    ).build();
+    const steadyZone = HeartRateZoneBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    )
+      .withId(1002)
+      .withMaxBpm(160)
+      .withMinBpm(140)
+      .withName("Steady")
+      .withPosition(2)
+      .build();
+    await DataSeedAsync.withProviderConnections(providerConnection)
+      .withHeartRateZones(easyZone, steadyZone)
+      .seedAsync();
 
     const result = await Effect.runPromise(
       fetchIntervalsIcuActivities({
@@ -255,6 +273,45 @@ describe("activity sync integration", () => {
       ]),
     );
     expect(coreStreams).toHaveLength(5);
+
+    const snapshots = await db
+      .select()
+      .from(activityHeartRateZoneSnapshots)
+      .where(
+        eq(activityHeartRateZoneSnapshots.activityId, activity.activityId ?? 0),
+      )
+      .orderBy(asc(activityHeartRateZoneSnapshots.position));
+    const [zoneTimeJob] = await db
+      .select()
+      .from(activityHeartRateZoneTimeCalculationJobs)
+      .where(
+        eq(
+          activityHeartRateZoneTimeCalculationJobs.activityId,
+          activity.activityId ?? 0,
+        ),
+      );
+
+    expect(snapshots).toEqual([
+      expect.objectContaining({
+        activityId: activity.activityId,
+        maxBpm: 140,
+        minBpm: 120,
+        name: "Easy",
+        position: 1,
+      }),
+      expect.objectContaining({
+        activityId: activity.activityId,
+        maxBpm: 160,
+        minBpm: 140,
+        name: "Steady",
+        position: 2,
+      }),
+    ]);
+    expect(zoneTimeJob).toMatchObject({
+      activityId: activity.activityId,
+      attemptCount: 0,
+      status: "pending",
+    });
   });
 });
 
