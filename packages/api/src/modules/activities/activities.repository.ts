@@ -1,19 +1,27 @@
 import {
   activities,
+  activityHeartRateZoneSnapshots,
+  activityHeartRateZoneTimeCalculationJobs,
+  activityHeartRateZoneTimes,
   activityLaps,
   activityMaps,
   activityStreams,
   db,
 } from "@korex/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type {
+  ActivityHeartRateZoneSnapshotInput,
+  ActivityHeartRateZoneTimeInput,
   ActivityInput,
   ActivityLapInput,
   ActivityMapInput,
   ActivityStreamInput,
 } from "./activities.types";
 
-type ActivityDatabase = Pick<typeof db, "delete" | "insert" | "update">;
+type ActivityDatabase = Pick<
+  typeof db,
+  "delete" | "insert" | "select" | "transaction" | "update"
+>;
 
 export type UpsertActivityResult = {
   activityId: number;
@@ -161,4 +169,147 @@ export async function replaceActivityStreams({
       streamType: stream.streamType,
     })),
   );
+}
+
+export async function replaceActivityHeartRateZoneSnapshots({
+  activityId,
+  database = db,
+  snapshots,
+}: {
+  activityId: number;
+  database?: ActivityDatabase;
+  snapshots: ActivityHeartRateZoneSnapshotInput[];
+}) {
+  await database
+    .delete(activityHeartRateZoneSnapshots)
+    .where(eq(activityHeartRateZoneSnapshots.activityId, activityId));
+
+  if (snapshots.length === 0) {
+    return;
+  }
+
+  await database.insert(activityHeartRateZoneSnapshots).values(
+    snapshots.map((snapshot) => ({
+      activityId,
+      maxBpm: snapshot.maxBpm,
+      minBpm: snapshot.minBpm,
+      name: snapshot.name,
+      position: snapshot.position,
+    })),
+  );
+}
+
+export async function replaceActivityHeartRateZoneTimes({
+  activityId,
+  database = db,
+  times,
+}: {
+  activityId: number;
+  database?: ActivityDatabase;
+  times: ActivityHeartRateZoneTimeInput[];
+}) {
+  await database
+    .delete(activityHeartRateZoneTimes)
+    .where(eq(activityHeartRateZoneTimes.activityId, activityId));
+
+  if (times.length === 0) {
+    return;
+  }
+
+  await database.insert(activityHeartRateZoneTimes).values(
+    times.map((time) => ({
+      activityId,
+      position: time.position,
+      timeSeconds: time.timeSeconds,
+    })),
+  );
+}
+
+export async function replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+  activityId,
+  snapshots,
+}: {
+  activityId: number;
+  snapshots: ActivityHeartRateZoneSnapshotInput[];
+}) {
+  await db.transaction(async (tx) => {
+    await replaceActivityHeartRateZoneSnapshots({
+      activityId,
+      database: tx,
+      snapshots,
+    });
+
+    await tx
+      .delete(activityHeartRateZoneTimes)
+      .where(eq(activityHeartRateZoneTimes.activityId, activityId));
+
+    await tx
+      .insert(activityHeartRateZoneTimeCalculationJobs)
+      .values({
+        activityId,
+        attemptCount: 0,
+        finishedAt: null,
+        lastError: null,
+        lockedAt: null,
+        lockedBy: null,
+        runAfter: new Date(),
+        status: "pending",
+      })
+      .onConflictDoUpdate({
+        target: [activityHeartRateZoneTimeCalculationJobs.activityId],
+        set: {
+          attemptCount: 0,
+          finishedAt: null,
+          lastError: null,
+          lockedAt: null,
+          lockedBy: null,
+          runAfter: new Date(),
+          status: "pending",
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
+export async function getActivityHeartRateZoneCalculationInputs({
+  activityId,
+  database = db,
+}: {
+  activityId: number;
+  database?: ActivityDatabase;
+}) {
+  const [activity] = await database
+    .select({
+      movingTimeSeconds: activities.movingTimeSeconds,
+    })
+    .from(activities)
+    .where(eq(activities.id, activityId));
+
+  const [heartRateStream] = await database
+    .select({
+      data: activityStreams.data,
+    })
+    .from(activityStreams)
+    .where(
+      and(
+        eq(activityStreams.activityId, activityId),
+        eq(activityStreams.streamType, "heartRate"),
+      ),
+    );
+
+  const snapshots = await database
+    .select({
+      maxBpm: activityHeartRateZoneSnapshots.maxBpm,
+      minBpm: activityHeartRateZoneSnapshots.minBpm,
+      name: activityHeartRateZoneSnapshots.name,
+      position: activityHeartRateZoneSnapshots.position,
+    })
+    .from(activityHeartRateZoneSnapshots)
+    .where(eq(activityHeartRateZoneSnapshots.activityId, activityId));
+
+  return {
+    heartRateSamples: heartRateStream?.data ?? [],
+    movingTimeSeconds: activity?.movingTimeSeconds ?? null,
+    snapshots,
+  };
 }
