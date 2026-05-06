@@ -105,6 +105,21 @@
         "vite": "^8.0.8",
       },
     },
+    "apps/worker": {
+      "name": "worker",
+      "dependencies": {
+        "@korex/api": "workspace:*",
+        "@korex/db": "workspace:*",
+        "@korex/env": "workspace:*",
+        "dotenv": "catalog:",
+      },
+      "devDependencies": {
+        "@korex/config": "workspace:*",
+        "@types/bun": "catalog:",
+        "tsdown": "^0.21.9",
+        "typescript": "catalog:",
+      },
+    },
     "packages/api": {
       "name": "@korex/api",
       "dependencies": {
@@ -1950,6 +1965,8 @@
     "workbox-sw": ["workbox-sw@7.4.0", "", {}, "sha512-ltU+Kr3qWR6BtbdlMnCjobZKzeV1hN+S6UvDywBrwM19TTyqA03X66dzw1tEIdJvQ4lYKkBFox6IAEhoSEZ8Xw=="],
 
     "workbox-window": ["workbox-window@7.4.0", "", { "dependencies": { "@types/trusted-types": "^2.0.2", "workbox-core": "7.4.0" } }, "sha512-/bIYdBLAVsNR3v7gYGaV4pQW3M3kEPx5E8vDxGvxo6khTrGtSSCS7QiFKv9ogzBgZiy0OXLP9zO28U/1nF1mfw=="],
+
+    "worker": ["worker@workspace:apps/worker"],
 
     "wrap-ansi": ["wrap-ansi@7.0.0", "", { "dependencies": { "ansi-styles": "^4.0.0", "string-width": "^4.1.0", "strip-ansi": "^6.0.0" } }, "sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q=="],
 
