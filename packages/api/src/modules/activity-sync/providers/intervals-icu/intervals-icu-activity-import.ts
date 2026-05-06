@@ -1,18 +1,8 @@
-import { db } from "@korex/db";
 import type { IntervalsIcuActivityDetail } from "@korex/integrations/intervals-icu/client";
 import { Effect } from "effect";
-import {
-  deleteActivity,
-  replaceActivityLaps,
-  upsertActivity,
-} from "../../../activities/activities.repository";
+import { ActivityImportWriter } from "../../activity-sync.dependencies";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type { ActivitySyncFailure } from "../../activity-sync.types";
-import {
-  clearExternalActivityActivityLink,
-  linkExternalActivityToActivity,
-  upsertExternalActivity,
-} from "../../repositories/external-activities.repository";
 import { toActivityFromIntervalsIcuDetail } from "./intervals-icu-activity.acl";
 import { toActivityLapsFromIntervalsIcuDetail } from "./intervals-icu-activity-lap.acl";
 import { toExternalActivityUpsertInput } from "./intervals-icu-mapper";
@@ -45,9 +35,10 @@ export function storeIntervalsIcuActivityImport({
   userId: string;
 }) {
   return Effect.gen(function* () {
+    const writer = yield* ActivityImportWriter;
     const upsertedExternalActivity = yield* Effect.tryPromise({
       try: () =>
-        upsertExternalActivity(
+        writer.storeExternalActivity(
           toExternalActivityUpsertInput({
             detail,
             lastSyncRunId,
@@ -80,15 +71,11 @@ export function storeIntervalsIcuActivityImport({
 
       if (existingActivityId) {
         yield* Effect.tryPromise({
-          try: async () => {
-            await db.transaction(async (tx) => {
-              await clearExternalActivityActivityLink(
-                upsertedExternalActivity.externalActivityId,
-                tx,
-              );
-              await deleteActivity(existingActivityId, tx);
-            });
-          },
+          try: () =>
+            writer.unlinkUnsupportedActivity({
+              activityId: existingActivityId,
+              externalActivityId: upsertedExternalActivity.externalActivityId,
+            }),
           catch: (cause) =>
             new ActivitySyncError({
               cause,
@@ -114,26 +101,11 @@ export function storeIntervalsIcuActivityImport({
 
     const activityUpsert = yield* Effect.tryPromise({
       try: () =>
-        db.transaction(async (tx) => {
-          const upsertedActivity = await upsertActivity({
-            activityId: upsertedExternalActivity.activityId,
-            database: tx,
-            input: activityResult.activity,
-          });
-
-          await replaceActivityLaps({
-            activityId: upsertedActivity.activityId,
-            database: tx,
-            laps: activityLaps,
-          });
-
-          await linkExternalActivityToActivity({
-            activityId: upsertedActivity.activityId,
-            database: tx,
-            externalActivityId: upsertedExternalActivity.externalActivityId,
-          });
-
-          return upsertedActivity;
+        writer.storeCoreActivity({
+          activity: activityResult.activity,
+          activityId: upsertedExternalActivity.activityId,
+          externalActivityId: upsertedExternalActivity.externalActivityId,
+          laps: activityLaps,
         }),
       catch: (cause) =>
         new ActivitySyncError({
