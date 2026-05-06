@@ -30,6 +30,11 @@ export class IntervalsIcuActivityDetailBuilder {
     return this;
   }
 
+  withName(name: string) {
+    this.value.name = name;
+    return this;
+  }
+
   withType(type: string) {
     this.value.type = type;
     return this;

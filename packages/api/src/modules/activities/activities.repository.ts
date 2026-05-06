@@ -198,14 +198,7 @@ export async function replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation
         database: tx,
         snapshots: [],
       });
-      await tx
-        .delete(activityHeartRateZoneTimes)
-        .where(eq(activityHeartRateZoneTimes.activityId, activityId));
-      await tx
-        .delete(activityHeartRateZoneTimeCalculationJobs)
-        .where(
-          eq(activityHeartRateZoneTimeCalculationJobs.activityId, activityId),
-        );
+      await clearActivityHeartRateZoneCalculation(tx, activityId);
       return;
     }
 
@@ -226,14 +219,7 @@ export async function replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation
         database: tx,
         snapshots: [],
       });
-      await tx
-        .delete(activityHeartRateZoneTimes)
-        .where(eq(activityHeartRateZoneTimes.activityId, activityId));
-      await tx
-        .delete(activityHeartRateZoneTimeCalculationJobs)
-        .where(
-          eq(activityHeartRateZoneTimeCalculationJobs.activityId, activityId),
-        );
+      await clearActivityHeartRateZoneCalculation(tx, activityId);
       return;
     }
 
@@ -243,35 +229,7 @@ export async function replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation
       snapshots,
     });
 
-    await tx
-      .delete(activityHeartRateZoneTimes)
-      .where(eq(activityHeartRateZoneTimes.activityId, activityId));
-
-    await tx
-      .insert(activityHeartRateZoneTimeCalculationJobs)
-      .values({
-        activityId,
-        attemptCount: 0,
-        finishedAt: null,
-        lastError: null,
-        lockedAt: null,
-        lockedBy: null,
-        runAfter: new Date(),
-        status: "pending",
-      })
-      .onConflictDoUpdate({
-        target: [activityHeartRateZoneTimeCalculationJobs.activityId],
-        set: {
-          attemptCount: 0,
-          finishedAt: null,
-          lastError: null,
-          lockedAt: null,
-          lockedBy: null,
-          runAfter: new Date(),
-          status: "pending",
-          updatedAt: new Date(),
-        },
-      });
+    await resetActivityHeartRateZoneCalculationJob(tx, activityId);
   });
 }
 
@@ -343,36 +301,57 @@ export async function replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
       snapshots,
     });
 
-    await tx
-      .delete(activityHeartRateZoneTimes)
-      .where(eq(activityHeartRateZoneTimes.activityId, activityId));
+    await resetActivityHeartRateZoneCalculationJob(tx, activityId);
+  });
+}
 
-    await tx
-      .insert(activityHeartRateZoneTimeCalculationJobs)
-      .values({
-        activityId,
+async function clearActivityHeartRateZoneCalculation(
+  database: ActivityDatabase,
+  activityId: number,
+) {
+  await database
+    .delete(activityHeartRateZoneTimes)
+    .where(eq(activityHeartRateZoneTimes.activityId, activityId));
+  await database
+    .delete(activityHeartRateZoneTimeCalculationJobs)
+    .where(eq(activityHeartRateZoneTimeCalculationJobs.activityId, activityId));
+}
+
+async function resetActivityHeartRateZoneCalculationJob(
+  database: ActivityDatabase,
+  activityId: number,
+) {
+  await database
+    .delete(activityHeartRateZoneTimes)
+    .where(eq(activityHeartRateZoneTimes.activityId, activityId));
+
+  const now = new Date();
+
+  await database
+    .insert(activityHeartRateZoneTimeCalculationJobs)
+    .values({
+      activityId,
+      attemptCount: 0,
+      finishedAt: null,
+      lastError: null,
+      lockedAt: null,
+      lockedBy: null,
+      runAfter: now,
+      status: "pending",
+    })
+    .onConflictDoUpdate({
+      target: [activityHeartRateZoneTimeCalculationJobs.activityId],
+      set: {
         attemptCount: 0,
         finishedAt: null,
         lastError: null,
         lockedAt: null,
         lockedBy: null,
-        runAfter: new Date(),
+        runAfter: now,
         status: "pending",
-      })
-      .onConflictDoUpdate({
-        target: [activityHeartRateZoneTimeCalculationJobs.activityId],
-        set: {
-          attemptCount: 0,
-          finishedAt: null,
-          lastError: null,
-          lockedAt: null,
-          lockedBy: null,
-          runAfter: new Date(),
-          status: "pending",
-          updatedAt: new Date(),
-        },
-      });
-  });
+        updatedAt: now,
+      },
+    });
 }
 
 export async function getActivityHeartRateZoneCalculationInputs({
