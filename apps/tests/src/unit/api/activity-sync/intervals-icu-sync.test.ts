@@ -112,7 +112,7 @@ describe("syncIntervalsIcuActivity", () => {
     expect(artifactStore.queuedActivityIds).toEqual([20]);
   });
 
-  it("keeps raw external map data when core map translation fails", async () => {
+  it("keeps raw external map data and skips core map storage when coordinates are empty", async () => {
     const artifactStore = new InMemoryActivityArtifactStore();
     const errors: ActivitySyncFailure[] = [];
 
@@ -159,12 +159,7 @@ describe("syncIntervalsIcuActivity", () => {
       },
     });
     expect(artifactStore.coreMaps.has(20)).toBe(false);
-    expect(errors).toEqual([
-      expect.objectContaining({
-        activityId: "activity-1",
-        stage: "map",
-      }),
-    ]);
+    expect(errors).toEqual([]);
   });
 });
 

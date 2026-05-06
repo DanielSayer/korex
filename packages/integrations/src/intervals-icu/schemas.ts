@@ -71,10 +71,10 @@ export const intervalsIcuActivityDetailSchema = z
 
 export const intervalsIcuActivityMapSchema = z.unknown();
 
-export const intervalsIcuActivityStreamsSchema = z.record(
-  z.string(),
-  z.unknown(),
-);
+export const intervalsIcuActivityStreamsSchema = z.union([
+  z.record(z.string(), z.unknown()),
+  z.array(z.unknown()),
+]);
 
 export type IntervalsIcuActivityListItem = z.infer<
   typeof intervalsIcuActivityListItemSchema

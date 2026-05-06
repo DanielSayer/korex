@@ -202,7 +202,7 @@ function readActivityMapAclResult({
   } catch (error) {
     errors.push({
       activityId,
-      details: getProviderPayloadDetails(map),
+      details: getErrorDetails(error) ?? getProviderPayloadDetails(map),
       message:
         error instanceof Error
           ? error.message
@@ -259,7 +259,9 @@ function syncIntervalsIcuActivityStreams({
       return;
     }
 
-    for (const [streamType, rawData] of Object.entries(streamsResult.right)) {
+    for (const [streamType, rawData] of readRawStreamEntries(
+      streamsResult.right,
+    )) {
       yield* Effect.tryPromise({
         try: () =>
           artifactStore.storeExternalStream({
@@ -322,7 +324,7 @@ function readActivityStreamsAclResult({
   } catch (error) {
     errors.push({
       activityId,
-      details: getProviderPayloadDetails(streams),
+      details: getErrorDetails(error) ?? getProviderPayloadDetails(streams),
       message:
         error instanceof Error
           ? error.message
@@ -332,6 +334,35 @@ function readActivityStreamsAclResult({
     });
     return null;
   }
+}
+
+function readRawStreamEntries(
+  streams: IntervalsIcuActivityStreams,
+): [string, unknown][] {
+  if (Array.isArray(streams)) {
+    return streams.map((stream, index) => [
+      readRawStreamType(stream) ?? String(index),
+      stream,
+    ]);
+  }
+
+  return Object.entries(streams);
+}
+
+function readRawStreamType(stream: unknown) {
+  if (!isRecord(stream) || typeof stream.type !== "string") {
+    return null;
+  }
+
+  return stream.type;
+}
+
+function getErrorDetails(error: unknown) {
+  if (!isRecord(error) || !("details" in error)) {
+    return null;
+  }
+
+  return error.details;
 }
 
 function getActivityMapRequestUrl(activityId: string) {

@@ -20,7 +20,7 @@ const intervalsIcuStreamTypes: Record<string, ActivityStreamType> =
 export function toActivityStreamsFromIntervalsIcuStreams(
   streams: IntervalsIcuActivityStreams,
 ): ActivityStreamInput[] {
-  return Object.entries(streams).flatMap(([streamKey, rawStream]) => {
+  return readRawStreams(streams).flatMap(([streamKey, rawStream]) => {
     const stream = readIntervalsIcuStream(streamKey, rawStream);
 
     if (!stream) {
@@ -31,12 +31,26 @@ export function toActivityStreamsFromIntervalsIcuStreams(
   });
 }
 
+function readRawStreams(
+  streams: IntervalsIcuActivityStreams,
+): [string, unknown][] {
+  if (Array.isArray(streams)) {
+    return streams.map((stream, index) => [String(index), stream]);
+  }
+
+  return Object.entries(streams);
+}
+
 function readIntervalsIcuStream(
   streamKey: string,
   rawStream: unknown,
 ): ActivityStreamInput | null {
   if (!isRecord(rawStream)) {
-    throw invalidStreamError();
+    throw invalidStreamError({
+      field: "stream",
+      streamKey,
+      shape: describeValue(rawStream),
+    });
   }
 
   const streamType = readStreamType(rawStream.type ?? streamKey);
@@ -45,19 +59,45 @@ function readIntervalsIcuStream(
     return null;
   }
 
-  if (!Array.isArray(rawStream.data)) {
-    throw invalidStreamError();
+  const rawData = readRawStreamData(rawStream);
+
+  if (!rawData) {
+    if (rawStream.allNull === true) {
+      return null;
+    }
+
+    throw invalidStreamError({
+      field: "data",
+      streamKey,
+      streamType: rawStream.type,
+      shape: describeValue(rawStream.data),
+      fallbackShape: describeValue(rawStream.data2),
+    });
   }
 
-  return {
-    data: rawStream.data.map((value) => readStreamValue(value, streamType)),
-    streamType,
-  };
+  const data = rawData.flatMap((value) => readStreamValue(value, streamType));
+
+  return data.length > 0 ? { data, streamType } : null;
+}
+
+function readRawStreamData(rawStream: Record<string, unknown>) {
+  if (Array.isArray(rawStream.data)) {
+    return rawStream.data;
+  }
+
+  if (Array.isArray(rawStream.data2)) {
+    return rawStream.data2;
+  }
+
+  return null;
 }
 
 function readStreamType(value: unknown): ActivityStreamType | null {
   if (typeof value !== "string") {
-    throw invalidStreamError();
+    throw invalidStreamError({
+      field: "type",
+      shape: describeValue(value),
+    });
   }
 
   return intervalsIcuStreamTypes[value] ?? null;
@@ -65,24 +105,52 @@ function readStreamType(value: unknown): ActivityStreamType | null {
 
 function readStreamValue(value: unknown, streamType: ActivityStreamType) {
   if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw invalidStreamError();
+    return [];
   }
 
   if (streamType === "cadence") {
     const cadence = readIntervalsIcuCadenceStepsPerMinute(value);
 
     if (cadence === null) {
-      throw invalidStreamError();
+      return [];
     }
 
-    return cadence;
+    return [cadence];
   }
 
-  return value;
+  return [value];
 }
 
-function invalidStreamError() {
+function invalidStreamError(details?: unknown) {
   return new ActivitySyncError({
+    details,
     message: "Intervals.icu activity streams are missing or invalid",
   });
+}
+
+function describeValue(value: unknown) {
+  if (Array.isArray(value)) {
+    return {
+      length: value.length,
+      sampleTypes: value.slice(0, 10).map((item) =>
+        item === null ? "null" : typeof item,
+      ),
+      type: "array",
+    };
+  }
+
+  if (isRecord(value)) {
+    const keys = Object.keys(value);
+
+    return {
+      keys: keys.slice(0, 20),
+      keyCount: keys.length,
+      type: "object",
+    };
+  }
+
+  return {
+    type: value === null ? "null" : typeof value,
+    value,
+  };
 }

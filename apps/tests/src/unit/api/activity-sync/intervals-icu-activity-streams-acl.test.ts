@@ -62,25 +62,82 @@ describe("Intervals.icu activity streams ACL", () => {
     ).toEqual([]);
   });
 
-  it("rejects supported streams without numeric array data", () => {
+  it("translates Intervals.icu stream arrays", () => {
+    expect(
+      toActivityStreamsFromIntervalsIcuStreams([
+        {
+          data: [140, 142],
+          type: "heartrate",
+        },
+        {
+          data: [82, 83.4],
+          type: "cadence",
+        },
+        {
+          data: [200, 210],
+          type: "watts",
+        },
+      ]),
+    ).toEqual([
+      {
+        data: [140, 142],
+        streamType: "heartRate",
+      },
+      {
+        data: [164, 167],
+        streamType: "cadence",
+      },
+    ]);
+  });
+
+  it("skips all-null streams and null sample gaps", () => {
+    expect(
+      toActivityStreamsFromIntervalsIcuStreams([
+        {
+          allNull: true,
+          data: null,
+          type: "heartrate",
+        },
+        {
+          data: [140, null, 142],
+          type: "heartrate",
+        },
+        {
+          data: [0, 82],
+          type: "cadence",
+        },
+      ]),
+    ).toEqual([
+      {
+        data: [140, 142],
+        streamType: "heartRate",
+      },
+      {
+        data: [164],
+        streamType: "cadence",
+      },
+    ]);
+  });
+
+  it("rejects supported streams without usable data", () => {
     expect(() =>
       toActivityStreamsFromIntervalsIcuStreams({
         heartrate: {
-          data: [140, null],
+          data: null,
           type: "heartrate",
         },
       }),
     ).toThrow(ActivitySyncError);
   });
 
-  it("rejects invalid Intervals.icu cadence values", () => {
-    expect(() =>
+  it("skips invalid Intervals.icu cadence values", () => {
+    expect(
       toActivityStreamsFromIntervalsIcuStreams({
         cadence: {
           data: [0],
           type: "cadence",
         },
       }),
-    ).toThrow(ActivitySyncError);
+    ).toEqual([]);
   });
 });
