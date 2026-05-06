@@ -34,3 +34,18 @@ export type ActivityLapInput = {
   startTimeSeconds: number;
   totalElevationGainMeters: number | null;
 };
+
+export type ActivityMapCoordinateInput = {
+  latitude: number;
+  longitude: number;
+};
+
+export type ActivityMapBoundsInput = {
+  northEast: ActivityMapCoordinateInput;
+  southWest: ActivityMapCoordinateInput;
+};
+
+export type ActivityMapInput = {
+  bounds: ActivityMapBoundsInput | null;
+  coordinates: ActivityMapCoordinateInput[];
+};

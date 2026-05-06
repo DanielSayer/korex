@@ -1,10 +1,15 @@
 import {
+  replaceActivityMap,
+  upsertActivity,
+} from "@korex/api/modules/activities/activities.repository";
+import {
   upsertExternalActivity,
   upsertExternalActivityMap,
   upsertExternalActivityStream,
 } from "@korex/api/modules/activity-sync/repositories/external-activities.repository";
 import { createActivitySyncRun } from "@korex/api/modules/activity-sync/repositories/sync-runs.repository";
 import {
+  activityMaps,
   db,
   externalActivities,
   externalActivityMaps,
@@ -122,6 +127,69 @@ describe("external activities repository", () => {
       providerActivityId: "activity-1",
       rawData: { polyline: "updated" },
       userId: userDataExtensions.HughJass.id,
+    });
+  });
+
+  it("replaces an Activity Map by activity id", async () => {
+    const activity = await upsertActivity({
+      activityId: null,
+      input: {
+        averageCadenceStepsPerMinute: null,
+        averageHeartRateBeatsPerMinute: null,
+        averageSpeedMetersPerSecond: null,
+        deviceName: null,
+        distanceMeters: null,
+        elapsedTimeSeconds: null,
+        energyKilocalories: null,
+        maxHeartRateBeatsPerMinute: null,
+        maxSpeedMetersPerSecond: null,
+        movingTimeSeconds: null,
+        name: "Morning Run",
+        sportType: "run",
+        startAt: new Date("2026-04-01T07:00:00.000Z"),
+        totalElevationGainMeters: null,
+        totalElevationLossMeters: null,
+        userId: userDataExtensions.HughJass.id,
+      },
+    });
+
+    await replaceActivityMap({
+      activityId: activity.activityId,
+      map: {
+        bounds: null,
+        coordinates: [{ latitude: -27.581491, longitude: 153.06828 }],
+      },
+    });
+    await replaceActivityMap({
+      activityId: activity.activityId,
+      map: {
+        bounds: {
+          northEast: { latitude: -27.58015, longitude: 153.07713 },
+          southWest: { latitude: -27.590372, longitude: 153.06575 },
+        },
+        coordinates: [
+          { latitude: -27.581491, longitude: 153.06828 },
+          { latitude: -27.581144, longitude: 153.06902 },
+        ],
+      },
+    });
+
+    const maps = await db
+      .select()
+      .from(activityMaps)
+      .where(eq(activityMaps.activityId, activity.activityId));
+
+    expect(maps).toHaveLength(1);
+    expect(maps[0]).toMatchObject({
+      activityId: activity.activityId,
+      bounds: {
+        northEast: { latitude: -27.58015, longitude: 153.07713 },
+        southWest: { latitude: -27.590372, longitude: 153.06575 },
+      },
+      coordinates: [
+        { latitude: -27.581491, longitude: 153.06828 },
+        { latitude: -27.581144, longitude: 153.06902 },
+      ],
     });
   });
 

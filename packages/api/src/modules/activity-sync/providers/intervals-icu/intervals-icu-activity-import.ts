@@ -19,6 +19,7 @@ import { toExternalActivityUpsertInput } from "./intervals-icu-mapper";
 
 export type StoreIntervalsIcuActivityImportResult =
   | {
+      activityId: number;
       created: boolean;
       externalActivityId: number;
       providerActivityId: string;
@@ -142,6 +143,7 @@ export function storeIntervalsIcuActivityImport({
     });
 
     return {
+      activityId: activityUpsert.activityId,
       created: activityUpsert.created,
       externalActivityId: upsertedExternalActivity.externalActivityId,
       providerActivityId: String(detail.id),

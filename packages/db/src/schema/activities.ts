@@ -3,6 +3,7 @@ import {
   doublePrecision,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   serial,
@@ -97,8 +98,41 @@ export const activityLaps = pgTable(
   ],
 );
 
+export type ActivityMapCoordinateJson = {
+  latitude: number;
+  longitude: number;
+};
+
+export type ActivityMapBoundsJson = {
+  northEast: ActivityMapCoordinateJson;
+  southWest: ActivityMapCoordinateJson;
+};
+
+export const activityMaps = pgTable(
+  "activity_maps",
+  {
+    id: serial("id").primaryKey(),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    bounds: jsonb("bounds").$type<ActivityMapBoundsJson | null>(),
+    coordinates: jsonb("coordinates")
+      .$type<ActivityMapCoordinateJson[]>()
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_maps_activity_id_idx").on(table.activityId),
+  ],
+);
+
 export const activitiesRelations = relations(activities, ({ many, one }) => ({
   laps: many(activityLaps),
+  map: one(activityMaps),
   user: one(user, {
     fields: [activities.userId],
     references: [user.id],
@@ -108,6 +142,13 @@ export const activitiesRelations = relations(activities, ({ many, one }) => ({
 export const activityLapsRelations = relations(activityLaps, ({ one }) => ({
   activity: one(activities, {
     fields: [activityLaps.activityId],
+    references: [activities.id],
+  }),
+}));
+
+export const activityMapsRelations = relations(activityMaps, ({ one }) => ({
+  activity: one(activities, {
+    fields: [activityMaps.activityId],
     references: [activities.id],
   }),
 }));

@@ -28,6 +28,14 @@ _Avoid_: External activity, provider activity
 A core-owned sequential segment of an **Activity**, imported from provider lap or split data for analysis inside Korex.
 _Avoid_: Provider lap, external lap, split
 
+**Activity Map**:
+A core-owned ordered route for an **Activity**, imported from provider map data for route display inside Korex.
+_Avoid_: Provider map, external map, raw route
+
+**Activity Map Coordinate**:
+A latitude and longitude pair in an **Activity Map**.
+_Avoid_: Latlng, point, GPS row
+
 **Sport Type**:
 A Korex-owned classification for an **Activity**, initially limited to run, treadmill, and hike.
 _Avoid_: Provider sport, provider type, category
@@ -52,7 +60,15 @@ _Avoid_: Activity fields, core activity data
 - An **Activity** belongs to exactly one **User**.
 - An **Activity** has exactly one **Sport Type**.
 - An **Activity** can have zero or more **Activity Laps**.
+- An **Activity** can have zero or one **Activity Map**.
 - An **Activity Lap** belongs to exactly one **Activity**.
+- An **Activity Map** belongs to exactly one **Activity**.
+- An **Activity Map** has one or more ordered **Activity Map Coordinates**.
+- An **Activity Map** may store nullable bounds as display metadata; coordinates are the domain value.
+- **Activity Map Coordinates** must be valid latitude and longitude pairs.
+- When provider map data changes on re-sync, Korex replaces the **Activity Map** for that **Activity** as a single value.
+- Malformed provider map data does not update or delete an existing **Activity Map**, and does not prevent the parent **Activity** from importing.
+- A missing provider map payload does not delete an existing **Activity Map**.
 - **Activity Laps** are ordered by a zero-based index within an **Activity**.
 - Each **Activity** can have only one **Activity Lap** for a given index.
 - **Activity Lap** start and end times are stored as second offsets from the parent **Activity** start.

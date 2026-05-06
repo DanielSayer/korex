@@ -1,5 +1,6 @@
 import type { IntervalsIcuClientService } from "@korex/integrations/intervals-icu/client";
 import { Effect, Either } from "effect";
+import { replaceActivityMap } from "../../../activities/activities.repository";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type {
   ActivitySyncCounters,
@@ -10,6 +11,7 @@ import {
   upsertExternalActivityStream,
 } from "../../repositories/external-activities.repository";
 import { storeIntervalsIcuActivityImport } from "./intervals-icu-activity-import";
+import { toActivityMapFromIntervalsIcuMap } from "./intervals-icu-activity-map.acl";
 
 export function syncIntervalsIcuActivity({
   activityId,
@@ -68,12 +70,13 @@ export function syncIntervalsIcuActivity({
     }
 
     yield* syncIntervalsIcuActivityMap({
-      activityId,
       apiKey,
+      coreActivityId: storedActivity.activityId,
       client,
       errors,
       externalActivityId: storedActivity.externalActivityId,
       providerActivityId: storedActivity.providerActivityId,
+      providerRequestActivityId: activityId,
       syncRunId,
       userId,
     });
@@ -92,35 +95,37 @@ export function syncIntervalsIcuActivity({
 }
 
 function syncIntervalsIcuActivityMap({
-  activityId,
   apiKey,
+  coreActivityId,
   client,
   errors,
   externalActivityId,
   providerActivityId,
+  providerRequestActivityId,
   syncRunId,
   userId,
 }: {
-  activityId: string;
   apiKey: string;
+  coreActivityId: number;
   client: IntervalsIcuClientService;
   errors: ActivitySyncFailure[];
   externalActivityId: number;
   providerActivityId: string;
+  providerRequestActivityId: string;
   syncRunId: number;
   userId: string;
 }) {
   return Effect.gen(function* () {
     const mapResult = yield* Effect.either(
       client.getActivityMap({
-        activityId,
+        activityId: providerRequestActivityId,
         apiKey,
       }),
     );
 
     if (Either.isLeft(mapResult)) {
       errors.push({
-        activityId,
+        activityId: providerRequestActivityId,
         message: mapResult.left.message,
         stage: "map",
       });
@@ -147,7 +152,54 @@ function syncIntervalsIcuActivityMap({
           message: "Failed to store external activity map",
         }),
     });
+
+    const activityMap = readActivityMapAclResult({
+      activityId: providerRequestActivityId,
+      errors,
+      map: mapResult.right,
+    });
+
+    if (!activityMap) {
+      return;
+    }
+
+    yield* Effect.tryPromise({
+      try: () =>
+        replaceActivityMap({
+          activityId: coreActivityId,
+          map: activityMap,
+        }),
+      catch: (cause) =>
+        new ActivitySyncError({
+          cause,
+          message: "Failed to store activity map",
+        }),
+    });
   });
+}
+
+function readActivityMapAclResult({
+  activityId,
+  errors,
+  map,
+}: {
+  activityId: string;
+  errors: ActivitySyncFailure[];
+  map: unknown;
+}) {
+  try {
+    return toActivityMapFromIntervalsIcuMap(map);
+  } catch (error) {
+    errors.push({
+      activityId,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to translate activity map",
+      stage: "map",
+    });
+    return null;
+  }
 }
 
 function syncIntervalsIcuActivityStreams({

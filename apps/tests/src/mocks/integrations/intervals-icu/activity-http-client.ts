@@ -63,9 +63,23 @@ export const intervalsIcuActivityHttpClientSuccess = Layer.succeed(
 
       if (path === "/api/v1/activity/activity-1/map") {
         return Effect.succeed(
-          new Response(JSON.stringify({ polyline: "abc123" }), {
-            status: 200,
-          }),
+          new Response(
+            JSON.stringify({
+              bounds: [
+                [-27.590372, 153.06575],
+                [-27.58015, 153.07713],
+              ],
+              latlngs: [
+                [-27.581491, 153.06828],
+                [-27.581144, 153.06902],
+              ],
+              route: null,
+              weather: null,
+            }),
+            {
+              status: 200,
+            },
+          ),
         );
       }
 

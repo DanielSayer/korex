@@ -4,6 +4,7 @@ import { encryptProviderSecret } from "@korex/api/modules/provider-connections/p
 import {
   activities,
   activityLaps,
+  activityMaps,
   db,
   externalActivities,
   externalActivityMaps,
@@ -129,8 +130,48 @@ describe("activity sync integration", () => {
       lastSyncRunId: result.syncRunId,
       provider: "intervals_icu",
       providerActivityId: "activity-1",
-      rawData: { polyline: "abc123" },
+      rawData: {
+        bounds: [
+          [-27.590372, 153.06575],
+          [-27.58015, 153.07713],
+        ],
+        latlngs: [
+          [-27.581491, 153.06828],
+          [-27.581144, 153.06902],
+        ],
+        route: null,
+        weather: null,
+      },
       userId: userDataExtensions.HughJass.id,
+    });
+
+    const [activityMap] = await db
+      .select()
+      .from(activityMaps)
+      .where(eq(activityMaps.activityId, activity.activityId ?? 0));
+
+    expect(activityMap).toMatchObject({
+      activityId: activity.activityId,
+      bounds: {
+        northEast: {
+          latitude: -27.58015,
+          longitude: 153.07713,
+        },
+        southWest: {
+          latitude: -27.590372,
+          longitude: 153.06575,
+        },
+      },
+      coordinates: [
+        {
+          latitude: -27.581491,
+          longitude: 153.06828,
+        },
+        {
+          latitude: -27.581144,
+          longitude: 153.06902,
+        },
+      ],
     });
 
     const laps = await db

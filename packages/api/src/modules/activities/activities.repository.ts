@@ -1,6 +1,10 @@
-import { activities, activityLaps, db } from "@korex/db";
+import { activities, activityLaps, activityMaps, db } from "@korex/db";
 import { eq } from "drizzle-orm";
-import type { ActivityInput, ActivityLapInput } from "./activities.types";
+import type {
+  ActivityInput,
+  ActivityLapInput,
+  ActivityMapInput,
+} from "./activities.types";
 
 type ActivityDatabase = Pick<typeof db, "delete" | "insert" | "update">;
 
@@ -98,4 +102,30 @@ export async function replaceActivityLaps({
       totalElevationGainMeters: lap.totalElevationGainMeters,
     })),
   );
+}
+
+export async function replaceActivityMap({
+  activityId,
+  database = db,
+  map,
+}: {
+  activityId: number;
+  database?: ActivityDatabase;
+  map: ActivityMapInput;
+}) {
+  await database
+    .insert(activityMaps)
+    .values({
+      activityId,
+      bounds: map.bounds,
+      coordinates: map.coordinates,
+    })
+    .onConflictDoUpdate({
+      target: [activityMaps.activityId],
+      set: {
+        bounds: map.bounds,
+        coordinates: map.coordinates,
+        updatedAt: new Date(),
+      },
+    });
 }
