@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 const nullableString = z.string().nullable().optional();
+const providerDateTimeString = z.string().nullable().optional();
 
 const intervalsIcuSportsSettingsSchema = z
   .object({
@@ -47,8 +48,8 @@ export const intervalsIcuActivityDetailSchema = z
     device_name: nullableString,
     distance: z.number().optional(),
     elapsed_time: z.number().optional(),
-    end_date: z.iso.datetime().optional(),
-    end_date_local: z.iso.datetime().optional(),
+    end_date: providerDateTimeString,
+    end_date_local: providerDateTimeString,
     id: intervalsIcuActivityId,
     icu_intervals: z.array(z.unknown()).optional(),
     max_heartrate: z.number().optional(),
@@ -56,15 +57,15 @@ export const intervalsIcuActivityDetailSchema = z
     moving_time: z.number().optional(),
     name: nullableString,
     sport: nullableString,
-    start_date: z.iso.datetime().optional(),
-    start_date_local: z.iso.datetime().optional(),
-    start_time: z.iso.datetime().optional(),
+    start_date: providerDateTimeString,
+    start_date_local: providerDateTimeString,
+    start_time: providerDateTimeString,
     source: nullableString,
     total_elevation_gain: z.number().optional(),
     total_elevation_loss: z.number().optional(),
     type: nullableString,
-    updated_at: z.iso.datetime().optional(),
-    updated: z.iso.datetime().optional(),
+    updated_at: providerDateTimeString,
+    updated: providerDateTimeString,
   })
   .loose();
 

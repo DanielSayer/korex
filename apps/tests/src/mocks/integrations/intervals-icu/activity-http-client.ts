@@ -51,7 +51,7 @@ export const intervalsIcuActivityHttpClientSuccess = Layer.succeed(
               moving_time: 3600,
               name: "Run",
               start_date: "2026-03-31T20:00:00.000Z",
-              start_date_local: "2026-04-01T06:00:00.000Z",
+              start_date_local: "2026-04-01T06:00:00",
               total_elevation_gain: 123.4,
               total_elevation_loss: 120.2,
               type: "Run",

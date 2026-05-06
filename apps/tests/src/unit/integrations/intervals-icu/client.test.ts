@@ -1,4 +1,5 @@
-import { Effect } from "effect";
+import { IntervalsIcuHttpClient } from "@korex/integrations/intervals-icu/http-client";
+import { Effect, Either, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { intervalsIcuActivityHttpClientSuccess } from "../../../mocks/integrations/intervals-icu/activity-http-client";
 import {
@@ -64,7 +65,7 @@ describe("Intervals.icu client", () => {
     expect(result.detail).toMatchObject({
       id: "activity-1",
       name: "Run",
-      start_date_local: "2026-04-01T06:00:00.000Z",
+      start_date_local: "2026-04-01T06:00:00",
       type: "Run",
     });
     expect(result.map).toMatchObject({
@@ -103,6 +104,30 @@ describe("Intervals.icu client", () => {
         name: null,
         type: "velocity_smooth",
       },
+    });
+  });
+
+  it("includes the requested activity list URL on list failures", async () => {
+    const result = await Effect.runPromise(
+      Effect.either(
+        runActivityClient(
+          Layer.succeed(IntervalsIcuHttpClient, {
+            fetch: () => Effect.succeed(new Response(null, { status: 502 })),
+          }),
+        ),
+      ),
+    );
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) {
+      throw new Error("Expected activity list request to fail");
+    }
+
+    expect(result.left).toMatchObject({
+      message: "Intervals.icu activity list request failed",
+      requestUrl:
+        "https://intervals.icu/api/v1/athlete/athlete-1/activities?oldest=2026-04-01&newest=2026-04-02",
+      status: 502,
     });
   });
 });

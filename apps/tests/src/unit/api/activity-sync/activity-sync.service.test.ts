@@ -22,6 +22,8 @@ describe("fetchIntervalsIcuActivities", () => {
           listActivities: Effect.fail(
             new IntervalsIcuClientError({
               message: "Intervals.icu list failed",
+              requestUrl:
+                "https://intervals.icu/api/v1/athlete/athlete-1/activities?oldest=2026-04-01&newest=2026-04-02",
               status: 502,
             }),
           ),
@@ -44,6 +46,8 @@ describe("fetchIntervalsIcuActivities", () => {
           errors: [
             {
               message: "Intervals.icu list failed",
+              requestUrl:
+                "https://intervals.icu/api/v1/athlete/athlete-1/activities?oldest=2026-04-01&newest=2026-04-02",
               stage: "list",
             },
           ],

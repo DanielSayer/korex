@@ -19,7 +19,9 @@ export type ActivitySyncStage =
 
 export type ActivitySyncFailure = {
   activityId?: string;
+  details?: unknown;
   message: string;
+  requestUrl?: string;
   stage: ActivitySyncStage;
 };
 

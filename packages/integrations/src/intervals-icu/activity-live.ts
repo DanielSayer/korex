@@ -6,7 +6,10 @@ import {
   type ListIntervalsIcuActivitiesInput,
 } from "./client";
 import { INTERVALS_ICU_BASIC_AUTH_USERNAME } from "./constants";
-import type { IntervalsIcuHttpClientService } from "./http-client";
+import {
+  getIntervalsIcuRequestUrl,
+  type IntervalsIcuHttpClientService,
+} from "./http-client";
 import {
   intervalsIcuActivityDetailSchema,
   intervalsIcuActivityListSchema,
@@ -19,8 +22,8 @@ export function listIntervalsIcuActivitiesLive(
   httpClient: IntervalsIcuHttpClientService,
 ) {
   const searchParams = new URLSearchParams({
-    oldest: startDate.toISOString(),
-    newest: endDate.toISOString(),
+    oldest: toIntervalsIcuDateParam(startDate),
+    newest: toIntervalsIcuDateParam(endDate),
   });
 
   return requestIntervalsIcuJson({
@@ -30,6 +33,10 @@ export function listIntervalsIcuActivitiesLive(
     schema: intervalsIcuActivityListSchema,
     subject: "activity list",
   });
+}
+
+function toIntervalsIcuDateParam(date: Date) {
+  return date.toISOString().slice(0, 10);
 }
 
 export function getIntervalsIcuActivityDetailLive(
@@ -84,6 +91,8 @@ function requestIntervalsIcuJson<A>({
   schema: { parse: (value: unknown) => A };
   subject: string;
 }) {
+  const requestUrl = getIntervalsIcuRequestUrl(path);
+
   return Effect.gen(function* () {
     const response = yield* httpClient
       .fetch(path, {
@@ -100,6 +109,7 @@ function requestIntervalsIcuJson<A>({
             new IntervalsIcuClientError({
               cause,
               message: `Failed to request Intervals.icu ${subject}`,
+              requestUrl,
             }),
         ),
       );
@@ -108,6 +118,7 @@ function requestIntervalsIcuJson<A>({
       return yield* Effect.fail(
         new IntervalsIcuClientError({
           message: `Intervals.icu ${subject} request failed`,
+          requestUrl,
           status: response.status,
         }),
       );
@@ -119,6 +130,7 @@ function requestIntervalsIcuJson<A>({
         new IntervalsIcuClientError({
           cause,
           message: `Failed to parse Intervals.icu ${subject} response`,
+          requestUrl,
           status: response.status,
         }),
     });
@@ -128,9 +140,63 @@ function requestIntervalsIcuJson<A>({
       catch: (cause) =>
         new IntervalsIcuClientError({
           cause,
+          details: getInvalidResponseDetails(cause, json),
           message: `Invalid Intervals.icu ${subject} response`,
+          requestUrl,
           status: response.status,
         }),
     });
   });
+}
+
+function getInvalidResponseDetails(cause: unknown, value: unknown) {
+  return {
+    parseIssues: readZodIssues(cause),
+    responseShape: describeValue(value),
+  };
+}
+
+function readZodIssues(cause: unknown) {
+  if (!isRecord(cause) || !Array.isArray(cause.issues)) {
+    return [];
+  }
+
+  return cause.issues.slice(0, 10).map((issue) => {
+    if (!isRecord(issue)) {
+      return { message: "Unknown parse issue" };
+    }
+
+    return {
+      code: issue.code,
+      message: issue.message,
+      path: Array.isArray(issue.path) ? issue.path.join(".") : undefined,
+    };
+  });
+}
+
+function describeValue(value: unknown) {
+  if (Array.isArray(value)) {
+    return {
+      length: value.length,
+      type: "array",
+    };
+  }
+
+  if (isRecord(value)) {
+    const keys = Object.keys(value);
+
+    return {
+      keys: keys.slice(0, 20),
+      keyCount: keys.length,
+      type: "object",
+    };
+  }
+
+  return {
+    type: value === null ? "null" : typeof value,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

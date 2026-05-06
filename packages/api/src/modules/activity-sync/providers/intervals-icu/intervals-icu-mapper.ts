@@ -1,5 +1,6 @@
 import type { IntervalsIcuActivityDetail } from "@korex/integrations/intervals-icu/client";
 import { ActivitySyncError } from "../../activity-sync.errors";
+import { readOptionalString } from "../../anti-corruption/readers";
 import type { UpsertExternalActivityInput } from "../../repositories/external-activities.repository";
 
 export function toExternalActivityUpsertInput({
@@ -25,8 +26,8 @@ export function toExternalActivityUpsertInput({
     providerAthleteId,
     providerUpdatedAt: readOptionalDate(detail.updated_at ?? detail.updated),
     rawData: detail,
-    sourceType: detail.source ?? null,
-    sportType: detail.type ?? detail.sport ?? detail.category ?? null,
+    sourceType: readOptionalString(detail.source),
+    sportType: readOptionalString(detail.type ?? detail.sport ?? detail.category),
     userId,
   };
 }

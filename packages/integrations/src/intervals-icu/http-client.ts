@@ -2,11 +2,16 @@ import { Context, Data, Effect, Layer } from "effect";
 
 const DEFAULT_BASE_URL = "https://intervals.icu";
 
+export function getIntervalsIcuRequestUrl(path: string) {
+  return `${DEFAULT_BASE_URL}${path}`;
+}
+
 export class IntervalsIcuHttpClientError extends Data.TaggedError(
   "IntervalsIcuHttpClientError",
 )<{
   cause?: unknown;
   message: string;
+  requestUrl?: string;
 }> {}
 
 export type IntervalsIcuHttpClientService = {
@@ -25,11 +30,12 @@ export const IntervalsIcuHttpClientLive = Layer.succeed(
   {
     fetch: (path, init) =>
       Effect.tryPromise({
-        try: () => fetch(`${DEFAULT_BASE_URL}${path}`, init),
+        try: () => fetch(getIntervalsIcuRequestUrl(path), init),
         catch: (cause) =>
           new IntervalsIcuHttpClientError({
             cause,
             message: "Failed to request Intervals.icu",
+            requestUrl: getIntervalsIcuRequestUrl(path),
           }),
       }),
   },

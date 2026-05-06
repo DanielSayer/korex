@@ -103,6 +103,7 @@ function fetchIntervalsIcuActivitiesForSession(
             errors,
             failure: {
               message: cause.message,
+              requestUrl: cause.requestUrl,
               stage: "list",
             },
             repository,

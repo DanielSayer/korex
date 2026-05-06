@@ -2,6 +2,7 @@ import type {
   IntervalsIcuActivityStreams,
   IntervalsIcuClientService,
 } from "@korex/integrations/intervals-icu/client";
+import { getIntervalsIcuRequestUrl } from "@korex/integrations/intervals-icu/http-client";
 import { Effect, Either } from "effect";
 import { ActivityArtifactStore } from "../../activity-sync.dependencies";
 import { ActivitySyncError } from "../../activity-sync.errors";
@@ -43,7 +44,9 @@ export function syncIntervalsIcuActivity({
     if (Either.isLeft(detailResult)) {
       errors.push({
         activityId,
+        details: detailResult.left.details,
         message: detailResult.left.message,
+        requestUrl: detailResult.left.requestUrl,
         stage: "detail",
       });
       return;
@@ -128,7 +131,9 @@ function syncIntervalsIcuActivityMap({
     if (Either.isLeft(mapResult)) {
       errors.push({
         activityId: providerRequestActivityId,
+        details: mapResult.left.details,
         message: mapResult.left.message,
+        requestUrl: mapResult.left.requestUrl,
         stage: "map",
       });
       return;
@@ -159,6 +164,7 @@ function syncIntervalsIcuActivityMap({
       activityId: providerRequestActivityId,
       errors,
       map: mapResult.right,
+      requestUrl: getActivityMapRequestUrl(providerRequestActivityId),
     });
 
     if (!activityMap) {
@@ -184,20 +190,24 @@ function readActivityMapAclResult({
   activityId,
   errors,
   map,
+  requestUrl,
 }: {
   activityId: string;
   errors: ActivitySyncFailure[];
   map: unknown;
+  requestUrl: string;
 }) {
   try {
     return toActivityMapFromIntervalsIcuMap(map);
   } catch (error) {
     errors.push({
       activityId,
+      details: getProviderPayloadDetails(map),
       message:
         error instanceof Error
           ? error.message
           : "Failed to translate activity map",
+      requestUrl,
       stage: "map",
     });
     return null;
@@ -237,7 +247,9 @@ function syncIntervalsIcuActivityStreams({
     if (Either.isLeft(streamsResult)) {
       errors.push({
         activityId,
+        details: streamsResult.left.details,
         message: streamsResult.left.message,
+        requestUrl: streamsResult.left.requestUrl,
         stage: "streams",
       });
       return;
@@ -270,6 +282,7 @@ function syncIntervalsIcuActivityStreams({
     const activityStreams = readActivityStreamsAclResult({
       activityId,
       errors,
+      requestUrl: getActivityStreamsRequestUrl(activityId),
       streams: streamsResult.right,
     });
 
@@ -297,9 +310,11 @@ function readActivityStreamsAclResult({
   activityId,
   errors,
   streams,
+  requestUrl,
 }: {
   activityId: string;
   errors: ActivitySyncFailure[];
+  requestUrl: string;
   streams: IntervalsIcuActivityStreams;
 }) {
   try {
@@ -307,12 +322,69 @@ function readActivityStreamsAclResult({
   } catch (error) {
     errors.push({
       activityId,
+      details: getProviderPayloadDetails(streams),
       message:
         error instanceof Error
           ? error.message
           : "Failed to translate activity streams",
+      requestUrl,
       stage: "streams",
     });
     return null;
   }
+}
+
+function getActivityMapRequestUrl(activityId: string) {
+  return getIntervalsIcuRequestUrl(
+    `/api/v1/activity/${encodeURIComponent(activityId)}/map`,
+  );
+}
+
+function getActivityStreamsRequestUrl(activityId: string) {
+  return getIntervalsIcuRequestUrl(
+    `/api/v1/activity/${encodeURIComponent(activityId)}/streams.json`,
+  );
+}
+
+type ProviderPayloadDetails =
+  | {
+      length: number;
+      sample: ProviderPayloadDetails[];
+      type: "array";
+    }
+  | {
+      keys: string[];
+      keyCount: number;
+      type: "object";
+    }
+  | {
+      type: string;
+    };
+
+function getProviderPayloadDetails(value: unknown): ProviderPayloadDetails {
+  if (Array.isArray(value)) {
+    return {
+      length: value.length,
+      sample: value.slice(0, 3).map(getProviderPayloadDetails),
+      type: "array",
+    };
+  }
+
+  if (isRecord(value)) {
+    const keys = Object.keys(value);
+
+    return {
+      keys: keys.slice(0, 20),
+      keyCount: keys.length,
+      type: "object",
+    };
+  }
+
+  return {
+    type: value === null ? "null" : typeof value,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

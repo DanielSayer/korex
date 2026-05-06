@@ -19,7 +19,9 @@ export class IntervalsIcuClientError extends Data.TaggedError(
   "IntervalsIcuClientError",
 )<{
   cause?: unknown;
+  details?: unknown;
   message: string;
+  requestUrl?: string;
   status?: number;
 }> {}
 
