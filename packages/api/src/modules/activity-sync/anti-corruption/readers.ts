@@ -54,6 +54,10 @@ export function readPositiveNumber(value: unknown) {
   return parsed.data;
 }
 
+export function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function readOptionalDate(value: unknown) {
   if (!value) {
     return null;

@@ -18,3 +18,19 @@ export type ActivityInput = {
   totalElevationLossMeters: number | null;
   userId: string;
 };
+
+export type ActivityLapInput = {
+  averageCadenceStepsPerMinute: number | null;
+  averageHeartRateBeatsPerMinute: number | null;
+  averageSpeedMetersPerSecond: number | null;
+  averageStrideLengthMeters: number | null;
+  distanceMeters: number;
+  elapsedTimeSeconds: number | null;
+  endTimeSeconds: number;
+  index: number;
+  maxHeartRateBeatsPerMinute: number | null;
+  maxSpeedMetersPerSecond: number | null;
+  movingTimeSeconds: number | null;
+  startTimeSeconds: number;
+  totalElevationGainMeters: number | null;
+};

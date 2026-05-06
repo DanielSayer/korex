@@ -11,6 +11,7 @@ import {
   readPositiveNumber,
   readRequiredDate,
 } from "../../anti-corruption/readers";
+import { readIntervalsIcuCadenceStepsPerMinute } from "./intervals-icu-readers";
 
 type ActivityAclResult =
   | {
@@ -47,7 +48,9 @@ export function toActivityFromIntervalsIcuDetail({
 
   return {
     activity: {
-      averageCadenceStepsPerMinute: readPositiveInteger(detail.average_cadence),
+      averageCadenceStepsPerMinute: readIntervalsIcuCadenceStepsPerMinute(
+        detail.average_cadence,
+      ),
       averageHeartRateBeatsPerMinute: readPositiveInteger(
         detail.average_heartrate,
       ),

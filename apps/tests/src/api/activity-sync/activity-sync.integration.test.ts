@@ -3,6 +3,7 @@ import { fetchIntervalsIcuActivities } from "@korex/api/modules/activity-sync/ac
 import { encryptProviderSecret } from "@korex/api/modules/provider-connections/provider-secret-encryption";
 import {
   activities,
+  activityLaps,
   db,
   externalActivities,
   externalActivityMaps,
@@ -10,7 +11,7 @@ import {
   syncRuns,
 } from "@korex/db";
 import { IntervalsIcuClientLayer } from "@korex/integrations/intervals-icu/live";
-import { eq } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { intervalsIcuActivityHttpClientSuccess } from "../../mocks/integrations/intervals-icu/activity-http-client";
@@ -131,6 +132,38 @@ describe("activity sync integration", () => {
       rawData: { polyline: "abc123" },
       userId: userDataExtensions.HughJass.id,
     });
+
+    const laps = await db
+      .select()
+      .from(activityLaps)
+      .where(eq(activityLaps.activityId, activity.activityId ?? 0))
+      .orderBy(asc(activityLaps.index));
+
+    expect(laps).toEqual([
+      expect.objectContaining({
+        activityId: activity.activityId,
+        averageCadenceStepsPerMinute: 174,
+        averageHeartRateBeatsPerMinute: 151,
+        averageSpeedMetersPerSecond: 3.25,
+        averageStrideLengthMeters: 1.02,
+        distanceMeters: 1000,
+        elapsedTimeSeconds: 300,
+        endTimeSeconds: 300,
+        index: 0,
+        maxHeartRateBeatsPerMinute: 181,
+        maxSpeedMetersPerSecond: 5.8,
+        movingTimeSeconds: 295,
+        startTimeSeconds: 0,
+        totalElevationGainMeters: 12.3,
+      }),
+      expect.objectContaining({
+        activityId: activity.activityId,
+        distanceMeters: 900,
+        endTimeSeconds: 600,
+        index: 1,
+        startTimeSeconds: 300,
+      }),
+    ]);
 
     const streams = await db
       .select()

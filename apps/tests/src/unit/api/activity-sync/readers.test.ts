@@ -1,5 +1,6 @@
 import { ActivitySyncError } from "@korex/api/modules/activity-sync/activity-sync.errors";
 import {
+  isRecord,
   readNonNegativeInteger,
   readNonNegativeNumber,
   readOptionalString,
@@ -56,5 +57,12 @@ describe("ACL readers", () => {
     expect(readNonNegativeInteger(-1)).toBeNull();
     expect(readPositiveInteger(12.5)).toBe(13);
     expect(readPositiveInteger(0)).toBeNull();
+  });
+
+  it("identifies plain records", () => {
+    expect(isRecord({ distance: 1000 })).toBe(true);
+    expect(isRecord(null)).toBe(false);
+    expect(isRecord([["distance", 1000]])).toBe(false);
+    expect(isRecord("distance")).toBe(false);
   });
 });

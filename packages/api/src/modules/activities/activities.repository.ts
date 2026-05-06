@@ -1,6 +1,8 @@
-import { activities, db } from "@korex/db";
+import { activities, activityLaps, db } from "@korex/db";
 import { eq } from "drizzle-orm";
-import type { ActivityInput } from "./activities.types";
+import type { ActivityInput, ActivityLapInput } from "./activities.types";
+
+type ActivityDatabase = Pick<typeof db, "delete" | "insert" | "update">;
 
 export type UpsertActivityResult = {
   activityId: number;
@@ -9,13 +11,15 @@ export type UpsertActivityResult = {
 
 export async function upsertActivity({
   activityId,
+  database = db,
   input,
 }: {
   activityId: number | null;
+  database?: ActivityDatabase;
   input: ActivityInput;
 }): Promise<UpsertActivityResult> {
   if (activityId) {
-    await db
+    await database
       .update(activities)
       .set({
         averageCadenceStepsPerMinute: input.averageCadenceStepsPerMinute,
@@ -40,7 +44,7 @@ export async function upsertActivity({
     return { activityId, created: false };
   }
 
-  const [inserted] = await db
+  const [inserted] = await database
     .insert(activities)
     .values(input)
     .returning({ id: activities.id });
@@ -52,6 +56,46 @@ export async function upsertActivity({
   return { activityId: inserted.id, created: true };
 }
 
-export async function deleteActivity(activityId: number) {
-  await db.delete(activities).where(eq(activities.id, activityId));
+export async function deleteActivity(
+  activityId: number,
+  database: ActivityDatabase = db,
+) {
+  await database.delete(activities).where(eq(activities.id, activityId));
+}
+
+export async function replaceActivityLaps({
+  activityId,
+  database = db,
+  laps,
+}: {
+  activityId: number;
+  database?: ActivityDatabase;
+  laps: ActivityLapInput[];
+}) {
+  await database
+    .delete(activityLaps)
+    .where(eq(activityLaps.activityId, activityId));
+
+  if (laps.length === 0) {
+    return;
+  }
+
+  await database.insert(activityLaps).values(
+    laps.map((lap) => ({
+      activityId,
+      averageCadenceStepsPerMinute: lap.averageCadenceStepsPerMinute,
+      averageHeartRateBeatsPerMinute: lap.averageHeartRateBeatsPerMinute,
+      averageSpeedMetersPerSecond: lap.averageSpeedMetersPerSecond,
+      averageStrideLengthMeters: lap.averageStrideLengthMeters,
+      distanceMeters: lap.distanceMeters,
+      elapsedTimeSeconds: lap.elapsedTimeSeconds,
+      endTimeSeconds: lap.endTimeSeconds,
+      index: lap.index,
+      maxHeartRateBeatsPerMinute: lap.maxHeartRateBeatsPerMinute,
+      maxSpeedMetersPerSecond: lap.maxSpeedMetersPerSecond,
+      movingTimeSeconds: lap.movingTimeSeconds,
+      startTimeSeconds: lap.startTimeSeconds,
+      totalElevationGainMeters: lap.totalElevationGainMeters,
+    })),
+  );
 }

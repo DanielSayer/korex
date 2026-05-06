@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 describe("Intervals.icu activity ACL", () => {
   it("translates supported activity summary fields into a Korex Activity", () => {
     const detail: IntervalsIcuActivityDetail = {
-      average_cadence: 174.4,
+      average_cadence: 87.2,
       average_heartrate: 151.2,
       average_speed: 3.25,
       calories: 540.3,

@@ -1,7 +1,9 @@
+import { db } from "@korex/db";
 import type { IntervalsIcuActivityDetail } from "@korex/integrations/intervals-icu/client";
 import { Effect } from "effect";
 import {
   deleteActivity,
+  replaceActivityLaps,
   upsertActivity,
 } from "../../../activities/activities.repository";
 import { ActivitySyncError } from "../../activity-sync.errors";
@@ -12,6 +14,7 @@ import {
   upsertExternalActivity,
 } from "../../repositories/external-activities.repository";
 import { toActivityFromIntervalsIcuDetail } from "./intervals-icu-activity.acl";
+import { toActivityLapsFromIntervalsIcuDetail } from "./intervals-icu-activity-lap.acl";
 import { toExternalActivityUpsertInput } from "./intervals-icu-mapper";
 
 export type StoreIntervalsIcuActivityImportResult =
@@ -77,10 +80,13 @@ export function storeIntervalsIcuActivityImport({
       if (existingActivityId) {
         yield* Effect.tryPromise({
           try: async () => {
-            await clearExternalActivityActivityLink(
-              upsertedExternalActivity.externalActivityId,
-            );
-            await deleteActivity(existingActivityId);
+            await db.transaction(async (tx) => {
+              await clearExternalActivityActivityLink(
+                upsertedExternalActivity.externalActivityId,
+                tx,
+              );
+              await deleteActivity(existingActivityId, tx);
+            });
           },
           catch: (cause) =>
             new ActivitySyncError({
@@ -96,29 +102,42 @@ export function storeIntervalsIcuActivityImport({
       } satisfies StoreIntervalsIcuActivityImportResult;
     }
 
+    const activityLaps = readActivityLapAclResult({ detail, errors });
+
+    if (!activityLaps) {
+      return {
+        externalActivityId: upsertedExternalActivity.externalActivityId,
+        skipped: true,
+      } satisfies StoreIntervalsIcuActivityImportResult;
+    }
+
     const activityUpsert = yield* Effect.tryPromise({
       try: () =>
-        upsertActivity({
-          activityId: upsertedExternalActivity.activityId,
-          input: activityResult.activity,
+        db.transaction(async (tx) => {
+          const upsertedActivity = await upsertActivity({
+            activityId: upsertedExternalActivity.activityId,
+            database: tx,
+            input: activityResult.activity,
+          });
+
+          await replaceActivityLaps({
+            activityId: upsertedActivity.activityId,
+            database: tx,
+            laps: activityLaps,
+          });
+
+          await linkExternalActivityToActivity({
+            activityId: upsertedActivity.activityId,
+            database: tx,
+            externalActivityId: upsertedExternalActivity.externalActivityId,
+          });
+
+          return upsertedActivity;
         }),
       catch: (cause) =>
         new ActivitySyncError({
           cause,
           message: "Failed to store activity",
-        }),
-    });
-
-    yield* Effect.tryPromise({
-      try: () =>
-        linkExternalActivityToActivity({
-          activityId: activityUpsert.activityId,
-          externalActivityId: upsertedExternalActivity.externalActivityId,
-        }),
-      catch: (cause) =>
-        new ActivitySyncError({
-          cause,
-          message: "Failed to link external activity",
         }),
     });
 
@@ -130,6 +149,28 @@ export function storeIntervalsIcuActivityImport({
       updated: !activityUpsert.created && upsertedExternalActivity.updated,
     } satisfies StoreIntervalsIcuActivityImportResult;
   });
+}
+
+function readActivityLapAclResult({
+  detail,
+  errors,
+}: {
+  detail: IntervalsIcuActivityDetail;
+  errors: ActivitySyncFailure[];
+}) {
+  try {
+    return toActivityLapsFromIntervalsIcuDetail(detail);
+  } catch (error) {
+    errors.push({
+      activityId: String(detail.id),
+      message:
+        error instanceof Error
+          ? error.message
+          : "Failed to translate activity laps",
+      stage: "detail",
+    });
+    return null;
+  }
 }
 
 function readActivityAclResult({

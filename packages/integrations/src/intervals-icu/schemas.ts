@@ -50,6 +50,7 @@ export const intervalsIcuActivityDetailSchema = z
     end_date: z.iso.datetime().optional(),
     end_date_local: z.iso.datetime().optional(),
     id: intervalsIcuActivityId,
+    icu_intervals: z.array(z.unknown()).optional(),
     max_heartrate: z.number().optional(),
     max_speed: z.number().optional(),
     moving_time: z.number().optional(),

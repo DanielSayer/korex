@@ -17,7 +17,7 @@ export const intervalsIcuActivityHttpClientSuccess = Layer.succeed(
         return Effect.succeed(
           new Response(
             JSON.stringify({
-              average_cadence: 174,
+              average_cadence: 87,
               average_heartrate: 151,
               average_speed: 3.25,
               calories: 540,
@@ -25,6 +25,27 @@ export const intervalsIcuActivityHttpClientSuccess = Layer.succeed(
               distance: 10001.5,
               elapsed_time: 3900,
               id: "activity-1",
+              icu_intervals: [
+                {
+                  average_cadence: 87,
+                  average_heartrate: 151,
+                  average_speed: 3.25,
+                  average_stride: 1.02,
+                  distance: 1000,
+                  elapsed_time: 300,
+                  end_time: 300,
+                  max_heartrate: 181,
+                  max_speed: 5.8,
+                  moving_time: 295,
+                  start_time: 0,
+                  total_elevation_gain: 12.3,
+                },
+                {
+                  distance: 900,
+                  end_time: 600,
+                  start_time: 300,
+                },
+              ],
               max_heartrate: 181,
               max_speed: 5.8,
               moving_time: 3600,

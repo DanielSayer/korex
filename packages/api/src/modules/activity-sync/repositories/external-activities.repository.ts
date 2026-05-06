@@ -7,6 +7,8 @@ import {
 } from "@korex/db";
 import { and, eq } from "drizzle-orm";
 
+type ExternalActivityDatabase = Pick<typeof db, "update">;
+
 export type UpsertExternalActivityInput = {
   activityEndAt: Date | null;
   activityStartAt: Date;
@@ -118,12 +120,14 @@ export async function upsertExternalActivity({
 
 export async function linkExternalActivityToActivity({
   activityId,
+  database = db,
   externalActivityId,
 }: {
   activityId: number;
+  database?: ExternalActivityDatabase;
   externalActivityId: number;
 }) {
-  await db
+  await database
     .update(externalActivities)
     .set({
       activityId,
@@ -134,8 +138,9 @@ export async function linkExternalActivityToActivity({
 
 export async function clearExternalActivityActivityLink(
   externalActivityId: number,
+  database: ExternalActivityDatabase = db,
 ) {
-  await db
+  await database
     .update(externalActivities)
     .set({
       activityId: null,
