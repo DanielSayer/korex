@@ -12,7 +12,7 @@ export const ProviderSessionLive = Layer.succeed(ProviderSessionContext, {
   getActiveProviderSessionForUser,
 });
 
-export function getActiveProviderSession({
+function getActiveProviderSession({
   provider,
   userId,
 }: {
@@ -43,11 +43,7 @@ export function getActiveProviderSession({
   });
 }
 
-export function getActiveProviderSessionForUser({
-  userId,
-}: {
-  userId: string;
-}) {
+function getActiveProviderSessionForUser({ userId }: { userId: string }) {
   return Effect.gen(function* () {
     const connection = yield* Effect.promise(() =>
       getActiveProviderConnectionForUserId(userId),

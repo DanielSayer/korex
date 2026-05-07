@@ -12,12 +12,10 @@
   "dependencies": {
     "@korex/api": "workspace:*",
     "@korex/auth": "workspace:*",
-    "@korex/db": "workspace:*",
     "@korex/env": "workspace:*",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "better-auth": "catalog:",
     "dotenv": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"

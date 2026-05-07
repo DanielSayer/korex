@@ -28,14 +28,11 @@ import {
   hasSuccessfulActivitySyncRunForUser,
 } from "./repositories/sync-runs.repository";
 
-export const ActivitySyncRepositoryLive = Layer.succeed(
-  ActivitySyncRepository,
-  {
-    createActivitySyncRun,
-    finishActivitySyncRun,
-    hasSuccessfulActivitySyncRunForUser,
-  },
-);
+const ActivitySyncRepositoryLive = Layer.succeed(ActivitySyncRepository, {
+  createActivitySyncRun,
+  finishActivitySyncRun,
+  hasSuccessfulActivitySyncRunForUser,
+});
 
 export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {
   storeExternalActivity: upsertExternalActivity,
@@ -68,7 +65,7 @@ export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {
     }),
 });
 
-export const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
+const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
   storeExternalMap: upsertExternalActivityMap,
   replaceCoreMap: replaceActivityMap,
   storeExternalStream: upsertExternalActivityStream,
@@ -76,17 +73,14 @@ export const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
     replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
 });
 
-export const IntervalsIcuActivitySyncLive = Layer.succeed(
-  IntervalsIcuActivitySync,
-  {
-    syncActivity: (input) =>
-      syncIntervalsIcuActivity(input).pipe(
-        Effect.provide(
-          Layer.mergeAll(ActivityArtifactStoreLive, ActivityImportWriterLive),
-        ),
+const IntervalsIcuActivitySyncLive = Layer.succeed(IntervalsIcuActivitySync, {
+  syncActivity: (input) =>
+    syncIntervalsIcuActivity(input).pipe(
+      Effect.provide(
+        Layer.mergeAll(ActivityArtifactStoreLive, ActivityImportWriterLive),
       ),
-  },
-);
+    ),
+});
 
 export const ActivitySyncLive = Layer.mergeAll(
   ActivityArtifactStoreLive,

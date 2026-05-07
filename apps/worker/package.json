@@ -10,8 +10,6 @@
   },
   "dependencies": {
     "@korex/api": "workspace:*",
-    "@korex/db": "workspace:*",
-    "@korex/env": "workspace:*",
     "dotenv": "catalog:"
   },
   "devDependencies": {

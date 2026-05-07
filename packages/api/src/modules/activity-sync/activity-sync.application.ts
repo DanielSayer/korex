@@ -8,21 +8,7 @@ import {
   SuccessfulActivitySyncExistsError,
 } from "./activity-sync.errors";
 import { ActivitySyncLive } from "./activity-sync.live";
-import {
-  type FetchIntervalsIcuActivitiesInput,
-  fetchIntervalsIcuActivities,
-  syncUserActivities,
-} from "./activity-sync.service";
-
-export function executeFetchIntervalsIcuActivities(
-  input: FetchIntervalsIcuActivitiesInput,
-) {
-  return runActivitySyncEffect(
-    fetchIntervalsIcuActivities(input).pipe(
-      Effect.provide(Layer.mergeAll(IntervalsIcuClientLive, ActivitySyncLive)),
-    ),
-  );
-}
+import { syncUserActivities } from "./activity-sync.service";
 
 export function executeInitialSync(userId: string) {
   return runActivitySyncEffect(
