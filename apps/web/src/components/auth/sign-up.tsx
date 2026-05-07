@@ -54,7 +54,7 @@ function SignUp({ step, setStep }: SignUpProps) {
 
             {step === 2 ? (
               <SignUpSyncStep
-                onComplete={goToDashboard}
+                onGoToDashboard={goToDashboard}
                 onProgressChange={setSyncProgress}
               />
             ) : null}

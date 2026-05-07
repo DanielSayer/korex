@@ -7,6 +7,11 @@ import { toast } from "sonner";
 import { LoadingProgress } from "@/components/loading-progress";
 import { orpc } from "@/utils/orpc";
 
+type SyncResult = {
+  activitiesStored: number;
+  status: string;
+};
+
 const syncLoadingMessages = [
   "Fetching your runs",
   "Reading workout history",
@@ -15,10 +20,10 @@ const syncLoadingMessages = [
 ];
 
 function SignUpSyncStep({
-  onComplete,
+  onGoToDashboard,
   onProgressChange,
 }: {
-  onComplete: () => void;
+  onGoToDashboard: () => void;
   onProgressChange?: (progress?: number) => void;
 }) {
   const initialSyncMutation = useMutation(
@@ -27,8 +32,8 @@ function SignUpSyncStep({
         toast.error(error.message);
       },
       onSuccess: () => {
-        toast.success("Sync started");
-        onComplete();
+        toast.success("Sync complete");
+        onProgressChange?.(undefined);
       },
     }),
   );
@@ -52,7 +57,9 @@ function SignUpSyncStep({
         </p>
       </div>
 
-      {initialSyncMutation.isPending ? (
+      {initialSyncMutation.data ? (
+        <SignUpSyncSummary result={initialSyncMutation.data} />
+      ) : initialSyncMutation.isPending ? (
         <SignUpSyncLoader onProgressChange={onProgressChange} />
       ) : (
         <div className="my-4 flex flex-col items-center gap-2 text-center">
@@ -66,28 +73,74 @@ function SignUpSyncStep({
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button
-          type="button"
-          size="lg"
-          onClick={startSync}
-          loading={initialSyncMutation.isPending}
-          loadingText="Starting sync"
-          className="group flex-1"
-        >
-          Start sync
-          <ArrowRight className="size-4 transition-all duration-200 group-hover:translate-x-1" />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="flex-1"
-          disabled={initialSyncMutation.isPending}
-        >
-          I&apos;ll do this later
-        </Button>
+        {initialSyncMutation.data ? (
+          <Button
+            type="button"
+            size="lg"
+            onClick={onGoToDashboard}
+            className="group w-full"
+          >
+            Go to dashboard
+            <ArrowRight className="size-4 transition-all duration-200 group-hover:translate-x-1" />
+          </Button>
+        ) : (
+          <>
+            <Button
+              type="button"
+              size="lg"
+              onClick={startSync}
+              loading={initialSyncMutation.isPending}
+              loadingText="Starting sync"
+              className="group flex-1"
+            >
+              Start sync
+              <ArrowRight className="size-4 transition-all duration-200 group-hover:translate-x-1" />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="flex-1"
+              disabled={initialSyncMutation.isPending}
+              onClick={onGoToDashboard}
+            >
+              I&apos;ll do this later
+            </Button>
+          </>
+        )}
       </div>
     </motion.div>
   );
+}
+
+function SignUpSyncSummary({ result }: { result: SyncResult }) {
+  return (
+    <div className="my-4 flex flex-col items-center gap-3 text-center">
+      <div className="flex size-20 items-center justify-center rounded-2xl border bg-muted/30 shadow-sm">
+        <CloudSyncIcon className="size-9 text-muted-foreground" />
+      </div>
+      <div className="space-y-1">
+        <p className="font-medium">
+          {result.activitiesStored} activities synced
+        </p>
+        <p className="text-muted-foreground text-sm">
+          Status: {getSyncStatusLabel(result.status)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function getSyncStatusLabel(status: string) {
+  switch (status) {
+    case "failed":
+      return "Partial";
+    case "partial":
+      return "Partially correct";
+    case "success":
+      return "Completed";
+    default:
+      return status;
+  }
 }
 
 function SignUpSyncLoader({
