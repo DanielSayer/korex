@@ -2,7 +2,7 @@ import {
   replaceActivityHeartRateZoneSnapshotsAndQueueCalculation,
   replaceActivityHeartRateZoneTimes,
   replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
-} from "@korex/api/modules/activities/activities.repository";
+} from "@korex/api/modules/activities/activity-heart-rate-zone-time.repository";
 import {
   claimActivityHeartRateZoneTimeCalculationJobs,
   enqueueActivityHeartRateZoneTimeCalculation,

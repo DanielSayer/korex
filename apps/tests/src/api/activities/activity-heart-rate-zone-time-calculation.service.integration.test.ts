@@ -1,7 +1,5 @@
-import {
-  replaceActivityHeartRateZoneSnapshots,
-  replaceActivityStreams,
-} from "@korex/api/modules/activities/activities.repository";
+import { replaceActivityStreams } from "@korex/api/modules/activities/activity-artifacts.repository";
+import { replaceActivityHeartRateZoneSnapshots } from "@korex/api/modules/activities/activity-heart-rate-zone-time.repository";
 import { processActivityHeartRateZoneTimeCalculationJob } from "@korex/api/modules/activities/activity-heart-rate-zone-time-calculation.service";
 import {
   claimActivityHeartRateZoneTimeCalculationJobs,
@@ -20,7 +18,9 @@ import { userDataExtensions } from "../../setup/integration/test-data/user-data-
 
 describe("activity heart rate zone time calculation service", () => {
   it("calculates zone times and marks the job succeeded", async () => {
-    const activity = ActivityBuilder.initWithUser(userDataExtensions.HughJass.id)
+    const activity = ActivityBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    )
       .withMovingTimeSeconds(100)
       .build();
     await DataSeedAsync.withActivities(activity).seedAsync();
@@ -73,10 +73,7 @@ describe("activity heart rate zone time calculation service", () => {
       .select()
       .from(activityHeartRateZoneTimeCalculationJobs)
       .where(
-        eq(
-          activityHeartRateZoneTimeCalculationJobs.activityId,
-          activity.id,
-        ),
+        eq(activityHeartRateZoneTimeCalculationJobs.activityId, activity.id),
       );
 
     expect(times).toEqual([
@@ -95,7 +92,9 @@ describe("activity heart rate zone time calculation service", () => {
   });
 
   it("marks the job failed when required inputs are missing", async () => {
-    const activity = ActivityBuilder.initWithUser(userDataExtensions.HughJass.id)
+    const activity = ActivityBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    )
       .withMovingTimeSeconds(null)
       .build();
     await DataSeedAsync.withActivities(activity).seedAsync();
@@ -116,10 +115,7 @@ describe("activity heart rate zone time calculation service", () => {
       .select()
       .from(activityHeartRateZoneTimeCalculationJobs)
       .where(
-        eq(
-          activityHeartRateZoneTimeCalculationJobs.activityId,
-          activity.id,
-        ),
+        eq(activityHeartRateZoneTimeCalculationJobs.activityId, activity.id),
       );
 
     expect(times).toEqual([]);

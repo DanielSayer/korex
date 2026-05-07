@@ -1,7 +1,7 @@
 import {
   getActivityHeartRateZoneCalculationInputs,
   replaceActivityHeartRateZoneTimes,
-} from "./activities.repository";
+} from "./activity-heart-rate-zone-time.repository";
 import {
   type ActivityHeartRateZoneTimeCalculationJob,
   markActivityHeartRateZoneTimeCalculationFailed,

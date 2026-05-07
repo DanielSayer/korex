@@ -1,12 +1,12 @@
 import { db } from "@korex/db";
 import { Effect, Layer } from "effect";
+import { replaceActivityMap } from "../activities/activity-artifacts.repository";
+import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/activity-heart-rate-zone-time.repository";
 import {
   deleteActivity,
   replaceActivityLaps,
-  replaceActivityMap,
-  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
   upsertActivity,
-} from "../activities/activities.repository";
+} from "../activities/activity-import.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
 import {
   ActivityArtifactStore,

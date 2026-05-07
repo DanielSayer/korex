@@ -1,8 +1,8 @@
 import {
   replaceActivityMap,
   replaceActivityStreams,
-  upsertActivity,
-} from "@korex/api/modules/activities/activities.repository";
+} from "@korex/api/modules/activities/activity-artifacts.repository";
+import { upsertActivity } from "@korex/api/modules/activities/activity-import.repository";
 import {
   upsertExternalActivity,
   upsertExternalActivityMap,
