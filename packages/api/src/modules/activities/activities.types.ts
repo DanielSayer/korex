@@ -57,6 +57,16 @@ export type ActivityMapInput = {
   coordinates: ActivityMapCoordinateInput[];
 };
 
+export type RecentActivity = {
+  averageHeartRateBeatsPerMinute: number | null;
+  distanceMeters: number | null;
+  durationSeconds: number | null;
+  id: number;
+  map: ActivityMapInput | null;
+  name: string;
+  startAt: Date;
+};
+
 export type ActivityStreamInput = {
   data: number[];
   streamType: ActivityStreamType;

@@ -1,5 +1,6 @@
 import {
   activities,
+  activityMaps,
   db,
   heartRateZones,
   providerConnections,
@@ -11,6 +12,7 @@ import type { ProviderConnectionTestData } from "./provider-connection-builder";
 import type { SyncRunTestData } from "./sync-run-builder";
 
 type ActivityInsert = typeof activities.$inferInsert;
+type ActivityMapInsert = typeof activityMaps.$inferInsert;
 type HeartRateZoneInsert = typeof heartRateZones.$inferInsert;
 type ProviderConnectionInsert = typeof providerConnections.$inferInsert;
 type SyncRunInsert = typeof syncRuns.$inferInsert;
@@ -84,6 +86,12 @@ class DataSeedBuilder {
       await db
         .insert(activities)
         .values(this.activityData.map(toActivityInsert));
+
+      const activityMapData = this.activityData.flatMap(toActivityMapInsert);
+
+      if (activityMapData.length > 0) {
+        await db.insert(activityMaps).values(activityMapData);
+      }
     }
 
     if (this.heartRateZoneData.length > 0) {
@@ -107,7 +115,22 @@ class DataSeedBuilder {
 export const DataSeedAsync = new DataSeedBuilder();
 
 function toActivityInsert(testData: ActivityTestData): ActivityInsert {
-  return testData;
+  const { map: _map, ...activity } = testData;
+  return activity;
+}
+
+function toActivityMapInsert(testData: ActivityTestData): ActivityMapInsert[] {
+  if (!testData.map) {
+    return [];
+  }
+
+  return [
+    {
+      activityId: testData.id,
+      bounds: testData.map.bounds,
+      coordinates: testData.map.coordinates,
+    },
+  ];
 }
 
 function toHeartRateZoneInsert(

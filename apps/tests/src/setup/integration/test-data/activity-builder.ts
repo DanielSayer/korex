@@ -1,4 +1,7 @@
-import type { SportType } from "@korex/api/modules/activities/activities.types";
+import type {
+  ActivityMapInput,
+  SportType,
+} from "@korex/api/modules/activities/activities.types";
 
 export type ActivityTestData = {
   averageCadenceStepsPerMinute: number | null;
@@ -11,6 +14,7 @@ export type ActivityTestData = {
   id: number;
   maxHeartRateBeatsPerMinute: number | null;
   maxSpeedMetersPerSecond: number | null;
+  map: ActivityMapInput | null;
   movingTimeSeconds: number | null;
   name: string;
   sportType: SportType;
@@ -37,6 +41,7 @@ export class ActivityBuilder {
       elapsedTimeSeconds: null,
       energyKilocalories: null,
       id: 1001,
+      map: null,
       maxHeartRateBeatsPerMinute: null,
       maxSpeedMetersPerSecond: null,
       movingTimeSeconds: 300,
@@ -54,8 +59,35 @@ export class ActivityBuilder {
     return this;
   }
 
+  withAverageHeartRateBeatsPerMinute(
+    averageHeartRateBeatsPerMinute: number | null,
+  ) {
+    this.value.averageHeartRateBeatsPerMinute = averageHeartRateBeatsPerMinute;
+    return this;
+  }
+
+  withDistanceMeters(distanceMeters: number | null) {
+    this.value.distanceMeters = distanceMeters;
+    return this;
+  }
+
   withMovingTimeSeconds(movingTimeSeconds: number | null) {
     this.value.movingTimeSeconds = movingTimeSeconds;
+    return this;
+  }
+
+  withMap(map: ActivityMapInput) {
+    this.value.map = map;
+    return this;
+  }
+
+  withName(name: string) {
+    this.value.name = name;
+    return this;
+  }
+
+  withStartAt(startAt: Date) {
+    this.value.startAt = startAt;
     return this;
   }
 

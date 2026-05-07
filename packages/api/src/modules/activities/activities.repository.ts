@@ -9,7 +9,7 @@ import {
   db,
   heartRateZones,
 } from "@korex/db";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import type {
   ActivityHeartRateZoneSnapshotInput,
   ActivityHeartRateZoneTimeInput,
@@ -17,6 +17,7 @@ import type {
   ActivityLapInput,
   ActivityMapInput,
   ActivityStreamInput,
+  RecentActivity,
 } from "./activities.types";
 
 type ActivityDatabase = Pick<
@@ -81,6 +82,46 @@ export async function deleteActivity(
   database: ActivityDatabase = db,
 ) {
   await database.delete(activities).where(eq(activities.id, activityId));
+}
+
+export async function getRecentActivities({
+  userId,
+}: {
+  database?: ActivityDatabase;
+  userId: string;
+}): Promise<RecentActivity[]> {
+  const rows = await db
+    .select({
+      activityId: activities.id,
+      averageHeartRateBeatsPerMinute: activities.averageHeartRateBeatsPerMinute,
+      bounds: activityMaps.bounds,
+      coordinates: activityMaps.coordinates,
+      distanceMeters: activities.distanceMeters,
+      durationSeconds: activities.movingTimeSeconds,
+      mapId: activityMaps.id,
+      name: activities.name,
+      startAt: activities.startAt,
+    })
+    .from(activities)
+    .leftJoin(activityMaps, eq(activityMaps.activityId, activities.id))
+    .where(eq(activities.userId, userId))
+    .orderBy(desc(activities.startAt))
+    .limit(5);
+
+  return rows.map((row) => ({
+    averageHeartRateBeatsPerMinute: row.averageHeartRateBeatsPerMinute,
+    distanceMeters: row.distanceMeters,
+    durationSeconds: row.durationSeconds,
+    id: row.activityId,
+    map: row.mapId
+      ? {
+          bounds: row.bounds,
+          coordinates: row.coordinates ?? [],
+        }
+      : null,
+    name: row.name,
+    startAt: row.startAt,
+  }));
 }
 
 export async function replaceActivityLaps({
