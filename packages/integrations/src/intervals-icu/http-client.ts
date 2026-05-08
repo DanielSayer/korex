@@ -1,10 +1,7 @@
 import { Context, Data, Effect, Layer } from "effect";
+import { getIntervalsIcuRequestUrl } from "./urls";
 
-const DEFAULT_BASE_URL = "https://intervals.icu";
-
-export function getIntervalsIcuRequestUrl(path: string) {
-  return `${DEFAULT_BASE_URL}${path}`;
-}
+export { getIntervalsIcuRequestUrl } from "./urls";
 
 export class IntervalsIcuHttpClientError extends Data.TaggedError(
   "IntervalsIcuHttpClientError",

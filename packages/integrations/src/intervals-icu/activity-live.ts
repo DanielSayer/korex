@@ -6,37 +6,36 @@ import {
   type ListIntervalsIcuActivitiesInput,
 } from "./client";
 import { INTERVALS_ICU_BASIC_AUTH_USERNAME } from "./constants";
-import {
-  getIntervalsIcuRequestUrl,
-  type IntervalsIcuHttpClientService,
-} from "./http-client";
+import type { IntervalsIcuHttpClientService } from "./http-client";
 import {
   intervalsIcuActivityDetailSchema,
   intervalsIcuActivityListSchema,
   intervalsIcuActivityMapSchema,
   intervalsIcuActivityStreamsSchema,
 } from "./schemas";
+import {
+  getIntervalsIcuActivityDetailPath,
+  getIntervalsIcuActivityListPath,
+  getIntervalsIcuActivityMapPath,
+  getIntervalsIcuActivityStreamsPath,
+  getIntervalsIcuRequestUrl,
+} from "./urls";
 
 export function listIntervalsIcuActivitiesLive(
   { apiKey, athleteId, endDate, startDate }: ListIntervalsIcuActivitiesInput,
   httpClient: IntervalsIcuHttpClientService,
 ) {
-  const searchParams = new URLSearchParams({
-    oldest: toIntervalsIcuDateParam(startDate),
-    newest: toIntervalsIcuDateParam(endDate),
-  });
-
   return requestIntervalsIcuJson({
     apiKey,
     httpClient,
-    path: `/api/v1/athlete/${encodeURIComponent(athleteId)}/activities?${searchParams.toString()}`,
+    path: getIntervalsIcuActivityListPath({
+      athleteId,
+      endDate,
+      startDate,
+    }),
     schema: intervalsIcuActivityListSchema,
     subject: "activity list",
   });
-}
-
-function toIntervalsIcuDateParam(date: Date) {
-  return date.toISOString().slice(0, 10);
 }
 
 export function getIntervalsIcuActivityDetailLive(
@@ -46,7 +45,7 @@ export function getIntervalsIcuActivityDetailLive(
   return requestIntervalsIcuJson({
     apiKey,
     httpClient,
-    path: `/api/v1/activity/${encodeURIComponent(activityId)}?intervals=true`,
+    path: getIntervalsIcuActivityDetailPath(activityId),
     schema: intervalsIcuActivityDetailSchema,
     subject: "activity detail",
   });
@@ -59,7 +58,7 @@ export function getIntervalsIcuActivityMapLive(
   return requestIntervalsIcuJson({
     apiKey,
     httpClient,
-    path: `/api/v1/activity/${encodeURIComponent(activityId)}/map`,
+    path: getIntervalsIcuActivityMapPath(activityId),
     schema: intervalsIcuActivityMapSchema,
     subject: "activity map",
   });
@@ -72,7 +71,7 @@ export function getIntervalsIcuActivityStreamsLive(
   return requestIntervalsIcuJson({
     apiKey,
     httpClient,
-    path: `/api/v1/activity/${encodeURIComponent(activityId)}/streams.json`,
+    path: getIntervalsIcuActivityStreamsPath(activityId),
     schema: intervalsIcuActivityStreamsSchema,
     subject: "activity streams",
   });
