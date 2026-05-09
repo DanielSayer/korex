@@ -33,6 +33,10 @@ export type ActivitySyncRepositoryService = {
     syncRunId: number;
   }) => Promise<void>;
   hasSuccessfulActivitySyncRunForUser: (userId: string) => Promise<boolean>;
+  markProviderConnectionSynced: (input: {
+    connectionId: number;
+    syncedAt: Date;
+  }) => Promise<void>;
 };
 
 export class ActivitySyncRepository extends Context.Tag(

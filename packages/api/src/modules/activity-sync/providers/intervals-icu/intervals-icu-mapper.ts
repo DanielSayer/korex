@@ -27,7 +27,9 @@ export function toExternalActivityUpsertInput({
     providerUpdatedAt: readOptionalDate(detail.updated_at ?? detail.updated),
     rawData: detail,
     sourceType: readOptionalString(detail.source),
-    sportType: readOptionalString(detail.type ?? detail.sport ?? detail.category),
+    sportType: readOptionalString(
+      detail.type ?? detail.sport ?? detail.category,
+    ),
     userId,
   };
 }

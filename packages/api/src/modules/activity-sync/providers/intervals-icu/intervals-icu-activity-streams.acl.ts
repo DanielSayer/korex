@@ -132,9 +132,9 @@ function describeValue(value: unknown) {
   if (Array.isArray(value)) {
     return {
       length: value.length,
-      sampleTypes: value.slice(0, 10).map((item) =>
-        item === null ? "null" : typeof item,
-      ),
+      sampleTypes: value
+        .slice(0, 10)
+        .map((item) => (item === null ? "null" : typeof item)),
       type: "array",
     };
   }

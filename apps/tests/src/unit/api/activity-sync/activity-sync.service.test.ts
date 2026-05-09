@@ -13,6 +13,34 @@ import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("fetchIntervalsIcuActivities", () => {
+  it("marks the provider connection synced to the requested end date after a successful sync", async () => {
+    const repository = createSyncRepositoryRecorder();
+    const result = await runFetchIntervalsIcuActivities({
+      clientLayer: createClientLayer({
+        listActivities: Effect.succeed([{ id: "activity-1" }]),
+      }),
+      repository,
+      syncActivityLayer: createSyncActivityLayer({
+        "activity-1": ({ counters }) => {
+          counters.activitiesStored += 1;
+          counters.activitiesCreated += 1;
+        },
+      }),
+    });
+
+    expect(result).toMatchObject({
+      activitiesCreated: 1,
+      activitiesSeen: 1,
+      status: "success",
+    });
+    expect(repository.syncedConnections).toEqual([
+      {
+        connectionId: 456,
+        syncedAt: new Date("2026-04-02T00:00:00.000Z"),
+      },
+    ]);
+  });
+
   it("finishes the sync run as failed when listing activities fails", async () => {
     const repository = createSyncRepositoryRecorder();
 
@@ -56,6 +84,7 @@ describe("fetchIntervalsIcuActivities", () => {
         syncRunId: 123,
       }),
     ]);
+    expect(repository.syncedConnections).toEqual([]);
   });
 
   it("returns failed when every listed activity fails before storage", async () => {
@@ -99,6 +128,7 @@ describe("fetchIntervalsIcuActivities", () => {
         status: "failed",
       }),
     ]);
+    expect(repository.syncedConnections).toEqual([]);
   });
 
   it("returns partial when stored activity sync records map or stream errors", async () => {
@@ -137,6 +167,7 @@ describe("fetchIntervalsIcuActivities", () => {
         status: "partial",
       }),
     ]);
+    expect(repository.syncedConnections).toEqual([]);
   });
 
   it("keeps mixed success and failure counters when a later detail fetch fails", async () => {
@@ -257,6 +288,7 @@ function createProviderSessionLayer() {
       Effect.succeed({
         apiKey: "api-key",
         authType: "basic" as const,
+        connectionId: 456,
         provider: "intervals_icu" as const,
         providerUserId: "athlete-1",
       }),
@@ -277,11 +309,13 @@ type FinishedSyncRun = {
 
 type SyncRepositoryRecorder = {
   finishedRuns: FinishedSyncRun[];
+  syncedConnections: Array<{ connectionId: number; syncedAt: Date }>;
 };
 
 function createSyncRepositoryRecorder(): SyncRepositoryRecorder {
   return {
     finishedRuns: [],
+    syncedConnections: [],
   };
 }
 
@@ -292,5 +326,8 @@ function createSyncRepositoryLayer(repository: SyncRepositoryRecorder) {
       repository.finishedRuns.push(input);
     },
     hasSuccessfulActivitySyncRunForUser: async () => false,
+    markProviderConnectionSynced: async (input) => {
+      repository.syncedConnections.push(input);
+    },
   });
 }

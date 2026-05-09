@@ -37,6 +37,7 @@ function getActiveProviderSession({
     return {
       apiKey,
       authType: "basic" as const,
+      connectionId: connection.id,
       provider: connection.provider,
       providerUserId: connection.providerUserId,
     };
@@ -62,6 +63,7 @@ function getActiveProviderSessionForUser({ userId }: { userId: string }) {
     return {
       apiKey,
       authType: "basic" as const,
+      connectionId: connection.id,
       provider: connection.provider,
       providerUserId: connection.providerUserId,
     };

@@ -12,6 +12,7 @@ import {
   externalActivities,
   externalActivityMaps,
   externalActivityStreams,
+  providerConnections,
   syncRuns,
 } from "@korex/db";
 import { IntervalsIcuClientLayer } from "@korex/integrations/intervals-icu/live";
@@ -92,6 +93,15 @@ describe("activity sync integration", () => {
       userId: userDataExtensions.HughJass.id,
     });
     expect(syncRun.finishedAt).toBeInstanceOf(Date);
+
+    const [syncedProviderConnection] = await db
+      .select()
+      .from(providerConnections)
+      .where(eq(providerConnections.userId, providerConnection.userId));
+
+    expect(syncedProviderConnection?.lastSyncedAt).toEqual(
+      new Date("2026-04-02T00:00:00.000Z"),
+    );
 
     const [activity] = await db
       .select()

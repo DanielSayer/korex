@@ -7,6 +7,7 @@ import {
   replaceActivityLaps,
   upsertActivity,
 } from "../activities/activity-import.repository";
+import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
 import {
   ActivityArtifactStore,
@@ -32,6 +33,7 @@ const ActivitySyncRepositoryLive = Layer.succeed(ActivitySyncRepository, {
   createActivitySyncRun,
   finishActivitySyncRun,
   hasSuccessfulActivitySyncRunForUser,
+  markProviderConnectionSynced,
 });
 
 export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {

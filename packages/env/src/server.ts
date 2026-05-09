@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
-import { createEnv } from "@t3-oss/env-core";
 import { fileURLToPath } from "node:url";
+import { createEnv } from "@t3-oss/env-core";
+import dotenv from "dotenv";
 import { z } from "zod";
 
 dotenv.config({

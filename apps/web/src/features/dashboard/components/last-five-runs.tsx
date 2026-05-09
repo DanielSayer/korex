@@ -1,5 +1,5 @@
 import type { RecentActivity } from "@korex/api/modules/activities/activities.types";
-import { RunFilmstripItem } from "./run-card";
+import { RunCard } from "./run-card";
 
 type LastFiveRunsProps = {
   runs: RecentActivity[];
@@ -17,7 +17,7 @@ function LastFiveRuns({ runs }: LastFiveRunsProps) {
   return (
     <div className="grid gap-3 lg:grid-cols-5">
       {runs.map((run) => (
-        <RunFilmstripItem key={run.id} run={run} />
+        <RunCard key={run.id} run={run} />
       ))}
     </div>
   );

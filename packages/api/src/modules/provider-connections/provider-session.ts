@@ -7,6 +7,7 @@ export type Provider = "intervals_icu";
 export type ProviderSession = {
   apiKey: string;
   authType: "basic";
+  connectionId: number;
   provider: "intervals_icu";
   providerUserId: string;
 };

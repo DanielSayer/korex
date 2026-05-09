@@ -142,6 +142,15 @@ function fetchIntervalsIcuActivitiesForSession(
       }),
     );
 
+    if (status === "success") {
+      yield* Effect.promise(() =>
+        repository.markProviderConnectionSynced({
+          connectionId: session.connectionId,
+          syncedAt: endDate,
+        }),
+      );
+    }
+
     return {
       ...counters,
       errors,

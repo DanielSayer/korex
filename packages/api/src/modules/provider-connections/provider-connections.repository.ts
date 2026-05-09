@@ -157,3 +157,19 @@ export async function getActiveProviderConnectionForUserId(userId: string) {
 
   return connection ?? null;
 }
+
+export async function markProviderConnectionSynced({
+  connectionId,
+  syncedAt,
+}: {
+  connectionId: number;
+  syncedAt: Date;
+}) {
+  await db
+    .update(providerConnections)
+    .set({
+      lastSyncedAt: syncedAt,
+      updatedAt: new Date(),
+    })
+    .where(eq(providerConnections.id, connectionId));
+}
