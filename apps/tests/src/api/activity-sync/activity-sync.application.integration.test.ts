@@ -1,4 +1,7 @@
-import { executeInitialSync } from "@korex/api/modules/activity-sync/activity-sync.application";
+import {
+  executeIncrementalSync,
+  executeInitialSync,
+} from "@korex/api/modules/activity-sync/activity-sync.application";
 import {
   createActivitySyncRun,
   finishActivitySyncRun,
@@ -24,6 +27,14 @@ describe("activity sync application", () => {
 
     await expect(
       executeInitialSync(userDataExtensions.HughJass.id),
+    ).rejects.toMatchObject({
+      code: "CONFLICT",
+    });
+  });
+
+  it("fails incremental sync before provider dispatch when the user has no successful sync", async () => {
+    await expect(
+      executeIncrementalSync(userDataExtensions.HughJass.id),
     ).rejects.toMatchObject({
       code: "CONFLICT",
     });

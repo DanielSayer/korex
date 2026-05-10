@@ -60,6 +60,10 @@ _Avoid_: Device identity, recording source
 The upstream identifiers, timestamps, and raw payload retained for an imported **Activity**.
 _Avoid_: Activity fields, core activity data
 
+**Incremental Activity Sync Watermark**:
+The timestamp used as the lower bound for the next incremental activity sync window.
+_Avoid_: Last finished sync time, cursor timestamp
+
 ## Relationships
 
 - A **Heart Rate Zone** belongs to exactly one **User**
@@ -125,6 +129,9 @@ _Avoid_: Activity fields, core activity data
 - Storing an **Activity**, replacing its **Activity Laps**, and linking **Provider Activity Metadata** should happen atomically.
 - If **Activity Lap** translation fails, Korex retains **Provider Activity Metadata** but skips the core **Activity** update and **Activity Lap** replacement.
 - An **Anti-Corruption Layer** may map fields, convert units, coerce invalid optional metrics to empty values, and choose default **Activity** names; it must not calculate derived **Activity** metrics.
+- An **Incremental Activity Sync Watermark** is the `started_at` timestamp of the latest successful activity sync run, not its `finished_at` timestamp.
+- Incremental activity sync deliberately overlaps the previous successful sync window so provider changes made during that previous run are not missed.
+- Incremental activity sync requires a previous successful activity sync run; it must not silently fall back to initial sync behavior.
 
 ## Example dialogue
 
@@ -139,3 +146,4 @@ _Avoid_: Activity fields, core activity data
 - "lap" and "split" can refer to provider-shaped segment records; resolved: use **Activity Lap** for the Korex-owned segment of an **Activity**.
 - "zone time" can mean provider-reported durations or Korex-calculated activity summaries; resolved: use **Activity Heart Rate Zone Time** only for point-in-time durations calculated by Korex.
 - "pending zone time" was considered for captured zones awaiting calculation; resolved: use **Activity Heart Rate Zone Snapshot** for the captured historical zone definition and **Activity Heart Rate Zone Time** only for calculated durations.
+- "last sync time" can mean when a sync started, finished, or last wrote provider connection metadata; resolved: use **Incremental Activity Sync Watermark** for the lower bound of an incremental activity sync window.

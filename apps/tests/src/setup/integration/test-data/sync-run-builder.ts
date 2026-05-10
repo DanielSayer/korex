@@ -3,7 +3,13 @@ type SyncType = "initial" | "incremental" | "manual" | "backfill";
 type ExternalProvider = "intervals_icu";
 
 export type SyncRunTestData = {
+  activitiesCreated: number;
+  activitiesSeen: number;
+  activitiesUpdated: number;
+  finishedAt: Date | null;
+  id?: number;
   provider: ExternalProvider;
+  startedAt: Date;
   status: SyncRunStatus;
   syncType: SyncType;
   userId: string;
@@ -18,11 +24,26 @@ export class SyncRunBuilder {
 
   private constructor(userId: string) {
     this.value = {
+      activitiesCreated: 0,
+      activitiesSeen: 0,
+      activitiesUpdated: 0,
+      finishedAt: new Date("2026-04-01T00:00:01.000Z"),
       provider: "intervals_icu",
+      startedAt: new Date("2026-04-01T00:00:00.000Z"),
       status: "success",
       syncType: "manual",
       userId,
     };
+  }
+
+  withId(id: number) {
+    this.value.id = id;
+    return this;
+  }
+
+  withStartedAt(startedAt: Date) {
+    this.value.startedAt = startedAt;
+    return this;
   }
 
   withStatus(status: SyncRunStatus) {

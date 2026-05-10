@@ -12,6 +12,12 @@ export class SuccessfulActivitySyncExistsError extends Data.TaggedError(
   message: string;
 }> {}
 
+export class SuccessfulActivitySyncNotFoundError extends Data.TaggedError(
+  "SuccessfulActivitySyncNotFoundError",
+)<{
+  message: string;
+}> {}
+
 export class ActivitySyncProviderNotSupportedError extends Data.TaggedError(
   "ActivitySyncProviderNotSupportedError",
 )<{

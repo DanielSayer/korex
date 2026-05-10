@@ -70,7 +70,12 @@ export function fetchIntervalsIcuActivities({
 }
 
 function fetchIntervalsIcuActivitiesForSession(
-  { endDate, startDate, userId }: FetchIntervalsIcuActivitiesInput,
+  {
+    endDate,
+    startDate,
+    syncType = "manual",
+    userId,
+  }: FetchIntervalsIcuActivitiesInput,
   session: ProviderSession,
 ) {
   return Effect.gen(function* () {
@@ -81,7 +86,7 @@ function fetchIntervalsIcuActivitiesForSession(
     const syncRun = yield* Effect.promise(() =>
       repository.createActivitySyncRun({
         provider: session.provider,
-        syncType: "manual",
+        syncType,
         userId,
       }),
     );

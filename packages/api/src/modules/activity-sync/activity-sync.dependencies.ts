@@ -19,7 +19,7 @@ import type {
 export type ActivitySyncRepositoryService = {
   createActivitySyncRun: (input: {
     provider: "intervals_icu";
-    syncType: "manual";
+    syncType: "initial" | "incremental" | "manual";
     userId: string;
   }) => Promise<{ id: number }>;
   finishActivitySyncRun: (input: {
@@ -33,6 +33,9 @@ export type ActivitySyncRepositoryService = {
     syncRunId: number;
   }) => Promise<void>;
   hasSuccessfulActivitySyncRunForUser: (userId: string) => Promise<boolean>;
+  getLatestSuccessfulActivitySyncRunForUser: (
+    userId: string,
+  ) => Promise<{ id: number; startedAt: Date } | null>;
   markProviderConnectionSynced: (input: {
     connectionId: number;
     syncedAt: Date;

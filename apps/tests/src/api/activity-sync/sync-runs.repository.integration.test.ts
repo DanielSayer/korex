@@ -1,6 +1,7 @@
 import {
   createActivitySyncRun,
   finishActivitySyncRun,
+  getLatestSuccessfulActivitySyncRunForUser,
   hasSuccessfulActivitySyncRunForUser,
 } from "@korex/api/modules/activity-sync/repositories/sync-runs.repository";
 import { db, syncRuns } from "@korex/db";
@@ -83,5 +84,34 @@ describe("sync runs repository", () => {
     await expect(
       hasSuccessfulActivitySyncRunForUser(userDataExtensions.HughJass.id),
     ).resolves.toBe(true);
+  });
+
+  it("gets the latest successful sync run for a user", async () => {
+    const latestSuccessfulSyncId = 9003;
+    await DataSeedAsync.withSyncRuns(
+      SyncRunBuilder.initWithUser(userDataExtensions.HughJass.id)
+        .withId(9001)
+        .withStartedAt(new Date("2026-04-01T00:00:00.000Z"))
+        .withSyncType("initial")
+        .build(),
+      SyncRunBuilder.initWithUser(userDataExtensions.HughJass.id)
+        .withId(9002)
+        .withStartedAt(new Date("2026-04-03T00:00:00.000Z"))
+        .withStatus("failed")
+        .withSyncType("incremental")
+        .build(),
+      SyncRunBuilder.initWithUser(userDataExtensions.HughJass.id)
+        .withId(latestSuccessfulSyncId)
+        .withStartedAt(new Date("2026-04-02T00:00:00.000Z"))
+        .withSyncType("incremental")
+        .build(),
+    ).seedAsync();
+
+    await expect(
+      getLatestSuccessfulActivitySyncRunForUser(userDataExtensions.HughJass.id),
+    ).resolves.toMatchObject({
+      id: latestSuccessfulSyncId,
+      startedAt: new Date("2026-04-02T00:00:00.000Z"),
+    });
   });
 });

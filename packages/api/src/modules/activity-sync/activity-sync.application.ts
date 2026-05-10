@@ -6,6 +6,7 @@ import {
   ActivitySyncError,
   ActivitySyncProviderNotSupportedError,
   SuccessfulActivitySyncExistsError,
+  SuccessfulActivitySyncNotFoundError,
 } from "./activity-sync.errors";
 import { ActivitySyncLive } from "./activity-sync.live";
 import { syncUserActivities } from "./activity-sync.service";
@@ -30,6 +31,36 @@ export function executeInitialSync(userId: string) {
       return yield* syncUserActivities({
         endDate: now,
         startDate: new Date(Date.UTC(now.getUTCFullYear(), 0, 1)),
+        syncType: "initial",
+        userId,
+      });
+    }).pipe(
+      Effect.provide(Layer.mergeAll(IntervalsIcuClientLive, ActivitySyncLive)),
+    ),
+  );
+}
+
+export function executeIncrementalSync(userId: string) {
+  return runActivitySyncEffect(
+    Effect.gen(function* () {
+      const now = new Date();
+      const repository = yield* ActivitySyncRepository;
+      const latestSuccessfulSync = yield* Effect.promise(() =>
+        repository.getLatestSuccessfulActivitySyncRunForUser(userId),
+      );
+
+      if (!latestSuccessfulSync) {
+        return yield* Effect.fail(
+          new SuccessfulActivitySyncNotFoundError({
+            message: "User does not have a successful sync",
+          }),
+        );
+      }
+
+      return yield* syncUserActivities({
+        endDate: now,
+        startDate: latestSuccessfulSync.startedAt,
+        syncType: "incremental",
         userId,
       });
     }).pipe(
@@ -62,6 +93,13 @@ function toActivitySyncOrpcError(cause: unknown) {
   if (cause instanceof SuccessfulActivitySyncExistsError) {
     return new ORPCError("CONFLICT", {
       message: "User already has a successful sync",
+      cause,
+    });
+  }
+
+  if (cause instanceof SuccessfulActivitySyncNotFoundError) {
+    return new ORPCError("CONFLICT", {
+      message: "User does not have a successful sync",
       cause,
     });
   }

@@ -26,12 +26,14 @@ import {
 import {
   createActivitySyncRun,
   finishActivitySyncRun,
+  getLatestSuccessfulActivitySyncRunForUser,
   hasSuccessfulActivitySyncRunForUser,
 } from "./repositories/sync-runs.repository";
 
 const ActivitySyncRepositoryLive = Layer.succeed(ActivitySyncRepository, {
   createActivitySyncRun,
   finishActivitySyncRun,
+  getLatestSuccessfulActivitySyncRunForUser,
   hasSuccessfulActivitySyncRunForUser,
   markProviderConnectionSynced,
 });
