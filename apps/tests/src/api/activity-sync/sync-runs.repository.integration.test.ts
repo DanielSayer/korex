@@ -1,6 +1,7 @@
 import {
   createActivitySyncRun,
   finishActivitySyncRun,
+  getLatestIncrementalActivitySyncRunForUser,
   getLatestSuccessfulActivitySyncRunForUser,
   hasSuccessfulActivitySyncRunForUser,
 } from "@korex/api/modules/activity-sync/repositories/sync-runs.repository";
@@ -111,6 +112,37 @@ describe("sync runs repository", () => {
       getLatestSuccessfulActivitySyncRunForUser(userDataExtensions.HughJass.id),
     ).resolves.toMatchObject({
       id: latestSuccessfulSyncId,
+      startedAt: new Date("2026-04-02T00:00:00.000Z"),
+    });
+  });
+
+  it("gets the latest incremental sync run for a user", async () => {
+    const latestIncrementalSyncId = 9012;
+    await DataSeedAsync.withSyncRuns(
+      SyncRunBuilder.initWithUser(userDataExtensions.HughJass.id)
+        .withId(9010)
+        .withStartedAt(new Date("2026-04-03T00:00:00.000Z"))
+        .withSyncType("manual")
+        .build(),
+      SyncRunBuilder.initWithUser(userDataExtensions.HughJass.id)
+        .withId(9011)
+        .withStartedAt(new Date("2026-04-01T00:00:00.000Z"))
+        .withSyncType("incremental")
+        .build(),
+      SyncRunBuilder.initWithUser(userDataExtensions.HughJass.id)
+        .withId(latestIncrementalSyncId)
+        .withStartedAt(new Date("2026-04-02T00:00:00.000Z"))
+        .withStatus("failed")
+        .withSyncType("incremental")
+        .build(),
+    ).seedAsync();
+
+    await expect(
+      getLatestIncrementalActivitySyncRunForUser(
+        userDataExtensions.HughJass.id,
+      ),
+    ).resolves.toMatchObject({
+      id: latestIncrementalSyncId,
       startedAt: new Date("2026-04-02T00:00:00.000Z"),
     });
   });

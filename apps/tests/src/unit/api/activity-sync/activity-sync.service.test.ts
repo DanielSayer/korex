@@ -325,8 +325,9 @@ function createSyncRepositoryLayer(repository: SyncRepositoryRecorder) {
     finishActivitySyncRun: async (input) => {
       repository.finishedRuns.push(input);
     },
-    hasSuccessfulActivitySyncRunForUser: async () => false,
+    getLatestIncrementalActivitySyncRunForUser: async () => null,
     getLatestSuccessfulActivitySyncRunForUser: async () => null,
+    hasSuccessfulActivitySyncRunForUser: async () => false,
     markProviderConnectionSynced: async (input) => {
       repository.syncedConnections.push(input);
     },

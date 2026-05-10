@@ -90,3 +90,21 @@ export async function getLatestSuccessfulActivitySyncRunForUser(
 
   return syncRun ?? null;
 }
+
+export async function getLatestIncrementalActivitySyncRunForUser(
+  userId: string,
+) {
+  const [syncRun] = await db
+    .select({
+      id: syncRuns.id,
+      startedAt: syncRuns.startedAt,
+    })
+    .from(syncRuns)
+    .where(
+      and(eq(syncRuns.userId, userId), eq(syncRuns.syncType, "incremental")),
+    )
+    .orderBy(desc(syncRuns.startedAt))
+    .limit(1);
+
+  return syncRun ?? null;
+}

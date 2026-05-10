@@ -5,11 +5,14 @@ import { ActivitySyncRepository } from "./activity-sync.dependencies";
 import {
   ActivitySyncError,
   ActivitySyncProviderNotSupportedError,
+  IncrementalActivitySyncRateLimitedError,
   SuccessfulActivitySyncExistsError,
   SuccessfulActivitySyncNotFoundError,
 } from "./activity-sync.errors";
 import { ActivitySyncLive } from "./activity-sync.live";
 import { syncUserActivities } from "./activity-sync.service";
+
+const INCREMENTAL_SYNC_RATE_LIMIT_MS = 5 * 60 * 1000;
 
 export function executeInitialSync(userId: string) {
   return runActivitySyncEffect(
@@ -48,6 +51,9 @@ export function executeIncrementalSync(userId: string) {
       const latestSuccessfulSync = yield* Effect.promise(() =>
         repository.getLatestSuccessfulActivitySyncRunForUser(userId),
       );
+      const latestIncrementalSync = yield* Effect.promise(() =>
+        repository.getLatestIncrementalActivitySyncRunForUser(userId),
+      );
 
       if (!latestSuccessfulSync) {
         return yield* Effect.fail(
@@ -55,6 +61,20 @@ export function executeIncrementalSync(userId: string) {
             message: "User does not have a successful sync",
           }),
         );
+      }
+
+      if (latestIncrementalSync) {
+        const nextAllowedSyncAt =
+          latestIncrementalSync.startedAt.getTime() +
+          INCREMENTAL_SYNC_RATE_LIMIT_MS;
+
+        if (nextAllowedSyncAt > now.getTime()) {
+          return yield* Effect.fail(
+            new IncrementalActivitySyncRateLimitedError({
+              message: `You can sync again in ${formatApproximateWait(nextAllowedSyncAt - now.getTime())}.`,
+            }),
+          );
+        }
       }
 
       return yield* syncUserActivities({
@@ -104,6 +124,13 @@ function toActivitySyncOrpcError(cause: unknown) {
     });
   }
 
+  if (cause instanceof IncrementalActivitySyncRateLimitedError) {
+    return new ORPCError("TOO_MANY_REQUESTS", {
+      message: cause.message,
+      cause,
+    });
+  }
+
   if (cause instanceof ActivitySyncError) {
     return new ORPCError("BAD_GATEWAY", {
       message: cause.message,
@@ -122,4 +149,10 @@ function toActivitySyncOrpcError(cause: unknown) {
     message: "Failed to sync activities",
     cause,
   });
+}
+
+function formatApproximateWait(milliseconds: number) {
+  const minutes = Math.max(2, Math.ceil(milliseconds / (2 * 60 * 1000)) * 2);
+
+  return `about ${minutes} minutes`;
 }

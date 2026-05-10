@@ -18,6 +18,12 @@ export class SuccessfulActivitySyncNotFoundError extends Data.TaggedError(
   message: string;
 }> {}
 
+export class IncrementalActivitySyncRateLimitedError extends Data.TaggedError(
+  "IncrementalActivitySyncRateLimitedError",
+)<{
+  message: string;
+}> {}
+
 export class ActivitySyncProviderNotSupportedError extends Data.TaggedError(
   "ActivitySyncProviderNotSupportedError",
 )<{

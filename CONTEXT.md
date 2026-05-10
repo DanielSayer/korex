@@ -132,6 +132,8 @@ _Avoid_: Last finished sync time, cursor timestamp
 - An **Incremental Activity Sync Watermark** is the `started_at` timestamp of the latest successful activity sync run, not its `finished_at` timestamp.
 - Incremental activity sync deliberately overlaps the previous successful sync window so provider changes made during that previous run are not missed.
 - Incremental activity sync requires a previous successful activity sync run; it must not silently fall back to initial sync behavior.
+- A user can start an incremental activity sync at most once every five minutes.
+- Failed incremental activity sync attempts still count toward the five-minute incremental sync rate limit.
 
 ## Example dialogue
 

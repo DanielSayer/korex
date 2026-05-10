@@ -36,6 +36,9 @@ export type ActivitySyncRepositoryService = {
   getLatestSuccessfulActivitySyncRunForUser: (
     userId: string,
   ) => Promise<{ id: number; startedAt: Date } | null>;
+  getLatestIncrementalActivitySyncRunForUser: (
+    userId: string,
+  ) => Promise<{ id: number; startedAt: Date } | null>;
   markProviderConnectionSynced: (input: {
     connectionId: number;
     syncedAt: Date;
