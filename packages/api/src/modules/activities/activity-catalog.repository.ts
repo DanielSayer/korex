@@ -1,6 +1,6 @@
 import { activities, activityMaps, db } from "@korex/db";
-import { desc, eq } from "drizzle-orm";
-import type { RecentActivity } from "./activities.types";
+import { and, desc, eq, gte, lte } from "drizzle-orm";
+import type { ActivityListItem, RecentActivity } from "./activities.types";
 
 export async function getRecentActivities({
   userId,
@@ -39,4 +39,34 @@ export async function getRecentActivities({
     name: row.name,
     startAt: row.startAt,
   }));
+}
+
+export async function listActivitiesForDateRange({
+  endDate,
+  startDate,
+  userId,
+}: {
+  endDate: Date;
+  startDate: Date;
+  userId: string;
+}): Promise<ActivityListItem[]> {
+  const rows = await db
+    .select({
+      averageHeartRateBeatsPerMinute: activities.averageHeartRateBeatsPerMinute,
+      distanceMeters: activities.distanceMeters,
+      durationSeconds: activities.movingTimeSeconds,
+      name: activities.name,
+      startAt: activities.startAt,
+    })
+    .from(activities)
+    .where(
+      and(
+        eq(activities.userId, userId),
+        gte(activities.startAt, startDate),
+        lte(activities.startAt, endDate),
+      ),
+    )
+    .orderBy(desc(activities.startAt));
+
+  return rows;
 }

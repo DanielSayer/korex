@@ -67,6 +67,14 @@ export type RecentActivity = {
   startAt: Date;
 };
 
+export type ActivityListItem = {
+  averageHeartRateBeatsPerMinute: number | null;
+  distanceMeters: number | null;
+  durationSeconds: number | null;
+  name: string;
+  startAt: Date;
+};
+
 export type ActivityStreamInput = {
   data: number[];
   streamType: ActivityStreamType;
