@@ -24,6 +24,7 @@
     "@tanstack/react-router": "^1.168.22",
     "better-auth": "catalog:",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dotenv": "catalog:",
     "lucide-react": "^1.11.0",
     "motion": "^12.38.0",
