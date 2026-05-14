@@ -16,7 +16,12 @@ function LastFiveRunsSection() {
         </div>
       </div>
       <QueryRenderer
-        error={<ErrorMessage message="Could not load recent runs." />}
+        error={
+          <ErrorMessage
+            message="Could not load recent runs."
+            variant="banner"
+          />
+        }
         loading={<LastFiveRunsSkeleton />}
         query={recentActivities}
       >

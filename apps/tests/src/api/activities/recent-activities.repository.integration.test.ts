@@ -122,6 +122,7 @@ describe("recent activities repository", () => {
         .withStartAt(new Date("2026-04-02T00:00:00.000Z"))
         .withMovingTimeSeconds(1200)
         .withDistanceMeters(3000)
+        .withTotalElevationGainMeters(24.5)
         .withAverageHeartRateBeatsPerMinute(140)
         .withMap({
           bounds: null,
@@ -132,6 +133,8 @@ describe("recent activities repository", () => {
         .withId(1103)
         .withName("Range End")
         .withStartAt(new Date("2026-04-03T00:00:00.000Z"))
+        .withDistanceMeters(1500)
+        .withTotalElevationGainMeters(12)
         .build(),
       ActivityBuilder.initWithUser(userId)
         .withId(1104)
@@ -154,10 +157,11 @@ describe("recent activities repository", () => {
     expect(result).toEqual([
       {
         averageHeartRateBeatsPerMinute: null,
-        distanceMeters: null,
+        distanceMeters: 1500,
         durationSeconds: 300,
         name: "Range End",
         startAt: new Date("2026-04-03T00:00:00.000Z"),
+        totalElevationGainMeters: 12,
       },
       {
         averageHeartRateBeatsPerMinute: 140,
@@ -165,6 +169,7 @@ describe("recent activities repository", () => {
         durationSeconds: 1200,
         name: "Range Start",
         startAt: new Date("2026-04-02T00:00:00.000Z"),
+        totalElevationGainMeters: 24.5,
       },
     ]);
     expect(result[1]).not.toHaveProperty("map");

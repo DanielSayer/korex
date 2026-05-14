@@ -1,4 +1,7 @@
-import type { ActivityListItem } from "@korex/api/modules/activities/activities.types";
+import type {
+  ActivityListItem,
+  ActivitySummary,
+} from "@korex/api/modules/activities/activities.types";
 import { Button } from "@korex/ui/components/button";
 import { cn } from "@korex/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
@@ -9,8 +12,10 @@ import {
   ClockIcon,
   HeartPulseIcon,
   Loader2Icon,
+  MountainIcon,
   RouteIcon,
 } from "lucide-react";
+import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { ErrorMessage } from "@/components/error-message";
 import {
@@ -43,7 +48,8 @@ function ActivityCalendar({
       },
     }),
   );
-  const activities = activitiesQuery.data ?? [];
+  const activities = activitiesQuery.data?.activities ?? [];
+  const summaries = activitiesQuery.data?.summaries ?? [];
   const showLoadingOverlay = activitiesQuery.isFetching;
 
   return (
@@ -55,15 +61,13 @@ function ActivityCalendar({
         onToday={() => onMonthChange(new Date())}
       />
       {activitiesQuery.isError ? (
-        <ErrorMessage
-          message="Could not load activities."
-          className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive"
-        />
+        <ErrorMessage message="Could not load activities." variant="banner" />
       ) : null}
-      <div className="relative grid flex-1">
+      <div className="relative min-w-0">
         <MonthGrid
           activities={activities}
           days={monthGrid.days}
+          summaries={summaries}
           visibleMonth={visibleMonth}
         />
         {showLoadingOverlay ? (
@@ -77,6 +81,64 @@ function ActivityCalendar({
         ) : null}
       </div>
     </section>
+  );
+}
+
+function WeekSummary({ summary }: { summary: ActivitySummary | undefined }) {
+  if (!summary) {
+    return <section className="border-border border-r border-b bg-muted/20" />;
+  }
+
+  const weekStartDate = new Date(summary.weekStartDate);
+
+  return (
+    <section className="overflow-hidden border-border border-r border-b bg-background px-4 py-4">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h3 className="font-medium text-sm">
+          Week {format(weekStartDate, "I")}
+        </h3>
+        <span className="text-muted-foreground text-xs">
+          {format(weekStartDate, "MMM d")}
+        </span>
+      </div>
+      <dl className="grid gap-3">
+        <SummaryMetric
+          icon={<ClockIcon />}
+          label="Total time"
+          value={formatSummaryDuration(summary.durationSeconds)}
+        />
+        <SummaryMetric
+          icon={<MountainIcon />}
+          label="Elevation gain"
+          value={formatElevation(summary.totalElevationGainMeters)}
+        />
+        <SummaryMetric
+          icon={<RouteIcon />}
+          label="Total distance"
+          value={formatDistance(summary.distanceMeters)}
+        />
+      </dl>
+    </section>
+  );
+}
+
+function SummaryMetric({
+  icon,
+  label,
+  value,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <dt className="inline-flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
+        <span className="[&>svg]:size-3.5">{icon}</span>
+        <span className="truncate">{label}</span>
+      </dt>
+      <dd className="shrink-0 font-semibold text-sm">{value}</dd>
+    </div>
   );
 }
 
@@ -132,40 +194,75 @@ function CalendarHeader({
 function MonthGrid({
   activities,
   days,
+  summaries,
   visibleMonth,
 }: {
   activities: ActivityListItem[];
   days: CalendarDay[];
+  summaries: ActivitySummary[];
   visibleMonth: Date;
 }) {
   const activitiesByDay = useMemo(
     () => groupActivitiesByDay(activities),
     [activities],
   );
+  const summariesByWeek = useMemo(
+    () => groupSummariesByWeek(summaries),
+    [summaries],
+  );
+  const weeks = useMemo(() => getCalendarWeeks(days), [days]);
 
   return (
-    <div className="grid flex-1 grid-rows-[auto_1fr] overflow-hidden rounded-lg border bg-background">
-      <div className="grid grid-cols-7 border-b bg-muted/40">
+    <div className="overflow-x-auto rounded-lg border bg-background">
+      <div className="grid min-w-[960px] grid-cols-[minmax(220px,0.9fr)_repeat(7,minmax(120px,1fr))]">
+        <div className="border-border border-r border-b bg-muted/40 px-4 py-2 font-medium text-muted-foreground text-xs">
+          Summary
+        </div>
         {weekDayLabels.map((day) => (
           <div
             key={day}
-            className="px-2 py-2 text-center font-medium text-muted-foreground text-xs"
+            className="border-border border-r border-b bg-muted/40 px-2 py-2 text-center font-medium text-muted-foreground text-xs last:border-r-0"
           >
             {day}
           </div>
         ))}
-      </div>
-      <div className="grid auto-rows-fr grid-cols-7">
-        {days.map((day) => (
-          <CalendarCell
-            activities={activitiesByDay.get(getActivityDayKey(day.date)) ?? []}
-            day={day}
-            key={day.date.toISOString()}
+        {weeks.map((week) => (
+          <WeekRow
+            activitiesByDay={activitiesByDay}
+            days={week}
+            key={week[0].date.toISOString()}
+            summary={summariesByWeek.get(getActivityDayKey(week[0].date))}
             visibleMonth={visibleMonth}
           />
         ))}
       </div>
     </div>
+  );
+}
+
+function WeekRow({
+  activitiesByDay,
+  days,
+  summary,
+  visibleMonth,
+}: {
+  activitiesByDay: Map<string, ActivityListItem[]>;
+  days: CalendarDay[];
+  summary: ActivitySummary | undefined;
+  visibleMonth: Date;
+}) {
+  return (
+    <>
+      <WeekSummary summary={summary} />
+      {days.map((day) => (
+        <CalendarCell
+          activities={activitiesByDay.get(getActivityDayKey(day.date)) ?? []}
+          day={day}
+          key={day.date.toISOString()}
+          visibleMonth={visibleMonth}
+        />
+      ))}
+    </>
   );
 }
 
@@ -183,7 +280,7 @@ function CalendarCell({
   return (
     <div
       className={cn(
-        "min-h-28 overflow-hidden border-border border-r border-b p-2 last:border-r-0",
+        "min-h-32 overflow-hidden border-border border-r border-b p-2 last:border-r-0",
         isOutsideMonth && "bg-muted/30 text-muted-foreground",
       )}
     >
@@ -247,6 +344,41 @@ function groupActivitiesByDay(activities: ActivityListItem[]) {
   }
 
   return activitiesByDay;
+}
+
+function groupSummariesByWeek(summaries: ActivitySummary[]) {
+  const summariesByWeek = new Map<string, ActivitySummary>();
+
+  for (const summary of summaries) {
+    summariesByWeek.set(getActivityDayKey(summary.weekStartDate), summary);
+  }
+
+  return summariesByWeek;
+}
+
+function getCalendarWeeks(days: CalendarDay[]) {
+  const weeks: CalendarDay[][] = [];
+
+  for (let index = 0; index < days.length; index += 7) {
+    weeks.push(days.slice(index, index + 7));
+  }
+
+  return weeks;
+}
+
+function formatSummaryDuration(durationSeconds: number) {
+  const hours = Math.floor(durationSeconds / 3600);
+  const minutes = Math.floor((durationSeconds % 3600) / 60);
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+
+  return `${minutes}m`;
+}
+
+function formatElevation(elevationMeters: number) {
+  return `${Math.round(elevationMeters)} m`;
 }
 
 export { ActivityCalendar };

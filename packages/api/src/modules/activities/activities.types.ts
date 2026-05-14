@@ -75,6 +75,22 @@ export type ActivityListItem = {
   startAt: Date;
 };
 
+export type ActivitySummaryInput = ActivityListItem & {
+  totalElevationGainMeters: number | null;
+};
+
+export type ActivitySummary = {
+  distanceMeters: number;
+  durationSeconds: number;
+  totalElevationGainMeters: number;
+  weekStartDate: Date;
+};
+
+export type ActivityCalendarRange = {
+  activities: ActivityListItem[];
+  summaries: ActivitySummary[];
+};
+
 export type ActivityStreamInput = {
   data: number[];
   streamType: ActivityStreamType;

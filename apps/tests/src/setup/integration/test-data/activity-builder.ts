@@ -76,6 +76,11 @@ export class ActivityBuilder {
     return this;
   }
 
+  withTotalElevationGainMeters(totalElevationGainMeters: number | null) {
+    this.value.totalElevationGainMeters = totalElevationGainMeters;
+    return this;
+  }
+
   withMap(map: ActivityMapInput) {
     this.value.map = map;
     return this;
