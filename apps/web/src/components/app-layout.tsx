@@ -13,7 +13,7 @@ import {
   SidebarTrigger,
 } from "@korex/ui/components/sidebar";
 import { Link, Outlet, useMatchRoute } from "@tanstack/react-router";
-import { Activity, CalendarDaysIcon, Home } from "lucide-react";
+import { Activity, CalendarDaysIcon, Home, TrophyIcon } from "lucide-react";
 
 function AppLayout() {
   const matchRoute = useMatchRoute();
@@ -55,6 +55,16 @@ function AppLayout() {
                   >
                     <CalendarDaysIcon />
                     <span>Calendar</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={Boolean(matchRoute({ to: "/weekly-summaries" }))}
+                    tooltip="Weekly Summaries"
+                    render={<Link to="/weekly-summaries" />}
+                  >
+                    <TrophyIcon />
+                    <span>Weekly Summaries</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

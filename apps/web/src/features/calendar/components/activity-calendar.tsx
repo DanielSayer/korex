@@ -20,8 +20,9 @@ import { useMemo } from "react";
 import { ErrorMessage } from "@/components/error-message";
 import {
   formatDistance,
-  formatDuration,
-} from "@/features/dashboard/utils/activity-formatters";
+  formatDurationClock,
+  formatDurationCompact,
+} from "@/utils/formatters";
 import { orpc } from "@/utils/orpc";
 import {
   type CalendarDay,
@@ -105,7 +106,7 @@ function WeekSummary({ summary }: { summary: ActivitySummary | undefined }) {
         <SummaryMetric
           icon={<ClockIcon />}
           label="Total time"
-          value={formatSummaryDuration(summary.durationSeconds)}
+          value={formatDurationCompact(summary.durationSeconds)}
         />
         <SummaryMetric
           icon={<MountainIcon />}
@@ -322,7 +323,7 @@ function ActivityCard({ activity }: { activity: ActivityListItem }) {
         </span>
         <span className="inline-flex items-center gap-1">
           <ClockIcon className="size-3" />
-          {formatDuration(activity.durationSeconds)}
+          {formatDurationClock(activity.durationSeconds)}
         </span>
         {activity.averageHeartRateBeatsPerMinute ? (
           <span className="inline-flex items-center gap-1">
@@ -364,17 +365,6 @@ function getCalendarWeeks(days: CalendarDay[]) {
   }
 
   return weeks;
-}
-
-function formatSummaryDuration(durationSeconds: number) {
-  const hours = Math.floor(durationSeconds / 3600);
-  const minutes = Math.floor((durationSeconds % 3600) / 60);
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-
-  return `${minutes}m`;
 }
 
 function formatElevation(elevationMeters: number) {

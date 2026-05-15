@@ -13,6 +13,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedWeeklySummariesRouteImport } from './routes/_authenticated/weekly-summaries'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 
@@ -38,6 +39,12 @@ const AuthSignInLazyRoute = AuthSignInLazyRouteImport.update({
   path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any).lazy(() => import('./routes/auth/sign-in.lazy').then((d) => d.Route))
+const AuthenticatedWeeklySummariesRoute =
+  AuthenticatedWeeklySummariesRouteImport.update({
+    id: '/weekly-summaries',
+    path: '/weekly-summaries',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -53,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
 }
@@ -60,6 +68,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
 }
@@ -69,6 +78,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
 }
@@ -78,16 +88,24 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/dashboard'
+    | '/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calendar' | '/dashboard' | '/auth/sign-in' | '/auth/sign-up'
+  to:
+    | '/'
+    | '/calendar'
+    | '/dashboard'
+    | '/weekly-summaries'
+    | '/auth/sign-in'
+    | '/auth/sign-up'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/_authenticated/calendar'
     | '/_authenticated/dashboard'
+    | '/_authenticated/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
   fileRoutesById: FileRoutesById
@@ -129,6 +147,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInLazyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/weekly-summaries': {
+      id: '/_authenticated/weekly-summaries'
+      path: '/weekly-summaries'
+      fullPath: '/weekly-summaries'
+      preLoaderRoute: typeof AuthenticatedWeeklySummariesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -149,11 +174,13 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedWeeklySummariesRoute: typeof AuthenticatedWeeklySummariesRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedWeeklySummariesRoute: AuthenticatedWeeklySummariesRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
