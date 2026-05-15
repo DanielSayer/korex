@@ -64,6 +64,14 @@ _Avoid_: Activity fields, core activity data
 The timestamp used as the lower bound for the next incremental activity sync window.
 _Avoid_: Last finished sync time, cursor timestamp
 
+**Weekly Training Summary**:
+A stored point-in-time summary of a user's training week, calculated from that week's **Activities** for later listing and replay.
+_Avoid_: Wrapped, weekly report, generated artifact
+
+**Training Week**:
+A Monday-start calendar week used to group **Activities** for weekly analysis.
+_Avoid_: Calendar week, ISO week, reporting week
+
 ## Relationships
 
 - A **Heart Rate Zone** belongs to exactly one **User**
@@ -134,6 +142,19 @@ _Avoid_: Last finished sync time, cursor timestamp
 - Incremental activity sync requires a previous successful activity sync run; it must not silently fall back to initial sync behavior.
 - A user can start an incremental activity sync at most once every five minutes.
 - Failed incremental activity sync attempts still count toward the five-minute incremental sync rate limit.
+- A **Weekly Training Summary** belongs to exactly one **User**.
+- A **Weekly Training Summary** is calculated from **Activities** within one **Training Week**.
+- A **Weekly Training Summary** is stored so the user can list and replay previous training weeks.
+- A **Weekly Training Summary** preserves when it was generated so the user can understand what imported **Activities** were available at that point in time.
+- A **Weekly Training Summary** includes comparisons against the previous **Training Week** when previous-week **Activity** data is available.
+- **Weekly Training Summary** previous-week comparisons are calculated from previous-week **Activities** at generation time, not from another stored **Weekly Training Summary**.
+- A **User** can have at most one current **Weekly Training Summary** for a given **Training Week**.
+- **Weekly Training Summaries** are generated only for completed **Training Weeks**, not the current in-progress week.
+- Scheduled **Weekly Training Summary** generation targets the immediately completed **Training Week**.
+- Scheduled **Weekly Training Summary** generation enqueues durable generation jobs; worker processes calculate and store the summaries.
+- A **Weekly Training Summary** can be regenerated for a specific week by user action when the stored snapshot no longer reflects the user's expected imported **Activities**.
+- Scheduled **Weekly Training Summary** generation only creates summaries for users with at least one **Activity** in the completed **Training Week**.
+- **Training Weeks** currently use the Australia/Brisbane timezone until Korex supports a user-defined timezone setting.
 
 ## Example dialogue
 

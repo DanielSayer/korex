@@ -1,4 +1,5 @@
 import { runActivityHeartRateZoneTimeWorkerOnce } from "@korex/api/modules/activities/activity-heart-rate-zone-time-worker";
+import { runWeeklyTrainingSummaryWorkerOnce } from "@korex/api/modules/activities/weekly-training-summary-worker";
 
 const batchSize = 10;
 const pollIntervalMs = 1000;
@@ -27,6 +28,18 @@ while (!shuttingDown) {
     if (result.processed > 0) {
       console.info(
         `Processed ${result.processed} activity heart-rate zone time jobs`,
+      );
+    }
+
+    const summaryResult = await runWeeklyTrainingSummaryWorkerOnce({
+      batchSize,
+      staleLockMs,
+      workerId,
+    });
+
+    if (summaryResult.processed > 0) {
+      console.info(
+        `Processed ${summaryResult.processed} weekly training summary jobs`,
       );
     }
   } catch (error) {

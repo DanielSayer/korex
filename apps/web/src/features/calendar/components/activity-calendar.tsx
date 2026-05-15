@@ -214,7 +214,7 @@ function MonthGrid({
 
   return (
     <div className="overflow-x-auto rounded-lg border bg-background">
-      <div className="grid min-w-[960px] grid-cols-[minmax(220px,0.9fr)_repeat(7,minmax(120px,1fr))]">
+      <div className="grid min-w-240 grid-cols-[minmax(220px,0.9fr)_repeat(7,minmax(120px,1fr))]">
         <div className="border-border border-r border-b bg-muted/40 px-4 py-2 font-medium text-muted-foreground text-xs">
           Summary
         </div>
