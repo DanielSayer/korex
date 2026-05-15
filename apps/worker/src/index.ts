@@ -1,11 +1,14 @@
 import { runActivityHeartRateZoneTimeWorkerOnce } from "@korex/api/modules/activities/activity-heart-rate-zone-time-worker";
 import { runWeeklyTrainingSummaryWorkerOnce } from "@korex/api/modules/activities/weekly-training-summary-worker";
+import { runWeeklyTrainingSummarySchedulerOnce } from "./weekly-training-summary-scheduler";
 
 const batchSize = 10;
 const pollIntervalMs = 1000;
+const schedulerIntervalMs = 60_000;
 const staleLockMs = 60_000;
 
 let shuttingDown = false;
+let lastSchedulerRunAt = 0;
 
 process.on("SIGINT", () => {
   shuttingDown = true;
@@ -19,6 +22,21 @@ const workerId = createWorkerId();
 
 while (!shuttingDown) {
   try {
+    const now = Date.now();
+
+    if (now - lastSchedulerRunAt >= schedulerIntervalMs) {
+      lastSchedulerRunAt = now;
+      const schedulerResult = await runWeeklyTrainingSummarySchedulerOnce({
+        now: new Date(now),
+      });
+
+      if (schedulerResult.skipped === false && schedulerResult.enqueued > 0) {
+        console.info(
+          `Enqueued ${schedulerResult.enqueued} weekly training summary jobs for ${schedulerResult.weekStartAt.toISOString()}`,
+        );
+      }
+    }
+
     const result = await runActivityHeartRateZoneTimeWorkerOnce({
       batchSize,
       staleLockMs,
