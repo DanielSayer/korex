@@ -8,12 +8,15 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 import type React from "react";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 import {
   formatDistance,
   formatDurationCompact,
   formatSignedNumber,
   formatSpeed,
 } from "@/utils/formatters";
+import { WeeklyTrainingSummaryDetailPanel } from "./weekly-training-summary-detail-panel";
 
 type WeeklyTrainingSummaryListProps = {
   summaries: WeeklyTrainingSummaryListItem[];
@@ -22,6 +25,9 @@ type WeeklyTrainingSummaryListProps = {
 function WeeklyTrainingSummaryList({
   summaries,
 }: WeeklyTrainingSummaryListProps) {
+  const [selectedSummary, setSelectedSummary] =
+    useState<WeeklyTrainingSummaryListItem | null>(null);
+
   if (summaries.length === 0) {
     return (
       <div className="flex min-h-56 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
@@ -36,21 +42,47 @@ function WeeklyTrainingSummaryList({
   }
 
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
-      {summaries.map((summary) => (
-        <WeeklyTrainingSummaryCard key={summary.id} summary={summary} />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-3 lg:grid-cols-2">
+        {summaries.map((summary) => (
+          <WeeklyTrainingSummaryCard
+            isSelected={selectedSummary?.id === summary.id}
+            key={summary.id}
+            onSelect={() => setSelectedSummary(summary)}
+            summary={summary}
+          />
+        ))}
+      </div>
+      <WeeklyTrainingSummaryDetailPanel
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedSummary(null);
+          }
+        }}
+        summary={selectedSummary}
+      />
+    </>
   );
 }
 
 function WeeklyTrainingSummaryCard({
+  isSelected,
+  onSelect,
   summary,
 }: {
+  isSelected: boolean;
+  onSelect: () => void;
   summary: WeeklyTrainingSummaryListItem;
 }) {
   return (
-    <article className="rounded-lg border p-4">
+    <button
+      className={cn(
+        "rounded-lg border p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        isSelected && "border-primary/60 bg-primary/5 shadow-sm",
+      )}
+      onClick={onSelect}
+      type="button"
+    >
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="font-semibold text-base">
@@ -90,7 +122,7 @@ function WeeklyTrainingSummaryCard({
           previous week
         </span>
       </div>
-    </article>
+    </button>
   );
 }
 
