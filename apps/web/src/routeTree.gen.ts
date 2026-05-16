@@ -14,6 +14,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWeeklySummariesRouteImport } from './routes/_authenticated/weekly-summaries'
+import { Route as AuthenticatedHeatmapRouteImport } from './routes/_authenticated/heatmap'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 
@@ -45,6 +46,11 @@ const AuthenticatedWeeklySummariesRoute =
     path: '/weekly-summaries',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedHeatmapRoute = AuthenticatedHeatmapRouteImport.update({
+  id: '/heatmap',
+  path: '/heatmap',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/heatmap': typeof AuthenticatedHeatmapRoute
   '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/heatmap': typeof AuthenticatedHeatmapRoute
   '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/heatmap': typeof AuthenticatedHeatmapRoute
   '/_authenticated/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
@@ -88,6 +97,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/dashboard'
+    | '/heatmap'
     | '/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/calendar'
     | '/dashboard'
+    | '/heatmap'
     | '/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/_authenticated/calendar'
     | '/_authenticated/dashboard'
+    | '/_authenticated/heatmap'
     | '/_authenticated/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
@@ -154,6 +166,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWeeklySummariesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/heatmap': {
+      id: '/_authenticated/heatmap'
+      path: '/heatmap'
+      fullPath: '/heatmap'
+      preLoaderRoute: typeof AuthenticatedHeatmapRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -174,12 +193,14 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHeatmapRoute: typeof AuthenticatedHeatmapRoute
   AuthenticatedWeeklySummariesRoute: typeof AuthenticatedWeeklySummariesRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHeatmapRoute: AuthenticatedHeatmapRoute,
   AuthenticatedWeeklySummariesRoute: AuthenticatedWeeklySummariesRoute,
 }
 
