@@ -1,6 +1,8 @@
-import { runActivityHeartRateZoneTimeWorkerOnce } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-worker";
-import { runActivityRouteHeatmapWorkerOnce } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-worker";
-import { runWeeklyTrainingSummaryWorkerOnce } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-worker";
+import {
+  runActivityHeartRateZoneTimeWorkerOnce,
+  runActivityRouteHeatmapWorkerOnce,
+  runWeeklyTrainingSummaryWorkerOnce,
+} from "@korex/api/modules/activities/activities.workers";
 import { runWeeklyTrainingSummarySchedulerOnce } from "./weekly-training-summary-scheduler";
 
 const batchSize = 10;
