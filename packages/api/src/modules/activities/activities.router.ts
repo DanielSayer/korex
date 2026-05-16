@@ -1,6 +1,9 @@
-import { z } from "zod";
-
 import { protectedProcedure } from "../../index";
+import {
+  getWeeklyTrainingSummaryInput,
+  listActivitiesInput,
+  routeHeatmapInput,
+} from "./activities.inputs";
 import { summarizeActivitiesByWeek } from "./activity-calendar-summary.service";
 import {
   getRecentActivities,
@@ -8,7 +11,6 @@ import {
 } from "./activity-catalog.repository";
 import {
   activityRouteHeatmapCellsPerTile,
-  activityRouteHeatmapZoomLevels,
 } from "./activity-route-heatmap";
 import { listActivityRouteHeatmapCellsForViewport } from "./activity-route-heatmap.repository";
 import {
@@ -16,75 +18,9 @@ import {
   listWeeklyTrainingSummaries,
 } from "./weekly-training-summary.repository";
 
-const listActivitiesInput = z
-  .object({
-    endDate: z.coerce.date(),
-    startDate: z.coerce.date(),
-  })
-  .refine((input) => input.startDate <= input.endDate, {
-    message: "startDate must be before or equal to endDate",
-    path: ["startDate"],
-  });
-
-const maxRouteHeatmapViewportTiles = 64;
-const routeHeatmapZoomValues = [...activityRouteHeatmapZoomLevels] as [
-  number,
-  ...number[],
-];
-
-const routeHeatmapInput = z
-  .object({
-    maxTileX: z.number().int().nonnegative(),
-    maxTileY: z.number().int().nonnegative(),
-    minTileX: z.number().int().nonnegative(),
-    minTileY: z.number().int().nonnegative(),
-    zoom: z.number().int(),
-  })
-  .refine((input) => routeHeatmapZoomValues.includes(input.zoom), {
-    message: "zoom must be a materialized Activity Route Heatmap zoom",
-    path: ["zoom"],
-  })
-  .refine((input) => input.minTileX <= input.maxTileX, {
-    message: "minTileX must be before or equal to maxTileX",
-    path: ["minTileX"],
-  })
-  .refine((input) => input.minTileY <= input.maxTileY, {
-    message: "minTileY must be before or equal to maxTileY",
-    path: ["minTileY"],
-  })
-  .refine(
-    (input) => {
-      const tileCount =
-        (input.maxTileX - input.minTileX + 1) *
-        (input.maxTileY - input.minTileY + 1);
-
-      return tileCount <= maxRouteHeatmapViewportTiles;
-    },
-    {
-      message: "Activity Route Heatmap viewport is too large",
-      path: ["maxTileX"],
-    },
-  )
-  .refine(
-    (input) => {
-      const maxTile = 2 ** input.zoom - 1;
-
-      return (
-        input.minTileX <= maxTile &&
-        input.maxTileX <= maxTile &&
-        input.minTileY <= maxTile &&
-        input.maxTileY <= maxTile
-      );
-    },
-    {
-      message: "tile coordinates must fit the requested zoom",
-      path: ["zoom"],
-    },
-  );
-
 export const activitiesRouter = {
   getWeeklyTrainingSummary: protectedProcedure
-    .input(z.object({ weekStartAt: z.coerce.date() }))
+    .input(getWeeklyTrainingSummaryInput)
     .handler(async ({ context, input }) => {
       return getWeeklyTrainingSummary({
         userId: context.session.user.id,
