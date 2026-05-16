@@ -48,6 +48,14 @@ _Avoid_: Pending zone time, copied zone
 A latitude and longitude pair in an **Activity Map**.
 _Avoid_: Latlng, point, GPS row
 
+**Activity Route Heatmap**:
+A user-owned visualization derived from run **Activity Maps**, showing route density across selected **Activities**.
+_Avoid_: Heat map, all-activity heatmap, route overlay
+
+**Activity Route Heatmap Contribution**:
+A materialized spatial bucket showing that one run **Activity** passed through one area for **Activity Route Heatmap** display.
+_Avoid_: Activity route, heatmap map, raw heatmap point
+
 **Sport Type**:
 A Korex-owned classification for an **Activity**, initially limited to run, treadmill, and hike.
 _Avoid_: Provider sport, provider type, category
@@ -113,6 +121,26 @@ _Avoid_: Calendar week, ISO week, reporting week
 - When provider map data changes on re-sync, Korex replaces the **Activity Map** for that **Activity** as a single value.
 - Malformed provider map data does not update or delete an existing **Activity Map**, and does not prevent the parent **Activity** from importing.
 - A missing provider map payload does not delete an existing **Activity Map**.
+- An **Activity Route Heatmap** is derived from run **Activity Maps** only.
+- **Activity Route Heatmap** density counts how many distinct **Activities** pass through an area, not how many **Activity Map Coordinates** were recorded there.
+- **Activity Route Heatmap** data is materialized separately from **Activity Maps** so map display data and heatmap query data can scale independently.
+- An **Activity Route Heatmap** supports global discovery: a user can pan to any visible region and see materialized run density where that user has run.
+- An **Activity Route Heatmap** initially materializes slippy-map zoom levels 4 through 15 inclusive.
+- The initial **Activity Route Heatmap** displays all-time run density; date range filtering is deferred.
+- The initial **Activity Route Heatmap** read model returns grouped cells for a requested viewport, not raw contribution rows.
+- The initial **Activity Route Heatmap** is private to the authenticated **User** whose run **Activities** produced it.
+- An **Activity Route Heatmap Contribution** belongs to exactly one run **Activity**.
+- An **Activity Route Heatmap Contribution** identifies one cell in a fixed 64 by 64 grid inside a slippy-map tile at one materialized zoom level.
+- An **Activity Route Heatmap Contribution** preserves the parent **Activity** start time so future heatmap date range filtering can avoid joining every contribution back to its **Activity**.
+- Replacing an **Activity Map** for a run **Activity** replaces that **Activity's** **Activity Route Heatmap Contributions** as a set.
+- **Activity Route Heatmap Contributions** are calculated by a separate durable job after **Activity Map** replacement, not inside provider sync request or import transaction lifetimes.
+- **Activity Route Heatmap Contributions** are calculated from consecutive **Activity Map Coordinate** segments, not from isolated coordinate samples.
+- **Activity Route Heatmap** calculation may simplify route geometry per materialized zoom, but simplification must not change the canonical **Activity Map**.
+- Existing run **Activity Maps** can be backfilled into **Activity Route Heatmap Contributions** by enqueueing durable calculation jobs; backfill does not calculate contributions inline.
+- **Activity Maps** remain the canonical data for single-Activity route display; **Activity Route Heatmap Contributions** are derived query data for heatmap display.
+- If a run **Activity Map** is preserved after malformed or missing provider map data, its **Activity Route Heatmap Contributions** remain unchanged.
+- If an **Activity** no longer qualifies for the **Activity Route Heatmap**, Korex removes that **Activity's** **Activity Route Heatmap Contributions**.
+- Treadmill **Activities** and hike **Activities** do not contribute to the initial **Activity Route Heatmap**.
 - **Activity Laps** are ordered by a zero-based index within an **Activity**.
 - Each **Activity** can have only one **Activity Lap** for a given index.
 - **Activity Lap** start and end times are stored as second offsets from the parent **Activity** start.

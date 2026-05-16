@@ -1,4 +1,5 @@
 import { runActivityHeartRateZoneTimeWorkerOnce } from "@korex/api/modules/activities/activity-heart-rate-zone-time-worker";
+import { runActivityRouteHeatmapWorkerOnce } from "@korex/api/modules/activities/activity-route-heatmap-worker";
 import { runWeeklyTrainingSummaryWorkerOnce } from "@korex/api/modules/activities/weekly-training-summary-worker";
 import { runWeeklyTrainingSummarySchedulerOnce } from "./weekly-training-summary-scheduler";
 
@@ -58,6 +59,18 @@ while (!shuttingDown) {
     if (summaryResult.processed > 0) {
       console.info(
         `Processed ${summaryResult.processed} weekly training summary jobs`,
+      );
+    }
+
+    const heatmapResult = await runActivityRouteHeatmapWorkerOnce({
+      batchSize,
+      staleLockMs,
+      workerId,
+    });
+
+    if (heatmapResult.processed > 0) {
+      console.info(
+        `Processed ${heatmapResult.processed} activity route heatmap jobs`,
       );
     }
   } catch (error) {

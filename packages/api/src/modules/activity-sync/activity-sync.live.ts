@@ -1,12 +1,13 @@
 import { db } from "@korex/db";
 import { Effect, Layer } from "effect";
-import { replaceActivityMap } from "../activities/activity-artifacts.repository";
+import { replaceActivityMapAndQueueHeatmapCalculation } from "../activities/activity-artifacts.repository";
 import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/activity-heart-rate-zone-time.repository";
 import {
   deleteActivity,
   replaceActivityLaps,
   upsertActivity,
 } from "../activities/activity-import.repository";
+import { enqueueActivityRouteHeatmapCalculation } from "../activities/activity-route-heatmap-jobs.repository";
 import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
 import {
@@ -62,6 +63,11 @@ export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {
         externalActivityId,
       });
 
+      await enqueueActivityRouteHeatmapCalculation({
+        activityId: upsertedActivity.activityId,
+        database: tx,
+      });
+
       return upsertedActivity;
     }),
   unlinkUnsupportedActivity: ({ activityId, externalActivityId }) =>
@@ -73,7 +79,7 @@ export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {
 
 const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
   storeExternalMap: upsertExternalActivityMap,
-  replaceCoreMap: replaceActivityMap,
+  replaceCoreMap: replaceActivityMapAndQueueHeatmapCalculation,
   storeExternalStream: upsertExternalActivityStream,
   replaceCoreStreamsAndQueueCalculation:
     replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,

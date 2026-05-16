@@ -138,6 +138,51 @@ export const activityMaps = pgTable(
   ],
 );
 
+export const activityRouteHeatmapContributions = pgTable(
+  "activity_route_heatmap_contributions",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    activityStartAt: timestamp("activity_start_at").notNull(),
+    zoom: integer("zoom").notNull(),
+    tileX: integer("tile_x").notNull(),
+    tileY: integer("tile_y").notNull(),
+    cellX: integer("cell_x").notNull(),
+    cellY: integer("cell_y").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_route_heatmap_activity_cell_idx").on(
+      table.activityId,
+      table.zoom,
+      table.tileX,
+      table.tileY,
+      table.cellX,
+      table.cellY,
+    ),
+    index("activity_route_heatmap_user_viewport_idx").on(
+      table.userId,
+      table.zoom,
+      table.tileX,
+      table.tileY,
+    ),
+    index("activity_route_heatmap_user_start_at_idx").on(
+      table.userId,
+      table.activityStartAt,
+    ),
+    index("activity_route_heatmap_activity_id_idx").on(table.activityId),
+  ],
+);
+
 export const activityStreams = pgTable(
   "activity_streams",
   {
@@ -215,6 +260,7 @@ export const activityHeartRateZoneTimes = pgTable(
 export const activitiesRelations = relations(activities, ({ many, one }) => ({
   heartRateZoneSnapshots: many(activityHeartRateZoneSnapshots),
   heartRateZoneTimes: many(activityHeartRateZoneTimes),
+  heatmapContributions: many(activityRouteHeatmapContributions),
   laps: many(activityLaps),
   map: one(activityMaps),
   streams: many(activityStreams),
@@ -237,6 +283,20 @@ export const activityMapsRelations = relations(activityMaps, ({ one }) => ({
     references: [activities.id],
   }),
 }));
+
+export const activityRouteHeatmapContributionsRelations = relations(
+  activityRouteHeatmapContributions,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [activityRouteHeatmapContributions.activityId],
+      references: [activities.id],
+    }),
+    user: one(user, {
+      fields: [activityRouteHeatmapContributions.userId],
+      references: [user.id],
+    }),
+  }),
+);
 
 export const activityStreamsRelations = relations(
   activityStreams,
