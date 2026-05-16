@@ -1,6 +1,6 @@
 import { activities, activityMaps, db } from "@korex/db";
 import { and, desc, eq, gte, lte } from "drizzle-orm";
-import type { ActivitySummaryInput, RecentActivity } from "./activities.types";
+import type { ActivitySummaryInput, RecentActivity } from "../activities.types";
 
 export async function getRecentActivities({
   userId,

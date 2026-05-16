@@ -1,7 +1,7 @@
 import { activityMaps, activityStreams, db } from "@korex/db";
 import { eq } from "drizzle-orm";
-import type { ActivityMapInput, ActivityStreamInput } from "./activities.types";
-import { enqueueActivityRouteHeatmapCalculation } from "./activity-route-heatmap-jobs.repository";
+import type { ActivityMapInput, ActivityStreamInput } from "../activities.types";
+import { enqueueActivityRouteHeatmapCalculation } from "../route-heatmap/activity-route-heatmap-jobs.repository";
 
 type ActivityDatabase = Pick<
   typeof db,

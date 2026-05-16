@@ -5,7 +5,7 @@ import {
   db,
 } from "@korex/db";
 import { and, count, eq, gte, lte } from "drizzle-orm";
-import type { ActivityMapInput } from "./activities.types";
+import type { ActivityMapInput } from "../activities.types";
 import type { ActivityRouteHeatmapContributionInput } from "./activity-route-heatmap";
 
 type ActivityDatabase = Pick<

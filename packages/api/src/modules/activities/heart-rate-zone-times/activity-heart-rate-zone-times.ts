@@ -1,7 +1,7 @@
 import type {
   ActivityHeartRateZoneSnapshotInput,
   ActivityHeartRateZoneTimeInput,
-} from "./activities.types";
+} from "../activities.types";
 
 export type CalculateActivityHeartRateZoneTimesInput = {
   heartRateSamples: number[];

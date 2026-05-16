@@ -1,4 +1,4 @@
-import { enqueueCompletedWeeklyTrainingSummaries } from "@korex/api/modules/activities/weekly-training-summary-jobs.repository";
+import { enqueueCompletedWeeklyTrainingSummaries } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-jobs.repository";
 
 const result = await enqueueCompletedWeeklyTrainingSummaries();
 

@@ -1,7 +1,7 @@
 import {
   getCompletedTrainingWeek,
   getTrainingWeekStartAt,
-} from "@korex/api/modules/activities/training-week";
+} from "@korex/api/modules/activities/weekly-training-summaries/training-week";
 import { describe, expect, it } from "vitest";
 
 describe("training week", () => {

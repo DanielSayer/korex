@@ -1,5 +1,5 @@
 import type { ActivitySummaryInput } from "@korex/api/modules/activities/activities.types";
-import { summarizeActivitiesByWeek } from "@korex/api/modules/activities/activity-calendar-summary.service";
+import { summarizeActivitiesByWeek } from "@korex/api/modules/activities/catalog/activity-calendar-summary.service";
 import { describe, expect, it } from "vitest";
 
 function activity(

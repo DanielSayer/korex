@@ -1,6 +1,6 @@
 import { activities, activityLaps, db } from "@korex/db";
 import { eq } from "drizzle-orm";
-import type { ActivityInput, ActivityLapInput } from "./activities.types";
+import type { ActivityInput, ActivityLapInput } from "../activities.types";
 
 type ActivityDatabase = Pick<
   typeof db,

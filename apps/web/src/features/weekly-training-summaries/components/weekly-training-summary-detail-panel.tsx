@@ -1,7 +1,7 @@
 import type {
   WeeklyTrainingSummaryDetail as WeeklyTrainingSummaryDetailType,
   WeeklyTrainingSummaryListItem,
-} from "@korex/api/modules/activities/weekly-training-summary.types";
+} from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary.types";
 import {
   Sheet,
   SheetContent,

@@ -1,7 +1,7 @@
-import { replaceActivityStreams } from "@korex/api/modules/activities/activity-artifacts.repository";
-import { replaceActivityHeartRateZoneSnapshots } from "@korex/api/modules/activities/activity-heart-rate-zone-time.repository";
-import { enqueueActivityHeartRateZoneTimeCalculation } from "@korex/api/modules/activities/activity-heart-rate-zone-time-jobs.repository";
-import { runActivityHeartRateZoneTimeWorkerOnce } from "@korex/api/modules/activities/activity-heart-rate-zone-time-worker";
+import { replaceActivityStreams } from "@korex/api/modules/activities/artifacts/activity-artifacts.repository";
+import { replaceActivityHeartRateZoneSnapshots } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
+import { enqueueActivityHeartRateZoneTimeCalculation } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-jobs.repository";
+import { runActivityHeartRateZoneTimeWorkerOnce } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-worker";
 import {
   activityHeartRateZoneTimeCalculationJobs,
   activityHeartRateZoneTimes,

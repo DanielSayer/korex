@@ -8,7 +8,7 @@ import {
   readCellKey,
   simplifyProjectedPoints,
   toContribution,
-} from "@korex/api/modules/activities/activity-route-heatmap";
+} from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap";
 import { describe, expect, it } from "vitest";
 
 describe("activity route heatmap", () => {

@@ -1,4 +1,4 @@
-import type { ActivitySummary, ActivitySummaryInput } from "./activities.types";
+import type { ActivitySummary, ActivitySummaryInput } from "../activities.types";
 
 export function summarizeActivitiesByWeek(
   activities: ActivitySummaryInput[],

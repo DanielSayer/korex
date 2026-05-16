@@ -2,13 +2,13 @@ import {
   replaceActivityHeartRateZoneSnapshotsAndQueueCalculation,
   replaceActivityHeartRateZoneTimes,
   replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
-} from "@korex/api/modules/activities/activity-heart-rate-zone-time.repository";
+} from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
 import {
   claimActivityHeartRateZoneTimeCalculationJobs,
   enqueueActivityHeartRateZoneTimeCalculation,
   markActivityHeartRateZoneTimeCalculationFailed,
   markActivityHeartRateZoneTimeCalculationSucceeded,
-} from "@korex/api/modules/activities/activity-heart-rate-zone-time-jobs.repository";
+} from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-jobs.repository";
 import {
   activityHeartRateZoneSnapshots,
   activityHeartRateZoneTimeCalculationJobs,

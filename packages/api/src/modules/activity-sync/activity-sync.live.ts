@@ -1,13 +1,13 @@
 import { db } from "@korex/db";
 import { Effect, Layer } from "effect";
-import { replaceActivityMapAndQueueHeatmapCalculation } from "../activities/activity-artifacts.repository";
-import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/activity-heart-rate-zone-time.repository";
+import { replaceActivityMapAndQueueHeatmapCalculation } from "../activities/artifacts/activity-artifacts.repository";
 import {
   deleteActivity,
   replaceActivityLaps,
   upsertActivity,
-} from "../activities/activity-import.repository";
-import { enqueueActivityRouteHeatmapCalculation } from "../activities/activity-route-heatmap-jobs.repository";
+} from "../activities/artifacts/activity-import.repository";
+import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
+import { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
 import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
 import {

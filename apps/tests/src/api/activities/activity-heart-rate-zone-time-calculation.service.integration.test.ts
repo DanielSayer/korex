@@ -1,10 +1,10 @@
-import { replaceActivityStreams } from "@korex/api/modules/activities/activity-artifacts.repository";
-import { replaceActivityHeartRateZoneSnapshots } from "@korex/api/modules/activities/activity-heart-rate-zone-time.repository";
-import { processActivityHeartRateZoneTimeCalculationJob } from "@korex/api/modules/activities/activity-heart-rate-zone-time-calculation.service";
+import { replaceActivityStreams } from "@korex/api/modules/activities/artifacts/activity-artifacts.repository";
+import { replaceActivityHeartRateZoneSnapshots } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
+import { processActivityHeartRateZoneTimeCalculationJob } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-calculation.service";
 import {
   claimActivityHeartRateZoneTimeCalculationJobs,
   enqueueActivityHeartRateZoneTimeCalculation,
-} from "@korex/api/modules/activities/activity-heart-rate-zone-time-jobs.repository";
+} from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-jobs.repository";
 import {
   activityHeartRateZoneTimeCalculationJobs,
   activityHeartRateZoneTimes,

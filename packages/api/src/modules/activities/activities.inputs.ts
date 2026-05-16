@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { activityRouteHeatmapZoomLevels } from "./activity-route-heatmap";
+import { activityRouteHeatmapZoomLevels } from "./route-heatmap/activity-route-heatmap";
 
 export const listActivitiesInput = z
   .object({

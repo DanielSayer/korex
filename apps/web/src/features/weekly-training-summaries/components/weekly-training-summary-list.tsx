@@ -1,4 +1,4 @@
-import type { WeeklyTrainingSummaryListItem } from "@korex/api/modules/activities/weekly-training-summary.types";
+import type { WeeklyTrainingSummaryListItem } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary.types";
 import {
   CalendarDaysIcon,
   ClockIcon,

@@ -4,19 +4,19 @@ import {
   listActivitiesInput,
   routeHeatmapInput,
 } from "./activities.inputs";
-import { summarizeActivitiesByWeek } from "./activity-calendar-summary.service";
 import {
   getRecentActivities,
   listActivitiesForDateRange,
-} from "./activity-catalog.repository";
+} from "./catalog/activity-catalog.repository";
+import { summarizeActivitiesByWeek } from "./catalog/activity-calendar-summary.service";
 import {
   activityRouteHeatmapCellsPerTile,
-} from "./activity-route-heatmap";
-import { listActivityRouteHeatmapCellsForViewport } from "./activity-route-heatmap.repository";
+} from "./route-heatmap/activity-route-heatmap";
+import { listActivityRouteHeatmapCellsForViewport } from "./route-heatmap/activity-route-heatmap.repository";
 import {
   getWeeklyTrainingSummary,
   listWeeklyTrainingSummaries,
-} from "./weekly-training-summary.repository";
+} from "./weekly-training-summaries/weekly-training-summary.repository";
 
 export const activitiesRouter = {
   getWeeklyTrainingSummary: protectedProcedure

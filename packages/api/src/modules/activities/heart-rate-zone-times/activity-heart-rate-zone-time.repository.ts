@@ -12,8 +12,8 @@ import type {
   ActivityHeartRateZoneSnapshotInput,
   ActivityHeartRateZoneTimeInput,
   ActivityStreamInput,
-} from "./activities.types";
-import { replaceActivityStreams } from "./activity-artifacts.repository";
+} from "../activities.types";
+import { replaceActivityStreams } from "../artifacts/activity-artifacts.repository";
 
 type ActivityDatabase = Pick<
   typeof db,

@@ -1,7 +1,7 @@
 import {
   getRecentActivities,
   listActivitiesForDateRange,
-} from "@korex/api/modules/activities/activity-catalog.repository";
+} from "@korex/api/modules/activities/catalog/activity-catalog.repository";
 import { db, user } from "@korex/db";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";

@@ -1,4 +1,4 @@
-import { calculateActivityHeartRateZoneTimes } from "@korex/api/modules/activities/activity-heart-rate-zone-times";
+import { calculateActivityHeartRateZoneTimes } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-times";
 import { describe, expect, it } from "vitest";
 
 const snapshots = [
