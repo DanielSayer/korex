@@ -1,8 +1,10 @@
 import { protectedProcedure } from "../../index";
 import {
+  getAnalyticsVolumeInput,
   getWeeklyTrainingSummaryInput,
   listActivitiesInput,
 } from "./activities.inputs";
+import { getAnalyticsVolume } from "./analytics/activity-analytics.repository";
 import { summarizeActivitiesByWeek } from "./catalog/activity-calendar-summary.service";
 import {
   getRecentActivities,
@@ -14,6 +16,15 @@ import {
 } from "./weekly-training-summaries/weekly-training-summary.repository";
 
 export const activitiesRouter = {
+  analyticsVolume: protectedProcedure
+    .input(getAnalyticsVolumeInput)
+    .handler(async ({ context, input }) => {
+      return getAnalyticsVolume({
+        bucketMode: input.bucketMode,
+        userId: context.session.user.id,
+        year: input.year,
+      });
+    }),
   getWeeklyTrainingSummary: protectedProcedure
     .input(getWeeklyTrainingSummaryInput)
     .handler(async ({ context, input }) => {

@@ -80,6 +80,10 @@ _Avoid_: Wrapped, weekly report, generated artifact
 A Monday-start calendar week used to group **Activities** for weekly analysis.
 _Avoid_: Calendar week, ISO week, reporting week
 
+**Analytics Volume**:
+A live distance or duration aggregate calculated from current **Activities** for a selected time bucket.
+_Avoid_: Weekly summary volume, snapshot volume
+
 ## Relationships
 
 - A **Heart Rate Zone** belongs to exactly one **User**
@@ -183,6 +187,14 @@ _Avoid_: Calendar week, ISO week, reporting week
 - A **Weekly Training Summary** can be regenerated for a specific week by user action when the stored snapshot no longer reflects the user's expected imported **Activities**.
 - Scheduled **Weekly Training Summary** generation only creates summaries for users with at least one **Activity** in the completed **Training Week**.
 - **Training Weeks** currently use the Australia/Brisbane timezone until Korex supports a user-defined timezone setting.
+- **Analytics Volume** is calculated from current **Activities**, not from **Weekly Training Summaries**.
+- **Analytics Volume** may be grouped by **Training Week** or by calendar month for chart display.
+- The first **Analytics Volume** chart uses distance as its default volume metric.
+- The initial analytics page scopes live chart aggregates to a selected calendar year, defaulting to the current calendar year.
+- Weekly **Analytics Volume** buckets align with full **Training Weeks** whose start date falls inside the selected calendar year so they stay in sync with weekly review displays.
+- Analytics cumulative distance accumulates the visible chart buckets, so monthly and weekly views may have different boundary totals for the same selected year.
+- The initial **Analytics Volume** chart includes run and treadmill **Activities**; finer sport filters such as all, run-only, or treadmill-only can be added later.
+- **Weekly Training Summaries** remain replayable snapshot artifacts and must not be treated as the source of truth for live analytics charts.
 
 ## Example dialogue
 
@@ -198,3 +210,4 @@ _Avoid_: Calendar week, ISO week, reporting week
 - "zone time" can mean provider-reported durations or Korex-calculated activity summaries; resolved: use **Activity Heart Rate Zone Time** only for point-in-time durations calculated by Korex.
 - "pending zone time" was considered for captured zones awaiting calculation; resolved: use **Activity Heart Rate Zone Snapshot** for the captured historical zone definition and **Activity Heart Rate Zone Time** only for calculated durations.
 - "last sync time" can mean when a sync started, finished, or last wrote provider connection metadata; resolved: use **Incremental Activity Sync Watermark** for the lower bound of an incremental activity sync window.
+- "volume" can mean either a live analytics aggregate or a replayed weekly snapshot; resolved: use **Analytics Volume** for live chart aggregates calculated from current **Activities**.

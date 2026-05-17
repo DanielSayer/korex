@@ -91,6 +91,24 @@ export type ActivityCalendarRange = {
   summaries: ActivitySummary[];
 };
 
+export type AnalyticsVolumeBucketMode = "monthly" | "weekly";
+
+export type AnalyticsVolumeBucket = {
+  activityCount: number;
+  bucketEndAt: Date;
+  bucketStartAt: Date;
+  cumulativeDistanceMeters: number;
+  distanceMeters: number;
+};
+
+export type AnalyticsVolume = {
+  bucketMode: AnalyticsVolumeBucketMode;
+  buckets: AnalyticsVolumeBucket[];
+  totalActivityCount: number;
+  totalDistanceMeters: number;
+  year: number;
+};
+
 export type ActivityStreamInput = {
   data: number[];
   streamType: ActivityStreamType;

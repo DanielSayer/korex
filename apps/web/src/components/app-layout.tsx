@@ -18,6 +18,7 @@ import {
   CalendarDaysIcon,
   FlameIcon,
   Home,
+  LineChartIcon,
   TrophyIcon,
 } from "lucide-react";
 
@@ -61,6 +62,16 @@ function AppLayout() {
                   >
                     <CalendarDaysIcon />
                     <span>Calendar</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={Boolean(matchRoute({ to: "/analytics" }))}
+                    tooltip="Analytics"
+                    render={<Link to="/analytics" />}
+                  >
+                    <LineChartIcon />
+                    <span>Analytics</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
