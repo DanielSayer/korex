@@ -183,6 +183,48 @@ export const activityRouteHeatmapContributions = pgTable(
   ],
 );
 
+export const activityRouteHeatmapCells = pgTable(
+  "activity_route_heatmap_cells",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    zoom: integer("zoom").notNull(),
+    tileX: integer("tile_x").notNull(),
+    tileY: integer("tile_y").notNull(),
+    cellX: integer("cell_x").notNull(),
+    cellY: integer("cell_y").notNull(),
+    activityCount: integer("activity_count").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_route_heatmap_cells_user_cell_idx").on(
+      table.userId,
+      table.zoom,
+      table.tileX,
+      table.tileY,
+      table.cellX,
+      table.cellY,
+    ),
+    index("activity_route_heatmap_cells_user_tile_idx").on(
+      table.userId,
+      table.zoom,
+      table.tileX,
+      table.tileY,
+    ),
+    index("activity_route_heatmap_cells_user_zoom_count_idx").on(
+      table.userId,
+      table.zoom,
+      table.activityCount,
+    ),
+  ],
+);
+
 export const activityStreams = pgTable(
   "activity_streams",
   {
@@ -293,6 +335,16 @@ export const activityRouteHeatmapContributionsRelations = relations(
     }),
     user: one(user, {
       fields: [activityRouteHeatmapContributions.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const activityRouteHeatmapCellsRelations = relations(
+  activityRouteHeatmapCells,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [activityRouteHeatmapCells.userId],
       references: [user.id],
     }),
   }),

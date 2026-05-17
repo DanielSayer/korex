@@ -1,10 +1,11 @@
 import {
   activities,
   activityMaps,
+  activityRouteHeatmapCells,
   activityRouteHeatmapContributions,
   db,
 } from "@korex/db";
-import { and, count, eq, gte, lte } from "drizzle-orm";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { ActivityMapInput } from "../activities.types";
 import type { ActivityRouteHeatmapContributionInput } from "./activity-route-heatmap";
 
@@ -27,6 +28,14 @@ export type ActivityRouteHeatmapCell = {
   cellY: number;
   tileX: number;
   tileY: number;
+};
+
+type ActivityRouteHeatmapCellCoordinate = {
+  cellX: number;
+  cellY: number;
+  tileX: number;
+  tileY: number;
+  zoom: number;
 };
 
 export async function getActivityRouteHeatmapCalculationInputs({
@@ -75,26 +84,44 @@ export async function replaceActivityRouteHeatmapContributions({
   database?: ActivityDatabase;
   userId: string;
 }) {
-  await database
-    .delete(activityRouteHeatmapContributions)
-    .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+  await database.transaction(async (tx) => {
+    const existingContributions = await tx
+      .select({
+        cellX: activityRouteHeatmapContributions.cellX,
+        cellY: activityRouteHeatmapContributions.cellY,
+        tileX: activityRouteHeatmapContributions.tileX,
+        tileY: activityRouteHeatmapContributions.tileY,
+        zoom: activityRouteHeatmapContributions.zoom,
+      })
+      .from(activityRouteHeatmapContributions)
+      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
 
-  if (contributions.length === 0) {
-    return;
-  }
+    await tx
+      .delete(activityRouteHeatmapContributions)
+      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
 
-  await database.insert(activityRouteHeatmapContributions).values(
-    contributions.map((contribution) => ({
-      activityId,
-      activityStartAt,
-      cellX: contribution.cellX,
-      cellY: contribution.cellY,
-      tileX: contribution.tileX,
-      tileY: contribution.tileY,
+    if (contributions.length > 0) {
+      await tx.insert(activityRouteHeatmapContributions).values(
+        contributions.map((contribution) => ({
+          activityId,
+          activityStartAt,
+          cellX: contribution.cellX,
+          cellY: contribution.cellY,
+          tileX: contribution.tileX,
+          tileY: contribution.tileY,
+          userId,
+          zoom: contribution.zoom,
+        })),
+      );
+    }
+
+    await applyActivityRouteHeatmapCellDeltas({
+      contributions,
+      existingContributions,
+      tx,
       userId,
-      zoom: contribution.zoom,
-    })),
-  );
+    });
+  });
 }
 
 export async function clearActivityRouteHeatmapContributions({
@@ -104,50 +131,78 @@ export async function clearActivityRouteHeatmapContributions({
   activityId: number;
   database?: ActivityDatabase;
 }) {
-  await database
-    .delete(activityRouteHeatmapContributions)
-    .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+  await database.transaction(async (tx) => {
+    const existingContributions = await tx
+      .select({
+        cellX: activityRouteHeatmapContributions.cellX,
+        cellY: activityRouteHeatmapContributions.cellY,
+        tileX: activityRouteHeatmapContributions.tileX,
+        tileY: activityRouteHeatmapContributions.tileY,
+        userId: activityRouteHeatmapContributions.userId,
+        zoom: activityRouteHeatmapContributions.zoom,
+      })
+      .from(activityRouteHeatmapContributions)
+      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+
+    await tx
+      .delete(activityRouteHeatmapContributions)
+      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+
+    const contributionsByUser = new Map<
+      string,
+      ActivityRouteHeatmapCellCoordinate[]
+    >();
+
+    for (const contribution of existingContributions) {
+      const userContributions =
+        contributionsByUser.get(contribution.userId) ?? [];
+
+      userContributions.push(contribution);
+      contributionsByUser.set(contribution.userId, userContributions);
+    }
+
+    for (const [userId, userContributions] of contributionsByUser) {
+      await applyActivityRouteHeatmapCellDeltas({
+        contributions: [],
+        existingContributions: userContributions,
+        tx,
+        userId,
+      });
+    }
+  });
 }
 
-export async function listActivityRouteHeatmapCellsForViewport({
-  maxTileX,
-  maxTileY,
-  minTileX,
-  minTileY,
+export async function listActivityRouteHeatmapAggregateCellsForTile({
+  tileX,
+  tileY,
   userId,
   zoom,
 }: {
-  maxTileX: number;
-  maxTileY: number;
-  minTileX: number;
-  minTileY: number;
+  tileX: number;
+  tileY: number;
   userId: string;
   zoom: number;
 }): Promise<ActivityRouteHeatmapCell[]> {
+  const maxTile = 2 ** zoom - 1;
+
   const rows = await db
     .select({
-      activityCount: count(),
-      cellX: activityRouteHeatmapContributions.cellX,
-      cellY: activityRouteHeatmapContributions.cellY,
-      tileX: activityRouteHeatmapContributions.tileX,
-      tileY: activityRouteHeatmapContributions.tileY,
+      activityCount: activityRouteHeatmapCells.activityCount,
+      cellX: activityRouteHeatmapCells.cellX,
+      cellY: activityRouteHeatmapCells.cellY,
+      tileX: activityRouteHeatmapCells.tileX,
+      tileY: activityRouteHeatmapCells.tileY,
     })
-    .from(activityRouteHeatmapContributions)
+    .from(activityRouteHeatmapCells)
     .where(
       and(
-        eq(activityRouteHeatmapContributions.userId, userId),
-        eq(activityRouteHeatmapContributions.zoom, zoom),
-        gte(activityRouteHeatmapContributions.tileX, minTileX),
-        lte(activityRouteHeatmapContributions.tileX, maxTileX),
-        gte(activityRouteHeatmapContributions.tileY, minTileY),
-        lte(activityRouteHeatmapContributions.tileY, maxTileY),
+        eq(activityRouteHeatmapCells.userId, userId),
+        eq(activityRouteHeatmapCells.zoom, zoom),
+        gte(activityRouteHeatmapCells.tileX, Math.max(0, tileX - 1)),
+        lte(activityRouteHeatmapCells.tileX, Math.min(maxTile, tileX + 1)),
+        gte(activityRouteHeatmapCells.tileY, Math.max(0, tileY - 1)),
+        lte(activityRouteHeatmapCells.tileY, Math.min(maxTile, tileY + 1)),
       ),
-    )
-    .groupBy(
-      activityRouteHeatmapContributions.tileX,
-      activityRouteHeatmapContributions.tileY,
-      activityRouteHeatmapContributions.cellX,
-      activityRouteHeatmapContributions.cellY,
     );
 
   return rows.map((row) => ({
@@ -157,4 +212,144 @@ export async function listActivityRouteHeatmapCellsForViewport({
     tileX: row.tileX,
     tileY: row.tileY,
   }));
+}
+
+export async function getActivityRouteHeatmapMaxActivityCount({
+  userId,
+  zoom,
+}: {
+  userId: string;
+  zoom: number;
+}) {
+  const [row] = await db
+    .select({
+      activityCount: activityRouteHeatmapCells.activityCount,
+    })
+    .from(activityRouteHeatmapCells)
+    .where(
+      and(
+        eq(activityRouteHeatmapCells.userId, userId),
+        eq(activityRouteHeatmapCells.zoom, zoom),
+      ),
+    )
+    .orderBy(desc(activityRouteHeatmapCells.activityCount))
+    .limit(1);
+
+  return row?.activityCount ?? 1;
+}
+
+type HeatmapCellDeltaTransaction = Parameters<
+  Parameters<typeof db.transaction>[0]
+>[0];
+
+async function applyActivityRouteHeatmapCellDeltas({
+  contributions,
+  existingContributions,
+  tx,
+  userId,
+}: {
+  contributions: ActivityRouteHeatmapCellCoordinate[];
+  existingContributions: ActivityRouteHeatmapCellCoordinate[];
+  tx: HeatmapCellDeltaTransaction;
+  userId: string;
+}) {
+  const deltas = new Map<
+    string,
+    ActivityRouteHeatmapCellCoordinate & {
+      delta: number;
+    }
+  >();
+
+  for (const contribution of existingContributions) {
+    addCellDelta({ contribution, delta: -1, deltas });
+  }
+
+  for (const contribution of contributions) {
+    addCellDelta({ contribution, delta: 1, deltas });
+  }
+
+  for (const contribution of deltas.values()) {
+    if (contribution.delta === 0) {
+      continue;
+    }
+
+    if (contribution.delta > 0) {
+      await tx
+        .insert(activityRouteHeatmapCells)
+        .values({
+          activityCount: contribution.delta,
+          cellX: contribution.cellX,
+          cellY: contribution.cellY,
+          tileX: contribution.tileX,
+          tileY: contribution.tileY,
+          userId,
+          zoom: contribution.zoom,
+        })
+        .onConflictDoUpdate({
+          target: [
+            activityRouteHeatmapCells.userId,
+            activityRouteHeatmapCells.zoom,
+            activityRouteHeatmapCells.tileX,
+            activityRouteHeatmapCells.tileY,
+            activityRouteHeatmapCells.cellX,
+            activityRouteHeatmapCells.cellY,
+          ],
+          set: {
+            activityCount: sql`${activityRouteHeatmapCells.activityCount} + ${contribution.delta}`,
+            updatedAt: new Date(),
+          },
+        });
+      continue;
+    }
+
+    await tx
+      .update(activityRouteHeatmapCells)
+      .set({
+        activityCount: sql`${activityRouteHeatmapCells.activityCount} + ${contribution.delta}`,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(activityRouteHeatmapCells.userId, userId),
+          eq(activityRouteHeatmapCells.zoom, contribution.zoom),
+          eq(activityRouteHeatmapCells.tileX, contribution.tileX),
+          eq(activityRouteHeatmapCells.tileY, contribution.tileY),
+          eq(activityRouteHeatmapCells.cellX, contribution.cellX),
+          eq(activityRouteHeatmapCells.cellY, contribution.cellY),
+        ),
+      );
+  }
+
+  await tx
+    .delete(activityRouteHeatmapCells)
+    .where(lte(activityRouteHeatmapCells.activityCount, 0));
+}
+
+function addCellDelta({
+  contribution,
+  delta,
+  deltas,
+}: {
+  contribution: ActivityRouteHeatmapCellCoordinate;
+  delta: number;
+  deltas: Map<
+    string,
+    ActivityRouteHeatmapCellCoordinate & {
+      delta: number;
+    }
+  >;
+}) {
+  const key = [
+    contribution.zoom,
+    contribution.tileX,
+    contribution.tileY,
+    contribution.cellX,
+    contribution.cellY,
+  ].join(":");
+  const existing = deltas.get(key);
+
+  deltas.set(key, {
+    ...contribution,
+    delta: (existing?.delta ?? 0) + delta,
+  });
 }

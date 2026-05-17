@@ -1,15 +1,8 @@
 import { useEffect } from "react";
 import { useMap } from "react-leaflet";
 import { routeHeatmapInitialLocationZoom } from "../constants";
-import type { RouteHeatmapViewport } from "../types";
 
-type InitialUserLocationViewProps = {
-  onViewportChange: (viewport: RouteHeatmapViewport) => void;
-};
-
-function InitialUserLocationView({
-  onViewportChange,
-}: InitialUserLocationViewProps) {
+function InitialUserLocationView() {
   const map = useMap();
 
   useEffect(() => {
@@ -23,7 +16,6 @@ function InitialUserLocationView({
           [position.coords.latitude, position.coords.longitude],
           routeHeatmapInitialLocationZoom,
         );
-        onViewportChange({ bounds: map.getBounds(), zoom: map.getZoom() });
       },
       () => undefined,
       {
@@ -32,7 +24,7 @@ function InitialUserLocationView({
         timeout: 5000,
       },
     );
-  }, [map, onViewportChange]);
+  }, [map]);
 
   return null;
 }

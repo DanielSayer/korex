@@ -1,44 +1,52 @@
-export function getRouteHeatmapColor(
-  activityCount: number,
-  maxActivityCount: number,
-) {
-  const intensity = activityCount / maxActivityCount;
+export function getRouteHeatmapRampColor(intensity: number) {
+  const clamped = clamp(intensity, 0, 1);
 
-  if (intensity > 0.66) {
-    return "#ef4444";
+  if (clamped < 0.35) {
+    return interpolateRgb(
+      { b: 18, g: 55, r: 190 },
+      { b: 0, g: 132, r: 249 },
+      clamped / 0.35,
+    );
   }
 
-  if (intensity > 0.33) {
-    return "#f97316";
+  if (clamped < 0.7) {
+    return interpolateRgb(
+      { b: 0, g: 132, r: 249 },
+      { b: 21, g: 204, r: 250 },
+      (clamped - 0.35) / 0.35,
+    );
   }
 
-  return "#facc15";
+  return interpolateRgb(
+    { b: 21, g: 204, r: 250 },
+    { b: 232, g: 248, r: 255 },
+    (clamped - 0.7) / 0.3,
+  );
 }
 
-export function getRouteHeatmapGlowOpacity(
-  activityCount: number,
-  maxActivityCount: number,
-) {
-  return 0.12 + (activityCount / maxActivityCount) * 0.2;
+export function getRouteHeatmapRampCss() {
+  return [
+    "rgba(190,55,18,0)",
+    getRouteHeatmapRampColor(0.12),
+    getRouteHeatmapRampColor(0.35),
+    getRouteHeatmapRampColor(0.7),
+    getRouteHeatmapRampColor(1),
+  ].join(", ");
 }
 
-export function getRouteHeatmapCoreOpacity(
-  activityCount: number,
-  maxActivityCount: number,
+function interpolateRgb(
+  from: { b: number; g: number; r: number },
+  to: { b: number; g: number; r: number },
+  amount: number,
 ) {
-  return 0.48 + (activityCount / maxActivityCount) * 0.26;
+  const t = clamp(amount, 0, 1);
+  const r = Math.round(from.r + (to.r - from.r) * t);
+  const g = Math.round(from.g + (to.g - from.g) * t);
+  const b = Math.round(from.b + (to.b - from.b) * t);
+
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
-export function getRouteHeatmapGlowWeight(
-  activityCount: number,
-  maxActivityCount: number,
-) {
-  return 10 + (activityCount / maxActivityCount) * 10;
-}
-
-export function getRouteHeatmapCoreWeight(
-  activityCount: number,
-  maxActivityCount: number,
-) {
-  return 3 + (activityCount / maxActivityCount) * 4;
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
 }

@@ -1,4 +1,10 @@
 import { createContext } from "@korex/api/context";
+import {
+  ActivityRouteHeatmapTileInputError,
+  readActivityRouteHeatmapTileInput,
+  renderActivityRouteHeatmapTile,
+  renderEmptyActivityRouteHeatmapTile,
+} from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-tile";
 import { appRouter } from "@korex/api/routers/index";
 import { auth } from "@korex/auth";
 import { env } from "@korex/env/server";
@@ -25,6 +31,45 @@ app.use(
 );
 
 app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+
+app.get(
+  "/api/activities/route-heatmap/tiles/:zoom/:tileX/:tileY",
+  async (c) => {
+    const context = await createContext({ context: c });
+
+    if (!context.session?.user) {
+      return c.body(null, 401);
+    }
+
+    try {
+      const tileInput = readActivityRouteHeatmapTileInput({
+        tileX: c.req.param("tileX"),
+        tileY: c.req.param("tileY"),
+        zoom: c.req.param("zoom"),
+      });
+
+      if (!tileInput) {
+        return routeHeatmapTileResponse(renderEmptyActivityRouteHeatmapTile());
+      }
+
+      const tile = await renderActivityRouteHeatmapTile({
+        tileX: tileInput.tileX,
+        tileY: tileInput.tileY,
+        userId: context.session.user.id,
+        zoom: tileInput.zoom,
+      });
+
+      return routeHeatmapTileResponse(tile);
+    } catch (error) {
+      if (error instanceof ActivityRouteHeatmapTileInputError) {
+        return routeHeatmapTileResponse(renderEmptyActivityRouteHeatmapTile());
+      }
+
+      console.error(error);
+      return c.text("Could not render route heatmap tile", 500);
+    }
+  },
+);
 
 export const apiHandler = new OpenAPIHandler(appRouter, {
   plugins: [
@@ -76,3 +121,12 @@ app.get("/", (c) => {
 });
 
 export default app;
+
+function routeHeatmapTileResponse(tile: Buffer) {
+  return new Response(tile, {
+    headers: {
+      "Cache-Control": "private, max-age=3600",
+      "Content-Type": "image/png",
+    },
+  });
+}

@@ -2,17 +2,12 @@ import { protectedProcedure } from "../../index";
 import {
   getWeeklyTrainingSummaryInput,
   listActivitiesInput,
-  routeHeatmapInput,
 } from "./activities.inputs";
+import { summarizeActivitiesByWeek } from "./catalog/activity-calendar-summary.service";
 import {
   getRecentActivities,
   listActivitiesForDateRange,
 } from "./catalog/activity-catalog.repository";
-import { summarizeActivitiesByWeek } from "./catalog/activity-calendar-summary.service";
-import {
-  activityRouteHeatmapCellsPerTile,
-} from "./route-heatmap/activity-route-heatmap";
-import { listActivityRouteHeatmapCellsForViewport } from "./route-heatmap/activity-route-heatmap.repository";
 import {
   getWeeklyTrainingSummary,
   listWeeklyTrainingSummaries,
@@ -60,24 +55,6 @@ export const activitiesRouter = {
       userId: context.session.user.id,
     });
   }),
-  routeHeatmap: protectedProcedure
-    .input(routeHeatmapInput)
-    .handler(async ({ context, input }) => {
-      const cells = await listActivityRouteHeatmapCellsForViewport({
-        maxTileX: input.maxTileX,
-        maxTileY: input.maxTileY,
-        minTileX: input.minTileX,
-        minTileY: input.minTileY,
-        userId: context.session.user.id,
-        zoom: input.zoom,
-      });
-
-      return {
-        cells,
-        cellsPerTile: activityRouteHeatmapCellsPerTile,
-        zoom: input.zoom,
-      };
-    }),
   weeklyTrainingSummaries: protectedProcedure.handler(async ({ context }) => {
     return listWeeklyTrainingSummaries({
       userId: context.session.user.id,
