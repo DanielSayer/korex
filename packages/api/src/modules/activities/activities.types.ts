@@ -99,13 +99,17 @@ export type AnalyticsVolumeBucket = {
   bucketStartAt: Date;
   cumulativeDistanceMeters: number;
   distanceMeters: number;
+  durationSeconds: number;
 };
 
 export type AnalyticsVolume = {
   bucketMode: AnalyticsVolumeBucketMode;
   buckets: AnalyticsVolumeBucket[];
+  monthlyBuckets: AnalyticsVolumeBucket[];
   totalActivityCount: number;
   totalDistanceMeters: number;
+  totalDurationSeconds: number;
+  weeklyBuckets: AnalyticsVolumeBucket[];
   year: number;
 };
 
