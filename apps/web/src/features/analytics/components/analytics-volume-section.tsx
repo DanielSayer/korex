@@ -89,7 +89,7 @@ function YearPicker({
 }) {
   const currentYear = new Date().getFullYear();
   const years = Array.from(
-    { length: currentYear - 2000 + 1 },
+    { length: currentYear - 2026 + 1 },
     (_, index) => currentYear - index,
   );
 

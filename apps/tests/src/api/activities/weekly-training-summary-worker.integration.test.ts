@@ -158,4 +158,47 @@ describe("weekly training summary worker", () => {
       userId,
     });
   });
+
+  it("does not re-enqueue a succeeded weekly summary during scheduled generation", async () => {
+    const userId = userDataExtensions.HughJass.id;
+    const now = new Date("2026-05-15T02:00:00.000Z");
+
+    await DataSeedAsync.withActivities(
+      ActivityBuilder.initWithUser(userId)
+        .withId(1501)
+        .withStartAt(new Date("2026-05-05T20:00:00.000Z"))
+        .withDistanceMeters(1000)
+        .withMovingTimeSeconds(500)
+        .build(),
+    ).seedAsync();
+
+    await enqueueCompletedWeeklyTrainingSummaries({ now });
+    await runWeeklyTrainingSummaryWorkerOnce({
+      batchSize: 10,
+      now,
+      staleLockMs: 60_000,
+      workerId: "worker-1",
+    });
+
+    const enqueueResult = await enqueueCompletedWeeklyTrainingSummaries({
+      now: new Date("2026-05-15T02:01:00.000Z"),
+      skipSucceeded: true,
+    });
+    const workerResult = await runWeeklyTrainingSummaryWorkerOnce({
+      batchSize: 10,
+      now: new Date("2026-05-15T02:02:00.000Z"),
+      staleLockMs: 60_000,
+      workerId: "worker-1",
+    });
+    const jobs = await db.select().from(weeklyTrainingSummaryGenerationJobs);
+
+    expect(enqueueResult.enqueued).toBe(0);
+    expect(workerResult).toEqual({ processed: 0 });
+    expect(jobs).toEqual([
+      expect.objectContaining({
+        status: "succeeded",
+        userId,
+      }),
+    ]);
+  });
 });

@@ -23,7 +23,10 @@ export async function runWeeklyTrainingSummarySchedulerOnce({
     return { enqueued: 0, skipped: true };
   }
 
-  const result = await enqueueCompletedWeeklyTrainingSummaries({ now });
+  const result = await enqueueCompletedWeeklyTrainingSummaries({
+    now,
+    skipSucceeded: true,
+  });
 
   return {
     enqueued: result.enqueued,

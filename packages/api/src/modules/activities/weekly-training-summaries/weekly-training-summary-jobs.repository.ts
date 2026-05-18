@@ -1,5 +1,5 @@
 import { activities, db, weeklyTrainingSummaryGenerationJobs } from "@korex/db";
-import { and, asc, eq, gte, lt, lte, or } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
 import { getCompletedTrainingWeek } from "./training-week";
 
 const retryDelaysSeconds = [1, 2, 4] as const;
@@ -61,19 +61,37 @@ export async function enqueueWeeklyTrainingSummaryGeneration({
 
 export async function enqueueCompletedWeeklyTrainingSummaries({
   now = new Date(),
+  skipSucceeded = false,
 }: {
   now?: Date;
+  skipSucceeded?: boolean;
 } = {}) {
   const { weekEndAt, weekStartAt } = getCompletedTrainingWeek(now);
-  const users = await db
+  const activityWeekCondition = and(
+    gte(activities.startAt, weekStartAt),
+    lt(activities.startAt, weekEndAt),
+  );
+  const usersQuery = db
     .selectDistinct({ userId: activities.userId })
-    .from(activities)
-    .where(
-      and(
-        gte(activities.startAt, weekStartAt),
-        lt(activities.startAt, weekEndAt),
-      ),
-    );
+    .from(activities);
+
+  const users = skipSucceeded
+    ? await usersQuery
+        .leftJoin(
+          weeklyTrainingSummaryGenerationJobs,
+          and(
+            eq(weeklyTrainingSummaryGenerationJobs.userId, activities.userId),
+            eq(weeklyTrainingSummaryGenerationJobs.weekStartAt, weekStartAt),
+            eq(weeklyTrainingSummaryGenerationJobs.status, "succeeded"),
+          ),
+        )
+        .where(
+          and(
+            activityWeekCondition,
+            isNull(weeklyTrainingSummaryGenerationJobs.id),
+          ),
+        )
+    : await usersQuery.where(activityWeekCondition);
 
   for (const { userId } of users) {
     await enqueueWeeklyTrainingSummaryGeneration({
