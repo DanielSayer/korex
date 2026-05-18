@@ -88,6 +88,10 @@ _Avoid_: Weekly summary volume, snapshot volume
 The fastest known contiguous distance effort by a **User** over a standard distance, derived from current **Activities**.
 _Avoid_: PR, record, best split
 
+**Activity Best Effort**:
+The fastest known contiguous distance effort within one **Activity** over a standard distance.
+_Avoid_: Activity PR, lap best, best split
+
 ## Relationships
 
 - A **Heart Rate Zone** belongs to exactly one **User**
@@ -201,8 +205,23 @@ _Avoid_: PR, record, best split
 - The initial **Analytics Volume** chart includes run and treadmill **Activities**; finer sport filters such as all, run-only, or treadmill-only can be added later.
 - **Weekly Training Summaries** remain replayable snapshot artifacts and must not be treated as the source of truth for live analytics charts.
 - A **Personal Best Effort** belongs to exactly one **User**.
-- A **Personal Best Effort** is derived from one **Activity**.
+- A **Personal Best Effort** is derived from one **Activity Best Effort**.
 - A **Personal Best Effort** covers one standard distance.
+- A **Personal Best Effort** duration uses elapsed time between the interpolated start and end distance boundaries, so pauses inside the effort window count.
+- An **Activity Best Effort** belongs to exactly one **Activity**.
+- An **Activity Best Effort** covers one standard distance.
+- A **Personal Best Effort** is the fastest known **Activity Best Effort** for a **User** and standard distance.
+- **Activity Best Efforts** are calculated by separate durable jobs after qualifying **Activity Stream** replacement, not inside provider sync request or import transaction lifetimes.
+- One activity-scoped durable job replaces an **Activity's** **Activity Best Efforts** and refreshes the affected **Personal Best Efforts**.
+- When **Personal Best Efforts** tie on duration, the earliest achieved effort wins; remaining ties are resolved deterministically.
+- The initial standard distances for **Activity Best Efforts** and **Personal Best Efforts** are 400 meters, 800 meters, 1000 meters, 1 mile, 3000 meters, 5K, 10K, half marathon, and marathon.
+- **Activity Best Efforts** and **Personal Best Efforts** are identified by standard-distance code, not raw distance meters.
+- **Activity Best Efforts** require run or treadmill **Activities** with paired distance and elapsed-time **Activity Streams** of the same length.
+- **Activity Best Efforts** are not calculated from **Activity Streams** with non-finite values, decreasing elapsed time, or decreasing distance.
+- If an **Activity** cannot produce reliable **Activity Best Efforts**, Korex stores no **Activity Best Efforts** for that **Activity**.
+- Replacing distance or elapsed-time **Activity Streams** makes an **Activity's** **Activity Best Efforts** stale.
+- Changing or deleting an **Activity** can make both **Activity Best Efforts** and **Personal Best Efforts** stale.
+- Existing eligible **Activities** can be backfilled into **Activity Best Efforts** by enqueueing durable calculation jobs.
 
 ## Example dialogue
 

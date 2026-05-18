@@ -29,6 +29,21 @@ export const activityStreamType = pgEnum("activity_stream_type", [
   "velocity",
 ]);
 
+export const bestEffortStandardDistanceCode = pgEnum(
+  "best_effort_standard_distance_code",
+  [
+    "400m",
+    "800m",
+    "1000m",
+    "1mi",
+    "3000m",
+    "5k",
+    "10k",
+    "half_marathon",
+    "marathon",
+  ],
+);
+
 export const activities = pgTable(
   "activities",
   {
@@ -300,7 +315,97 @@ export const activityHeartRateZoneTimes = pgTable(
   ],
 );
 
+export const activityBestEfforts = pgTable(
+  "activity_best_efforts",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    standardDistanceCode: bestEffortStandardDistanceCode(
+      "standard_distance_code",
+    ).notNull(),
+    distanceMeters: doublePrecision("distance_meters").notNull(),
+    durationSeconds: doublePrecision("duration_seconds").notNull(),
+    startElapsedTimeSeconds: doublePrecision(
+      "start_elapsed_time_seconds",
+    ).notNull(),
+    endElapsedTimeSeconds: doublePrecision(
+      "end_elapsed_time_seconds",
+    ).notNull(),
+    startDistanceMeters: doublePrecision("start_distance_meters").notNull(),
+    endDistanceMeters: doublePrecision("end_distance_meters").notNull(),
+    activityStartAt: timestamp("activity_start_at").notNull(),
+    sportType: activitySportType("sport_type").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("activity_best_efforts_activity_distance_idx").on(
+      table.activityId,
+      table.standardDistanceCode,
+    ),
+    index("activity_best_efforts_user_distance_duration_idx").on(
+      table.userId,
+      table.standardDistanceCode,
+      table.durationSeconds,
+    ),
+    index("activity_best_efforts_activity_id_idx").on(table.activityId),
+  ],
+);
+
+export const personalBestEfforts = pgTable(
+  "personal_best_efforts",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    activityBestEffortId: integer("activity_best_effort_id")
+      .notNull()
+      .references(() => activityBestEfforts.id, { onDelete: "cascade" }),
+    activityId: integer("activity_id")
+      .notNull()
+      .references(() => activities.id, { onDelete: "cascade" }),
+    standardDistanceCode: bestEffortStandardDistanceCode(
+      "standard_distance_code",
+    ).notNull(),
+    distanceMeters: doublePrecision("distance_meters").notNull(),
+    durationSeconds: doublePrecision("duration_seconds").notNull(),
+    startElapsedTimeSeconds: doublePrecision(
+      "start_elapsed_time_seconds",
+    ).notNull(),
+    endElapsedTimeSeconds: doublePrecision(
+      "end_elapsed_time_seconds",
+    ).notNull(),
+    activityStartAt: timestamp("activity_start_at").notNull(),
+    sportType: activitySportType("sport_type").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("personal_best_efforts_user_distance_idx").on(
+      table.userId,
+      table.standardDistanceCode,
+    ),
+    index("personal_best_efforts_activity_best_effort_id_idx").on(
+      table.activityBestEffortId,
+    ),
+    index("personal_best_efforts_activity_id_idx").on(table.activityId),
+  ],
+);
+
 export const activitiesRelations = relations(activities, ({ many, one }) => ({
+  bestEfforts: many(activityBestEfforts),
   heartRateZoneSnapshots: many(activityHeartRateZoneSnapshots),
   heartRateZoneTimes: many(activityHeartRateZoneTimes),
   heatmapContributions: many(activityRouteHeatmapContributions),
@@ -377,6 +482,38 @@ export const activityHeartRateZoneTimesRelations = relations(
     activity: one(activities, {
       fields: [activityHeartRateZoneTimes.activityId],
       references: [activities.id],
+    }),
+  }),
+);
+
+export const activityBestEffortsRelations = relations(
+  activityBestEfforts,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [activityBestEfforts.activityId],
+      references: [activities.id],
+    }),
+    user: one(user, {
+      fields: [activityBestEfforts.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const personalBestEffortsRelations = relations(
+  personalBestEfforts,
+  ({ one }) => ({
+    activity: one(activities, {
+      fields: [personalBestEfforts.activityId],
+      references: [activities.id],
+    }),
+    activityBestEffort: one(activityBestEfforts, {
+      fields: [personalBestEfforts.activityBestEffortId],
+      references: [activityBestEfforts.id],
+    }),
+    user: one(user, {
+      fields: [personalBestEfforts.userId],
+      references: [user.id],
     }),
   }),
 );
