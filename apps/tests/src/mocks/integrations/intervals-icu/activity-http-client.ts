@@ -107,6 +107,11 @@ export const intervalsIcuActivityHttpClientSuccess = Layer.succeed(
                 name: null,
                 type: "heartrate",
               },
+              time: {
+                data: [0, 2],
+                name: null,
+                type: "time",
+              },
               velocity_smooth: {
                 data: [3.1, 3.2],
                 name: null,

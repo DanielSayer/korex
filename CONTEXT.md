@@ -84,6 +84,10 @@ _Avoid_: Calendar week, ISO week, reporting week
 A live distance or duration aggregate calculated from current **Activities** for a selected time bucket.
 _Avoid_: Weekly summary volume, snapshot volume
 
+**Personal Best Effort**:
+The fastest known contiguous distance effort by a **User** over a standard distance, derived from current **Activities**.
+_Avoid_: PR, record, best split
+
 ## Relationships
 
 - A **Heart Rate Zone** belongs to exactly one **User**
@@ -102,8 +106,9 @@ _Avoid_: Weekly summary volume, snapshot volume
 - An **Activity Map** belongs to exactly one **Activity**.
 - An **Activity Stream** belongs to exactly one **Activity**.
 - Each **Activity** can have only one **Activity Stream** for a given stream type.
-- **Activity Streams** are initially limited to cadence, distance, altitude, heart rate, and velocity.
+- **Activity Streams** are initially limited to cadence, distance, altitude, heart rate, velocity, and elapsed time.
 - Intervals.icu cadence stream values are revolutions per minute and become steps per minute in Korex by doubling each value.
+- Intervals.icu `time` stream values become elapsed-time **Activity Stream** values in Korex.
 - An **Activity** can have zero or more **Activity Heart Rate Zone Times**.
 - An **Activity** can have zero or more **Activity Heart Rate Zone Snapshots**.
 - An **Activity Heart Rate Zone Snapshot** belongs to exactly one **Activity**.
@@ -195,6 +200,9 @@ _Avoid_: Weekly summary volume, snapshot volume
 - Analytics cumulative distance accumulates the visible chart buckets, so monthly and weekly views may have different boundary totals for the same selected year.
 - The initial **Analytics Volume** chart includes run and treadmill **Activities**; finer sport filters such as all, run-only, or treadmill-only can be added later.
 - **Weekly Training Summaries** remain replayable snapshot artifacts and must not be treated as the source of truth for live analytics charts.
+- A **Personal Best Effort** belongs to exactly one **User**.
+- A **Personal Best Effort** is derived from one **Activity**.
+- A **Personal Best Effort** covers one standard distance.
 
 ## Example dialogue
 
@@ -211,3 +219,4 @@ _Avoid_: Weekly summary volume, snapshot volume
 - "pending zone time" was considered for captured zones awaiting calculation; resolved: use **Activity Heart Rate Zone Snapshot** for the captured historical zone definition and **Activity Heart Rate Zone Time** only for calculated durations.
 - "last sync time" can mean when a sync started, finished, or last wrote provider connection metadata; resolved: use **Incremental Activity Sync Watermark** for the lower bound of an incremental activity sync window.
 - "volume" can mean either a live analytics aggregate or a replayed weekly snapshot; resolved: use **Analytics Volume** for live chart aggregates calculated from current **Activities**.
+- "best effort" can mean a provider badge, race record, or lap split; resolved: use **Personal Best Effort** for the fastest known contiguous standard-distance effort derived inside Korex.

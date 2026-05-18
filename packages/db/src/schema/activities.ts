@@ -25,6 +25,7 @@ export const activityStreamType = pgEnum("activity_stream_type", [
   "distance",
   "altitude",
   "heartRate",
+  "elapsedTime",
   "velocity",
 ]);
 

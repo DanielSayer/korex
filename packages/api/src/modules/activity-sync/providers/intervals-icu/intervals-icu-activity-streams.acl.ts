@@ -12,6 +12,7 @@ const intervalsIcuStreamTypeMap = {
   distance: "distance",
   fixed_altitude: "altitude",
   heartrate: "heartRate",
+  time: "elapsedTime",
   velocity_smooth: "velocity",
 } satisfies Record<string, ActivityStreamType>;
 const intervalsIcuStreamTypes: Record<string, ActivityStreamType> =

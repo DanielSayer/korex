@@ -22,6 +22,10 @@ describe("Intervals.icu activity streams ACL", () => {
           data: [140, 142],
           type: "heartrate",
         },
+        time: {
+          data: [0, 2],
+          type: "time",
+        },
         velocity_smooth: {
           data: [3.1, 3.2],
           type: "velocity_smooth",
@@ -43,6 +47,10 @@ describe("Intervals.icu activity streams ACL", () => {
       {
         data: [140, 142],
         streamType: "heartRate",
+      },
+      {
+        data: [0, 2],
+        streamType: "elapsedTime",
       },
       {
         data: [3.1, 3.2],

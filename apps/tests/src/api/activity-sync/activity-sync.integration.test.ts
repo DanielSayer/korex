@@ -258,9 +258,17 @@ describe("activity sync integration", () => {
           }),
           streamType: "heartrate",
         }),
+        expect.objectContaining({
+          lastSyncRunId: result.syncRunId,
+          rawData: expect.objectContaining({
+            data: [0, 2],
+            type: "time",
+          }),
+          streamType: "time",
+        }),
       ]),
     );
-    expect(streams).toHaveLength(5);
+    expect(streams).toHaveLength(6);
 
     const coreStreams = await db
       .select()
@@ -280,9 +288,14 @@ describe("activity sync integration", () => {
           data: [140, 142],
           streamType: "heartRate",
         }),
+        expect.objectContaining({
+          activityId: activity.activityId,
+          data: [0, 2],
+          streamType: "elapsedTime",
+        }),
       ]),
     );
-    expect(coreStreams).toHaveLength(5);
+    expect(coreStreams).toHaveLength(6);
 
     const snapshots = await db
       .select()

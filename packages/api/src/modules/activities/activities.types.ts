@@ -5,6 +5,7 @@ export type ActivityStreamType =
   | "distance"
   | "altitude"
   | "heartRate"
+  | "elapsedTime"
   | "velocity";
 
 export type ActivityInput = {
