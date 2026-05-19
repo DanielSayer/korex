@@ -48,6 +48,20 @@ describe("activity best efforts", () => {
     });
   });
 
+  it("rounds interpolated elapsed-time boundaries to whole seconds", () => {
+    const [effort] = calculateActivityBestEfforts({
+      distanceSamples: [0, 123, 523],
+      elapsedTimeSamples: [0, 16, 91],
+    });
+
+    expect(effort).toMatchObject({
+      durationSeconds: 68,
+      endElapsedTimeSeconds: 68,
+      standardDistanceCode: "400m",
+      startElapsedTimeSeconds: 0,
+    });
+  });
+
   it("returns no efforts for mismatched or decreasing streams", () => {
     expect(
       calculateActivityBestEfforts({

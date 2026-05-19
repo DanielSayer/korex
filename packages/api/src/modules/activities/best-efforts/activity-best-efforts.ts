@@ -163,12 +163,15 @@ function findBestWindowForDistance({
       continue;
     }
 
+    const roundedStartElapsedTimeSeconds = Math.round(startElapsedTimeSeconds);
+    const roundedEndElapsedTimeSeconds = Math.round(endElapsedTimeSeconds);
     const candidate = {
-      durationSeconds: endElapsedTimeSeconds - startElapsedTimeSeconds,
+      durationSeconds:
+        roundedEndElapsedTimeSeconds - roundedStartElapsedTimeSeconds,
       endDistanceMeters,
-      endElapsedTimeSeconds,
+      endElapsedTimeSeconds: roundedEndElapsedTimeSeconds,
       startDistanceMeters,
-      startElapsedTimeSeconds,
+      startElapsedTimeSeconds: roundedStartElapsedTimeSeconds,
     };
 
     if (isBetterWindow(candidate, bestWindow)) {
