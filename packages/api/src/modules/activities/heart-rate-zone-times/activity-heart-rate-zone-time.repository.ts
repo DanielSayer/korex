@@ -14,6 +14,7 @@ import type {
   ActivityStreamInput,
 } from "../activities.types";
 import { replaceActivityStreams } from "../artifacts/activity-artifacts.repository";
+import { enqueueActivityBestEffortCalculation } from "../best-efforts/activity-best-effort-jobs.repository";
 
 type ActivityDatabase = Pick<
   typeof db,
@@ -106,6 +107,10 @@ export async function replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation
       activityId,
       database: tx,
       streams,
+    });
+    await enqueueActivityBestEffortCalculation({
+      activityId,
+      database: tx,
     });
 
     const heartRateStream = streams.find(

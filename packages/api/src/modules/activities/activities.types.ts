@@ -8,6 +8,27 @@ export type ActivityStreamType =
   | "elapsedTime"
   | "velocity";
 
+export type BestEffortStandardDistanceCode =
+  | "400m"
+  | "800m"
+  | "1000m"
+  | "1mi"
+  | "3000m"
+  | "5k"
+  | "10k"
+  | "half_marathon"
+  | "marathon";
+
+export type ActivityBestEffortInput = {
+  distanceMeters: number;
+  durationSeconds: number;
+  endDistanceMeters: number;
+  endElapsedTimeSeconds: number;
+  standardDistanceCode: BestEffortStandardDistanceCode;
+  startDistanceMeters: number;
+  startElapsedTimeSeconds: number;
+};
+
 export type ActivityInput = {
   averageCadenceStepsPerMinute: number | null;
   averageHeartRateBeatsPerMinute: number | null;

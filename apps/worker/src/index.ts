@@ -1,4 +1,5 @@
 import {
+  runActivityBestEffortWorkerOnce,
   runActivityHeartRateZoneTimeWorkerOnce,
   runActivityRouteHeatmapWorkerOnce,
   runWeeklyTrainingSummaryWorkerOnce,
@@ -73,6 +74,18 @@ while (!shuttingDown) {
     if (heatmapResult.processed > 0) {
       console.info(
         `Processed ${heatmapResult.processed} activity route heatmap jobs`,
+      );
+    }
+
+    const bestEffortResult = await runActivityBestEffortWorkerOnce({
+      batchSize,
+      staleLockMs,
+      workerId,
+    });
+
+    if (bestEffortResult.processed > 0) {
+      console.info(
+        `Processed ${bestEffortResult.processed} activity best effort jobs`,
       );
     }
   } catch (error) {
