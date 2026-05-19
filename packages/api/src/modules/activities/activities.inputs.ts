@@ -20,3 +20,7 @@ export const getAnalyticsVolumeInput = z.object({
   bucketMode: z.enum(["monthly", "weekly"]).default("monthly"),
   year: z.coerce.number().int().min(2000).max(currentYear).default(currentYear),
 });
+
+export const getAnalyticsBestEffortsInput = z.object({
+  year: z.coerce.number().int().min(2000).max(currentYear).default(currentYear),
+});

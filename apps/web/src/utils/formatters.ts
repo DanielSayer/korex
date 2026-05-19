@@ -7,13 +7,14 @@ function formatDistance(distanceMeters: number | null) {
 }
 
 function formatDurationClock(durationSeconds: number | null) {
-  if (durationSeconds === null) {
+  if (durationSeconds === null || !Number.isFinite(durationSeconds)) {
     return "--";
   }
 
-  const hours = Math.floor(durationSeconds / 3600);
-  const minutes = Math.floor((durationSeconds % 3600) / 60);
-  const seconds = durationSeconds % 60;
+  const roundedSeconds = Math.round(durationSeconds);
+  const hours = Math.floor(roundedSeconds / 3600);
+  const minutes = Math.floor((roundedSeconds % 3600) / 60);
+  const seconds = roundedSeconds % 60;
 
   if (hours > 0) {
     return `${hours}:${padTime(minutes)}:${padTime(seconds)}`;
@@ -45,6 +46,20 @@ function formatSignedNumber(value: number) {
   return value >= 0 ? `+${value}` : value.toString();
 }
 
+function formatShortDate(value: Date | string) {
+  return new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function formatShortMonth(value: Date | string) {
+  return new Intl.DateTimeFormat(undefined, { month: "short" }).format(
+    new Date(value),
+  );
+}
+
 function padTime(value: number) {
   return value.toString().padStart(2, "0");
 }
@@ -53,6 +68,8 @@ export {
   formatDistance,
   formatDurationClock,
   formatDurationCompact,
+  formatShortDate,
+  formatShortMonth,
   formatSignedNumber,
   formatSpeed,
 };

@@ -1,6 +1,7 @@
 import type { AnalyticsVolumeBucketMode } from "@korex/api/modules/activities/activities.types";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { AnalyticsBestEffortsSection } from "@/features/analytics/components/analytics-best-efforts-section";
 import {
   AnalyticsVolumeControls,
   AnalyticsVolumeSection,
@@ -59,6 +60,7 @@ function RouteComponent() {
         />
       </div>
       <AnalyticsVolumeSection bucketMode={bucketMode} year={year} />
+      <AnalyticsBestEffortsSection year={year} />
     </div>
   );
 }

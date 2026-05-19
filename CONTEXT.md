@@ -216,6 +216,7 @@ _Avoid_: Activity PR, lap best, best split
 - When **Personal Best Efforts** tie on duration, the earliest achieved effort wins; remaining ties are resolved deterministically.
 - The initial standard distances for **Activity Best Efforts** and **Personal Best Efforts** are 400 meters, 800 meters, 1000 meters, 1 mile, 3000 meters, 5K, 10K, half marathon, and marathon.
 - **Activity Best Efforts** and **Personal Best Efforts** are identified by standard-distance code, not raw distance meters.
+- A monthly **Personal Best Effort** trend shows the fastest **Activity Best Effort** achieved on or before each calendar month end, not the fastest effort performed inside that month only.
 - **Activity Best Efforts** require run or treadmill **Activities** with paired distance and elapsed-time **Activity Streams** of the same length.
 - **Activity Best Efforts** are not calculated from **Activity Streams** with non-finite values, decreasing elapsed time, or decreasing distance.
 - If an **Activity** cannot produce reliable **Activity Best Efforts**, Korex stores no **Activity Best Efforts** for that **Activity**.

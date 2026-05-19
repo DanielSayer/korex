@@ -1,10 +1,12 @@
 import { protectedProcedure } from "../../index";
 import {
+  getAnalyticsBestEffortsInput,
   getAnalyticsVolumeInput,
   getWeeklyTrainingSummaryInput,
   listActivitiesInput,
 } from "./activities.inputs";
 import { getAnalyticsVolume } from "./analytics/activity-analytics.repository";
+import { getAnalyticsBestEfforts } from "./analytics/activity-best-effort-analytics.repository";
 import { summarizeActivitiesByWeek } from "./catalog/activity-calendar-summary.service";
 import {
   getRecentActivities,
@@ -16,6 +18,14 @@ import {
 } from "./weekly-training-summaries/weekly-training-summary.repository";
 
 export const activitiesRouter = {
+  analyticsBestEfforts: protectedProcedure
+    .input(getAnalyticsBestEffortsInput)
+    .handler(async ({ context, input }) => {
+      return getAnalyticsBestEfforts({
+        userId: context.session.user.id,
+        year: input.year,
+      });
+    }),
   analyticsVolume: protectedProcedure
     .input(getAnalyticsVolumeInput)
     .handler(async ({ context, input }) => {

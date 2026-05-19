@@ -135,6 +135,27 @@ export type AnalyticsVolume = {
   year: number;
 };
 
+export type PersonalBestEffort = {
+  activityId: number;
+  activityStartAt: Date;
+  distanceMeters: number;
+  durationSeconds: number;
+  standardDistanceCode: BestEffortStandardDistanceCode;
+};
+
+export type PersonalBestEffortTrendBucket = {
+  bucketEndAt: Date;
+  bucketStartAt: Date;
+  durationSeconds: number | null;
+  standardDistanceCode: BestEffortStandardDistanceCode;
+};
+
+export type AnalyticsBestEfforts = {
+  allTime: PersonalBestEffort[];
+  monthlyTrendBuckets: PersonalBestEffortTrendBucket[];
+  year: number;
+};
+
 export type ActivityStreamInput = {
   data: number[];
   streamType: ActivityStreamType;
