@@ -1,31 +1,14 @@
-import { processActivityRouteHeatmapCalculationJob } from "./activity-route-heatmap-calculation.service";
-import { claimActivityRouteHeatmapCalculationJobs } from "./activity-route-heatmap-jobs.repository";
+import { Effect } from "effect";
+import type { RunActivityRouteHeatmapWorkerOnceInput } from "./activity-route-heatmap-workflow.dependencies";
+import { ActivityRouteHeatmapWorkflowLive } from "./activity-route-heatmap-workflow.live";
+import { runActivityRouteHeatmapWorkerOnce as runActivityRouteHeatmapWorkerOnceWorkflow } from "./activity-route-heatmap-workflow.service";
 
-export type RunActivityRouteHeatmapWorkerOnceInput = {
-  batchSize: number;
-  now?: Date;
-  staleLockMs: number;
-  workerId: string;
-};
-
-export async function runActivityRouteHeatmapWorkerOnce({
-  batchSize,
-  now = new Date(),
-  staleLockMs,
-  workerId,
-}: RunActivityRouteHeatmapWorkerOnceInput) {
-  const jobs = await claimActivityRouteHeatmapCalculationJobs({
-    batchSize,
-    now,
-    staleLockedBefore: new Date(now.getTime() - staleLockMs),
-    workerId,
-  });
-
-  for (const job of jobs) {
-    await processActivityRouteHeatmapCalculationJob(job);
-  }
-
-  return {
-    processed: jobs.length,
-  };
+export function runActivityRouteHeatmapWorkerOnce(
+  input: RunActivityRouteHeatmapWorkerOnceInput,
+) {
+  return Effect.runPromise(
+    runActivityRouteHeatmapWorkerOnceWorkflow(input).pipe(
+      Effect.provide(ActivityRouteHeatmapWorkflowLive),
+    ),
+  );
 }
