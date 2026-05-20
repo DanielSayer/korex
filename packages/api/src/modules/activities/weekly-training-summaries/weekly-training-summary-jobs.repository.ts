@@ -1,6 +1,8 @@
 import { activities, db, weeklyTrainingSummaryGenerationJobs } from "@korex/db";
 import { and, asc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
-import { getCompletedTrainingWeek } from "./training-week";
+import { Effect } from "effect";
+import { WeeklyTrainingSummaryWorkflowLive } from "./weekly-training-summary-workflow.live";
+import { enqueueCompletedWeeklyTrainingSummaries as enqueueCompletedWeeklyTrainingSummariesWorkflow } from "./weekly-training-summary-workflow.service";
 
 const retryDelaysSeconds = [1, 2, 4] as const;
 const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
@@ -66,7 +68,22 @@ export async function enqueueCompletedWeeklyTrainingSummaries({
   now?: Date;
   skipSucceeded?: boolean;
 } = {}) {
-  const { weekEndAt, weekStartAt } = getCompletedTrainingWeek(now);
+  return Effect.runPromise(
+    enqueueCompletedWeeklyTrainingSummariesWorkflow({ now, skipSucceeded }).pipe(
+      Effect.provide(WeeklyTrainingSummaryWorkflowLive),
+    ),
+  );
+}
+
+export async function listUsersWithActivitiesForTrainingWeek({
+  skipSucceeded = false,
+  weekEndAt,
+  weekStartAt,
+}: {
+  skipSucceeded?: boolean;
+  weekEndAt: Date;
+  weekStartAt: Date;
+}) {
   const activityWeekCondition = and(
     gte(activities.startAt, weekStartAt),
     lt(activities.startAt, weekEndAt),
@@ -93,18 +110,7 @@ export async function enqueueCompletedWeeklyTrainingSummaries({
         )
     : await usersQuery.where(activityWeekCondition);
 
-  for (const { userId } of users) {
-    await enqueueWeeklyTrainingSummaryGeneration({
-      userId,
-      weekStartAt,
-    });
-  }
-
-  return {
-    enqueued: users.length,
-    weekEndAt,
-    weekStartAt,
-  };
+  return users.map((user) => user.userId);
 }
 
 export async function claimWeeklyTrainingSummaryGenerationJobs({

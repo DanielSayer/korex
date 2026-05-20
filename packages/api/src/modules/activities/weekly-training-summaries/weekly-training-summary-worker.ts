@@ -1,31 +1,14 @@
-import { processWeeklyTrainingSummaryGenerationJob } from "./weekly-training-summary-generation.service";
-import { claimWeeklyTrainingSummaryGenerationJobs } from "./weekly-training-summary-jobs.repository";
+import { Effect } from "effect";
+import type { RunWeeklyTrainingSummaryWorkerOnceInput } from "./weekly-training-summary-workflow.dependencies";
+import { WeeklyTrainingSummaryWorkflowLive } from "./weekly-training-summary-workflow.live";
+import { runWeeklyTrainingSummaryWorkerOnce as runWeeklyTrainingSummaryWorkerOnceWorkflow } from "./weekly-training-summary-workflow.service";
 
-export type RunWeeklyTrainingSummaryWorkerOnceInput = {
-  batchSize: number;
-  now?: Date;
-  staleLockMs: number;
-  workerId: string;
-};
-
-export async function runWeeklyTrainingSummaryWorkerOnce({
-  batchSize,
-  now = new Date(),
-  staleLockMs,
-  workerId,
-}: RunWeeklyTrainingSummaryWorkerOnceInput) {
-  const jobs = await claimWeeklyTrainingSummaryGenerationJobs({
-    batchSize,
-    now,
-    staleLockedBefore: new Date(now.getTime() - staleLockMs),
-    workerId,
-  });
-
-  for (const job of jobs) {
-    await processWeeklyTrainingSummaryGenerationJob(job);
-  }
-
-  return {
-    processed: jobs.length,
-  };
+export function runWeeklyTrainingSummaryWorkerOnce(
+  input: RunWeeklyTrainingSummaryWorkerOnceInput,
+) {
+  return Effect.runPromise(
+    runWeeklyTrainingSummaryWorkerOnceWorkflow(input).pipe(
+      Effect.provide(WeeklyTrainingSummaryWorkflowLive),
+    ),
+  );
 }
