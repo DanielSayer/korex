@@ -1,31 +1,14 @@
-import { processActivityBestEffortCalculationJob } from "./activity-best-effort-calculation.service";
-import { claimActivityBestEffortCalculationJobs } from "./activity-best-effort-jobs.repository";
+import { Effect } from "effect";
+import type { RunActivityBestEffortWorkerOnceInput } from "./activity-best-effort-workflow.dependencies";
+import { ActivityBestEffortWorkflowLive } from "./activity-best-effort-workflow.live";
+import { runActivityBestEffortWorkerOnce as runActivityBestEffortWorkerOnceWorkflow } from "./activity-best-effort-workflow.service";
 
-export type RunActivityBestEffortWorkerOnceInput = {
-  batchSize: number;
-  now?: Date;
-  staleLockMs: number;
-  workerId: string;
-};
-
-export async function runActivityBestEffortWorkerOnce({
-  batchSize,
-  now = new Date(),
-  staleLockMs,
-  workerId,
-}: RunActivityBestEffortWorkerOnceInput) {
-  const jobs = await claimActivityBestEffortCalculationJobs({
-    batchSize,
-    now,
-    staleLockedBefore: new Date(now.getTime() - staleLockMs),
-    workerId,
-  });
-
-  for (const job of jobs) {
-    await processActivityBestEffortCalculationJob(job);
-  }
-
-  return {
-    processed: jobs.length,
-  };
+export function runActivityBestEffortWorkerOnce(
+  input: RunActivityBestEffortWorkerOnceInput,
+) {
+  return Effect.runPromise(
+    runActivityBestEffortWorkerOnceWorkflow(input).pipe(
+      Effect.provide(ActivityBestEffortWorkflowLive),
+    ),
+  );
 }

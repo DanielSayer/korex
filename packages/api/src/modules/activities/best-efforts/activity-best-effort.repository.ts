@@ -92,17 +92,17 @@ export async function replaceActivityBestEffortsAndRefreshPersonalBests({
   });
 }
 
-async function replaceActivityBestEfforts({
+export async function replaceActivityBestEfforts({
   activityId,
   activityStartAt,
-  database,
+  database = db,
   efforts,
   sportType,
   userId,
 }: {
   activityId: number;
   activityStartAt: Date;
-  database: ActivityBestEffortDatabase;
+  database?: ActivityBestEffortDatabase;
   efforts: ActivityBestEffortInput[];
   sportType: "run" | "treadmill" | "hike";
   userId: string;
@@ -144,12 +144,12 @@ async function replaceActivityBestEfforts({
   return [...affectedDistanceCodes];
 }
 
-async function refreshPersonalBestEfforts({
-  database,
+export async function refreshPersonalBestEfforts({
+  database = db,
   standardDistanceCodes,
   userId,
 }: {
-  database: ActivityBestEffortDatabase;
+  database?: ActivityBestEffortDatabase;
   standardDistanceCodes: BestEffortStandardDistanceCode[];
   userId: string;
 }) {
