@@ -5,7 +5,7 @@ const retryDelaysSeconds = [1, 2, 4] as const;
 
 type ActivityHeartRateZoneTimeJobDatabase = Pick<
   typeof db,
-  "insert" | "select" | "transaction" | "update"
+  "delete" | "insert" | "select" | "transaction" | "update"
 >;
 
 export type ActivityHeartRateZoneTimeCalculationJob = {
@@ -48,6 +48,18 @@ export async function enqueueActivityHeartRateZoneTimeCalculation({
         updatedAt: now,
       },
     });
+}
+
+export async function deleteActivityHeartRateZoneTimeCalculationJob({
+  activityId,
+  database = db,
+}: {
+  activityId: number;
+  database?: ActivityHeartRateZoneTimeJobDatabase;
+}) {
+  await database
+    .delete(activityHeartRateZoneTimeCalculationJobs)
+    .where(eq(activityHeartRateZoneTimeCalculationJobs.activityId, activityId));
 }
 
 export async function claimActivityHeartRateZoneTimeCalculationJobs({

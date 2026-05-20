@@ -224,6 +224,14 @@ _Avoid_: Activity PR, lap best, best split
 - Changing or deleting an **Activity** can make both **Activity Best Efforts** and **Personal Best Efforts** stale.
 - Existing eligible **Activities** can be backfilled into **Activity Best Efforts** by enqueueing durable calculation jobs.
 
+## Architecture Boundaries
+
+- Korex uses Effect at application and workflow boundaries, where orchestration composes repositories, provider clients, clocks, encryption, transactions, and durable jobs.
+- Repositories stay Promise-based and data-shaped. They expose literal persistence operations such as insert, update, query, claim, mark, replace, enqueue, and delete.
+- Repositories must not decide downstream workflow behavior such as which derived jobs to enqueue, which snapshots to capture, or which projections to refresh.
+- Pure calculation modules stay plain TypeScript unless they need external dependencies. Effect wraps the workflow that calls them, not the calculation itself.
+- Workflow modules use `*.dependencies.ts` for `Context.Tag` service contracts, `*.service.ts` for Effect-returning functions, and `*.live.ts` for live layer composition.
+
 ## Example dialogue
 
 > **Dev:** "When Intervals.icu returns heart-rate zones during profile sync, do those remain Intervals settings?"

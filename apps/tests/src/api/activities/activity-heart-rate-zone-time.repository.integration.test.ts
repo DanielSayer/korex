@@ -1,14 +1,14 @@
-import {
-  replaceActivityHeartRateZoneSnapshotsAndQueueCalculation,
-  replaceActivityHeartRateZoneTimes,
-  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
-} from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
+import { replaceActivityHeartRateZoneTimes } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
 import {
   claimActivityHeartRateZoneTimeCalculationJobs,
   enqueueActivityHeartRateZoneTimeCalculation,
   markActivityHeartRateZoneTimeCalculationFailed,
   markActivityHeartRateZoneTimeCalculationSucceeded,
 } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-jobs.repository";
+import { replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.adapter";
+import type { ActivityHeartRateZoneTimeWorkflow } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.dependencies";
+import { ActivityHeartRateZoneTimeWorkflowLive } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
+import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
 import {
   activityHeartRateZoneSnapshots,
   activityHeartRateZoneTimeCalculationJobs,
@@ -16,6 +16,7 @@ import {
   db,
 } from "@korex/db";
 import { eq } from "drizzle-orm";
+import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -42,7 +43,7 @@ describe("activity heart rate zone time repositories", () => {
       now: new Date("2026-04-01T00:00:00.000Z"),
     });
 
-    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise({
       activityId: activity.id,
       snapshots: [
         {
@@ -220,7 +221,9 @@ describe("activity heart rate zone time repositories", () => {
     });
     expect(finalClaim).toEqual([]);
   });
+});
 
+describe("activity heart rate zone time workflow", () => {
   it("replaces streams, captures current heart rate zones, and queues calculation", async () => {
     const activity = ActivityBuilder.initWithUser(
       userDataExtensions.HughJass.id,
@@ -246,11 +249,13 @@ describe("activity heart rate zone time repositories", () => {
       times: [{ position: 1, timeSeconds: 123 }],
     });
 
-    await replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
-      activityId: activity.id,
-      streams: [{ data: [130, 150], streamType: "heartRate" }],
-      userId: userDataExtensions.HughJass.id,
-    });
+    await runWorkflow(
+      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+        activityId: activity.id,
+        streams: [{ data: [130, 150], streamType: "heartRate" }],
+        userId: userDataExtensions.HughJass.id,
+      }),
+    );
 
     const snapshots = await db
       .select()
@@ -299,7 +304,7 @@ describe("activity heart rate zone time repositories", () => {
     await DataSeedAsync.withActivities(activity)
       .withHeartRateZones(zone)
       .seedAsync();
-    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise({
       activityId: activity.id,
       snapshots: [zone],
     });
@@ -308,11 +313,13 @@ describe("activity heart rate zone time repositories", () => {
       times: [{ position: 1, timeSeconds: 123 }],
     });
 
-    await replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
-      activityId: activity.id,
-      streams: [{ data: [0, 10], streamType: "distance" }],
-      userId: userDataExtensions.HughJass.id,
-    });
+    await runWorkflow(
+      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+        activityId: activity.id,
+        streams: [{ data: [0, 10], streamType: "distance" }],
+        userId: userDataExtensions.HughJass.id,
+      }),
+    );
 
     const snapshots = await db
       .select()
@@ -344,7 +351,7 @@ describe("activity heart rate zone time repositories", () => {
     await DataSeedAsync.withActivities(activity)
       .withHeartRateZones(zone)
       .seedAsync();
-    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise({
       activityId: activity.id,
       snapshots: [zone],
     });
@@ -353,11 +360,13 @@ describe("activity heart rate zone time repositories", () => {
       times: [{ position: 1, timeSeconds: 123 }],
     });
 
-    await replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
-      activityId: activity.id,
-      streams: [{ data: [130, 150], streamType: "heartRate" }],
-      userId: "user-without-heart-rate-zones",
-    });
+    await runWorkflow(
+      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+        activityId: activity.id,
+        streams: [{ data: [130, 150], streamType: "heartRate" }],
+        userId: "user-without-heart-rate-zones",
+      }),
+    );
 
     const snapshots = await db
       .select()
@@ -410,4 +419,12 @@ function requireJob<T>(job: T | undefined): T {
   }
 
   return job;
+}
+
+function runWorkflow(
+  effect: Effect.Effect<void, never, ActivityHeartRateZoneTimeWorkflow>,
+) {
+  return Effect.runPromise(
+    effect.pipe(Effect.provide(ActivityHeartRateZoneTimeWorkflowLive)),
+  );
 }

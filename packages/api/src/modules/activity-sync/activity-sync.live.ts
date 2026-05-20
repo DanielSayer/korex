@@ -6,7 +6,8 @@ import {
   replaceActivityLaps,
   upsertActivity,
 } from "../activities/artifacts/activity-import.repository";
-import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
+import { ActivityHeartRateZoneTimeWorkflowLive } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
+import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
 import { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
 import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
@@ -81,8 +82,12 @@ const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
   storeExternalMap: upsertExternalActivityMap,
   replaceCoreMap: replaceActivityMapAndQueueHeatmapCalculation,
   storeExternalStream: upsertExternalActivityStream,
-  replaceCoreStreamsAndQueueCalculation:
-    replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
+  replaceCoreStreamsAndQueueCalculation: (input) =>
+    Effect.runPromise(
+      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation(input).pipe(
+        Effect.provide(ActivityHeartRateZoneTimeWorkflowLive),
+      ),
+    ),
 });
 
 const IntervalsIcuActivitySyncLive = Layer.succeed(IntervalsIcuActivitySync, {
@@ -98,6 +103,7 @@ export const ActivitySyncLive = Layer.mergeAll(
   ActivityArtifactStoreLive,
   ActivityImportWriterLive,
   ActivitySyncRepositoryLive,
+  ActivityHeartRateZoneTimeWorkflowLive,
   ProviderSessionLive,
   IntervalsIcuActivitySyncLive,
 );
