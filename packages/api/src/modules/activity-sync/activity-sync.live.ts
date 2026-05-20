@@ -1,13 +1,14 @@
 import { Effect, Layer } from "effect";
+import { ActivityArtifactWorkflow } from "../activities/artifacts/activity-artifact-workflow.dependencies";
 import { ActivityArtifactWorkflowLive } from "../activities/artifacts/activity-artifact-workflow.live";
-import { replaceActivityMapAndQueueHeatmapCalculation } from "../activities/artifacts/activity-artifact-workflow.service";
+import { ActivityHeartRateZoneTimeWorkflow } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.dependencies";
 import { ActivityHeartRateZoneTimeWorkflowLive } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
-import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
 import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
 import { ActivityImportWriterLive } from "./activity-import-writer.live";
 import {
   ActivityArtifactStore,
+  ActivityImportWriter,
   ActivitySyncRepository,
   IntervalsIcuActivitySync,
 } from "./activity-sync.dependencies";
@@ -33,38 +34,67 @@ const ActivitySyncRepositoryLive = Layer.succeed(ActivitySyncRepository, {
   markProviderConnectionSynced,
 });
 
-const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
-  storeExternalMap: upsertExternalActivityMap,
-  replaceCoreMap: (input) =>
-    Effect.runPromise(
-      replaceActivityMapAndQueueHeatmapCalculation(input).pipe(
-        Effect.provide(ActivityArtifactWorkflowLive),
-      ),
-    ),
-  storeExternalStream: upsertExternalActivityStream,
-  replaceCoreStreamsAndQueueCalculation: (input) =>
-    Effect.runPromise(
-      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation(input).pipe(
-        Effect.provide(ActivityHeartRateZoneTimeWorkflowLive),
-      ),
-    ),
-});
+const ActivityArtifactStoreLive = Layer.effect(
+  ActivityArtifactStore,
+  Effect.gen(function* () {
+    const activityArtifactWorkflow = yield* ActivityArtifactWorkflow;
+    const heartRateZoneTimeWorkflow = yield* ActivityHeartRateZoneTimeWorkflow;
 
-const IntervalsIcuActivitySyncLive = Layer.succeed(IntervalsIcuActivitySync, {
-  syncActivity: (input) =>
-    syncIntervalsIcuActivity(input).pipe(
-      Effect.provide(
-        Layer.mergeAll(ActivityArtifactStoreLive, ActivityImportWriterLive),
-      ),
-    ),
-});
+    return {
+      storeExternalMap: upsertExternalActivityMap,
+      replaceCoreMap: (input) =>
+        Effect.runPromise(
+          activityArtifactWorkflow.replaceActivityMapAndQueueHeatmapCalculation(
+            input,
+          ),
+        ),
+      storeExternalStream: upsertExternalActivityStream,
+      replaceCoreStreamsAndQueueCalculation: (input) =>
+        Effect.runPromise(
+          heartRateZoneTimeWorkflow.replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation(
+            input,
+          ),
+        ),
+    };
+  }),
+);
 
-export const ActivitySyncLive = Layer.mergeAll(
+const IntervalsIcuActivitySyncLive = Layer.effect(
+  IntervalsIcuActivitySync,
+  Effect.gen(function* () {
+    const activityArtifactStore = yield* ActivityArtifactStore;
+    const activityImportWriter = yield* ActivityImportWriter;
+
+    return {
+      syncActivity: (input) =>
+        syncIntervalsIcuActivity(input).pipe(
+          Effect.provideService(ActivityArtifactStore, activityArtifactStore),
+          Effect.provideService(ActivityImportWriter, activityImportWriter),
+        ),
+    };
+  }),
+);
+
+const IntervalsIcuActivitySyncWithDependenciesLive =
+  IntervalsIcuActivitySyncLive.pipe(
+    Layer.provide(
+      Layer.mergeAll(ActivityArtifactStoreLive, ActivityImportWriterLive),
+    ),
+  );
+
+export const ActivitySyncLayer = Layer.mergeAll(
   ActivityArtifactStoreLive,
   ActivityImportWriterLive,
   ActivitySyncRepositoryLive,
-  ActivityArtifactWorkflowLive,
-  ActivityHeartRateZoneTimeWorkflowLive,
   ProviderSessionLive,
-  IntervalsIcuActivitySyncLive,
+  IntervalsIcuActivitySyncWithDependenciesLive,
+);
+
+export const ActivitySyncLive = ActivitySyncLayer.pipe(
+  Layer.provide(
+    Layer.mergeAll(
+      ActivityArtifactWorkflowLive,
+      ActivityHeartRateZoneTimeWorkflowLive,
+    ),
+  ),
 );

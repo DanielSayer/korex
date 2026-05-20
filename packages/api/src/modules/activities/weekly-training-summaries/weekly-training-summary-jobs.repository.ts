@@ -1,8 +1,5 @@
 import { activities, db, weeklyTrainingSummaryGenerationJobs } from "@korex/db";
 import { and, asc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
-import { Effect } from "effect";
-import { WeeklyTrainingSummaryWorkflowLive } from "./weekly-training-summary-workflow.live";
-import { enqueueCompletedWeeklyTrainingSummaries as enqueueCompletedWeeklyTrainingSummariesWorkflow } from "./weekly-training-summary-workflow.service";
 
 const retryDelaysSeconds = [1, 2, 4] as const;
 const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
@@ -59,21 +56,6 @@ export async function enqueueWeeklyTrainingSummaryGeneration({
         updatedAt: now,
       },
     });
-}
-
-export async function enqueueCompletedWeeklyTrainingSummaries({
-  now = new Date(),
-  skipSucceeded = false,
-}: {
-  now?: Date;
-  skipSucceeded?: boolean;
-} = {}) {
-  return Effect.runPromise(
-    enqueueCompletedWeeklyTrainingSummariesWorkflow({
-      now,
-      skipSucceeded,
-    }).pipe(Effect.provide(WeeklyTrainingSummaryWorkflowLive)),
-  );
 }
 
 export async function listUsersWithActivitiesForTrainingWeek({

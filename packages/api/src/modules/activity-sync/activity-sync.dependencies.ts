@@ -6,15 +6,86 @@ import type {
   ActivityMapInput,
   ActivityStreamInput,
 } from "../activities/activities.types";
+import type {
+  replaceActivityLaps,
+  upsertActivity,
+} from "../activities/artifacts/activity-import.repository";
+import type { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
 import type { ActivitySyncError } from "./activity-sync.errors";
 import type {
   ActivitySyncCounters,
   ActivitySyncFailure,
 } from "./activity-sync.types";
 import type {
+  clearExternalActivityActivityLink,
+  linkExternalActivityToActivity,
   UpsertExternalActivityInput,
   UpsertExternalActivityResult,
 } from "./repositories/external-activities.repository";
+
+export type ActivityImportDatabase = NonNullable<
+  Parameters<typeof upsertActivity>[0]["database"]
+>;
+
+export type ActivityImportRepositoryService = {
+  deleteActivity: (
+    activityId: number,
+    database?: ActivityImportDatabase,
+  ) => Promise<void>;
+  replaceActivityLaps: (
+    input: Omit<Parameters<typeof replaceActivityLaps>[0], "database"> & {
+      database?: ActivityImportDatabase;
+    },
+  ) => Promise<void>;
+  transaction: <T>(
+    work: (database: ActivityImportDatabase) => Promise<T>,
+  ) => Promise<T>;
+  upsertActivity: (
+    input: Omit<Parameters<typeof upsertActivity>[0], "database"> & {
+      database?: ActivityImportDatabase;
+    },
+  ) => ReturnType<typeof upsertActivity>;
+};
+
+export class ActivityImportRepository extends Context.Tag(
+  "ActivityImportRepository",
+)<ActivityImportRepository, ActivityImportRepositoryService>() {}
+
+export type ExternalActivityRepositoryService = {
+  clearExternalActivityActivityLink: (
+    externalActivityId: number,
+    database?: ActivityImportDatabase,
+  ) => ReturnType<typeof clearExternalActivityActivityLink>;
+  linkExternalActivityToActivity: (
+    input: Omit<
+      Parameters<typeof linkExternalActivityToActivity>[0],
+      "database"
+    > & { database?: ActivityImportDatabase },
+  ) => ReturnType<typeof linkExternalActivityToActivity>;
+  upsertExternalActivity: (
+    input: UpsertExternalActivityInput,
+  ) => Promise<UpsertExternalActivityResult>;
+};
+
+export class ExternalActivityRepository extends Context.Tag(
+  "ExternalActivityRepository",
+)<ExternalActivityRepository, ExternalActivityRepositoryService>() {}
+
+export type ActivityRouteHeatmapJobRepositoryService = {
+  enqueueActivityRouteHeatmapCalculation: (
+    input: Omit<
+      Parameters<typeof enqueueActivityRouteHeatmapCalculation>[0],
+      "database"
+    > & { database?: ActivityImportDatabase },
+  ) => Promise<void>;
+};
+
+export class ActivityRouteHeatmapJobRepository extends Context.Tag(
+  "ActivityImportRouteHeatmapJobRepository",
+)<
+  ActivityRouteHeatmapJobRepository,
+  ActivityRouteHeatmapJobRepositoryService
+>() {}
 
 export type ActivitySyncRepositoryService = {
   createActivitySyncRun: (input: {

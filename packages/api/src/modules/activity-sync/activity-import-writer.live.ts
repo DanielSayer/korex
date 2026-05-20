@@ -1,50 +1,108 @@
 import { db } from "@korex/db";
-import { Layer } from "effect";
+import { Effect, Layer } from "effect";
 import {
   deleteActivity,
   replaceActivityLaps,
   upsertActivity,
 } from "../activities/artifacts/activity-import.repository";
 import { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
-import { ActivityImportWriter } from "./activity-sync.dependencies";
+import {
+  type ActivityImportDatabase,
+  ActivityImportRepository,
+  ActivityImportWriter,
+  ActivityRouteHeatmapJobRepository,
+  ExternalActivityRepository,
+} from "./activity-sync.dependencies";
 import {
   clearExternalActivityActivityLink,
   linkExternalActivityToActivity,
   upsertExternalActivity,
 } from "./repositories/external-activities.repository";
 
-export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {
-  storeExternalActivity: upsertExternalActivity,
-  storeCoreActivity: ({ activity, activityId, externalActivityId, laps }) =>
-    db.transaction(async (tx) => {
-      const upsertedActivity = await upsertActivity({
-        activityId,
-        database: tx,
-        input: activity,
-      });
+export const ActivityImportRepositoryLive = Layer.succeed(
+  ActivityImportRepository,
+  {
+    deleteActivity,
+    replaceActivityLaps,
+    transaction: (work) =>
+      db.transaction((tx) => work(tx as ActivityImportDatabase)),
+    upsertActivity,
+  },
+);
 
-      await replaceActivityLaps({
-        activityId: upsertedActivity.activityId,
-        database: tx,
-        laps,
-      });
+export const ExternalActivityRepositoryLive = Layer.succeed(
+  ExternalActivityRepository,
+  {
+    clearExternalActivityActivityLink,
+    linkExternalActivityToActivity,
+    upsertExternalActivity,
+  },
+);
 
-      await linkExternalActivityToActivity({
-        activityId: upsertedActivity.activityId,
-        database: tx,
-        externalActivityId,
-      });
+export const ActivityRouteHeatmapJobRepositoryLive = Layer.succeed(
+  ActivityRouteHeatmapJobRepository,
+  {
+    enqueueActivityRouteHeatmapCalculation,
+  },
+);
 
-      await enqueueActivityRouteHeatmapCalculation({
-        activityId: upsertedActivity.activityId,
-        database: tx,
-      });
+export const ActivityImportWriterLayer = Layer.effect(
+  ActivityImportWriter,
+  Effect.gen(function* () {
+    const activityImportRepository = yield* ActivityImportRepository;
+    const externalActivityRepository = yield* ExternalActivityRepository;
+    const routeHeatmapJobRepository = yield* ActivityRouteHeatmapJobRepository;
 
-      return upsertedActivity;
-    }),
-  unlinkUnsupportedActivity: ({ activityId, externalActivityId }) =>
-    db.transaction(async (tx) => {
-      await clearExternalActivityActivityLink(externalActivityId, tx);
-      await deleteActivity(activityId, tx);
-    }),
-});
+    return {
+      storeExternalActivity: externalActivityRepository.upsertExternalActivity,
+      storeCoreActivity: ({ activity, activityId, externalActivityId, laps }) =>
+        activityImportRepository.transaction(async (database) => {
+          const upsertedActivity =
+            await activityImportRepository.upsertActivity({
+              activityId,
+              database,
+              input: activity,
+            });
+
+          await activityImportRepository.replaceActivityLaps({
+            activityId: upsertedActivity.activityId,
+            database,
+            laps,
+          });
+
+          await externalActivityRepository.linkExternalActivityToActivity({
+            activityId: upsertedActivity.activityId,
+            database,
+            externalActivityId,
+          });
+
+          await routeHeatmapJobRepository.enqueueActivityRouteHeatmapCalculation(
+            {
+              activityId: upsertedActivity.activityId,
+              database,
+            },
+          );
+
+          return upsertedActivity;
+        }),
+      unlinkUnsupportedActivity: ({ activityId, externalActivityId }) =>
+        activityImportRepository.transaction(async (database) => {
+          await externalActivityRepository.clearExternalActivityActivityLink(
+            externalActivityId,
+            database,
+          );
+          await activityImportRepository.deleteActivity(activityId, database);
+        }),
+    };
+  }),
+);
+
+export const ActivityImportWriterLive = ActivityImportWriterLayer.pipe(
+  Layer.provide(
+    Layer.mergeAll(
+      ActivityImportRepositoryLive,
+      ActivityRouteHeatmapJobRepositoryLive,
+      ExternalActivityRepositoryLive,
+    ),
+  ),
+);
