@@ -54,44 +54,6 @@ export async function getActivityBestEffortCalculationInputs({
   };
 }
 
-export async function replaceActivityBestEffortsAndRefreshPersonalBests({
-  activityId,
-  efforts,
-}: {
-  activityId: number;
-  efforts: ActivityBestEffortInput[];
-}) {
-  await db.transaction(async (tx) => {
-    const [activity] = await tx
-      .select({
-        activityStartAt: activities.startAt,
-        sportType: activities.sportType,
-        userId: activities.userId,
-      })
-      .from(activities)
-      .where(eq(activities.id, activityId));
-
-    if (!activity) {
-      return;
-    }
-
-    const affectedDistanceCodes = await replaceActivityBestEfforts({
-      activityId,
-      activityStartAt: activity.activityStartAt,
-      database: tx,
-      efforts,
-      sportType: activity.sportType,
-      userId: activity.userId,
-    });
-
-    await refreshPersonalBestEfforts({
-      database: tx,
-      standardDistanceCodes: affectedDistanceCodes,
-      userId: activity.userId,
-    });
-  });
-}
-
 export async function replaceActivityBestEfforts({
   activityId,
   activityStartAt,

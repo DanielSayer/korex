@@ -69,9 +69,10 @@ export async function enqueueCompletedWeeklyTrainingSummaries({
   skipSucceeded?: boolean;
 } = {}) {
   return Effect.runPromise(
-    enqueueCompletedWeeklyTrainingSummariesWorkflow({ now, skipSucceeded }).pipe(
-      Effect.provide(WeeklyTrainingSummaryWorkflowLive),
-    ),
+    enqueueCompletedWeeklyTrainingSummariesWorkflow({
+      now,
+      skipSucceeded,
+    }).pipe(Effect.provide(WeeklyTrainingSummaryWorkflowLive)),
   );
 }
 

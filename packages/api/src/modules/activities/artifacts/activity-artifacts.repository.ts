@@ -4,7 +4,6 @@ import type {
   ActivityMapInput,
   ActivityStreamInput,
 } from "../activities.types";
-import { enqueueActivityRouteHeatmapCalculation } from "../route-heatmap/activity-route-heatmap-jobs.repository";
 
 type ActivityDatabase = Pick<
   typeof db,
@@ -35,27 +34,6 @@ export async function replaceActivityMap({
         updatedAt: new Date(),
       },
     });
-}
-
-export async function replaceActivityMapAndQueueHeatmapCalculation({
-  activityId,
-  map,
-}: {
-  activityId: number;
-  map: ActivityMapInput;
-}) {
-  await db.transaction(async (tx) => {
-    await replaceActivityMap({
-      activityId,
-      database: tx,
-      map,
-    });
-
-    await enqueueActivityRouteHeatmapCalculation({
-      activityId,
-      database: tx,
-    });
-  });
 }
 
 export async function replaceActivityStreams({

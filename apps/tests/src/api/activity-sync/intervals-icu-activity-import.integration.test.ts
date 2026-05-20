@@ -1,4 +1,4 @@
-import { ActivityImportWriterLive } from "@korex/api/modules/activity-sync/activity-sync.live";
+import { ActivityImportWriterLive } from "@korex/api/modules/activity-sync/activity-import-writer.live";
 import { storeIntervalsIcuActivityImport } from "@korex/api/modules/activity-sync/providers/intervals-icu/intervals-icu-activity-import";
 import {
   linkExternalActivityToActivity,

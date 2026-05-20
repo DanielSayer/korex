@@ -5,10 +5,12 @@ import {
   markActivityHeartRateZoneTimeCalculationFailed,
   markActivityHeartRateZoneTimeCalculationSucceeded,
 } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-jobs.repository";
-import { replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.adapter";
 import type { ActivityHeartRateZoneTimeWorkflow } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.dependencies";
 import { ActivityHeartRateZoneTimeWorkflowLive } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
-import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
+import {
+  replaceActivityHeartRateZoneSnapshotsAndQueueCalculation,
+  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
+} from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
 import {
   activityHeartRateZoneSnapshots,
   activityHeartRateZoneTimeCalculationJobs,
@@ -43,23 +45,25 @@ describe("activity heart rate zone time repositories", () => {
       now: new Date("2026-04-01T00:00:00.000Z"),
     });
 
-    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise({
-      activityId: activity.id,
-      snapshots: [
-        {
-          maxBpm: 140,
-          minBpm: 120,
-          name: "Easy",
-          position: 1,
-        },
-        {
-          maxBpm: null,
-          minBpm: 140,
-          name: "Hard",
-          position: 2,
-        },
-      ],
-    });
+    await runWorkflow(
+      replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+        activityId: activity.id,
+        snapshots: [
+          {
+            maxBpm: 140,
+            minBpm: 120,
+            name: "Easy",
+            position: 1,
+          },
+          {
+            maxBpm: null,
+            minBpm: 140,
+            name: "Hard",
+            position: 2,
+          },
+        ],
+      }),
+    );
 
     const snapshots = await db
       .select()
@@ -304,10 +308,12 @@ describe("activity heart rate zone time workflow", () => {
     await DataSeedAsync.withActivities(activity)
       .withHeartRateZones(zone)
       .seedAsync();
-    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise({
-      activityId: activity.id,
-      snapshots: [zone],
-    });
+    await runWorkflow(
+      replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+        activityId: activity.id,
+        snapshots: [zone],
+      }),
+    );
     await replaceActivityHeartRateZoneTimes({
       activityId: activity.id,
       times: [{ position: 1, timeSeconds: 123 }],
@@ -351,10 +357,12 @@ describe("activity heart rate zone time workflow", () => {
     await DataSeedAsync.withActivities(activity)
       .withHeartRateZones(zone)
       .seedAsync();
-    await replaceActivityHeartRateZoneSnapshotsAndQueueCalculationPromise({
-      activityId: activity.id,
-      snapshots: [zone],
-    });
+    await runWorkflow(
+      replaceActivityHeartRateZoneSnapshotsAndQueueCalculation({
+        activityId: activity.id,
+        snapshots: [zone],
+      }),
+    );
     await replaceActivityHeartRateZoneTimes({
       activityId: activity.id,
       times: [{ position: 1, timeSeconds: 123 }],

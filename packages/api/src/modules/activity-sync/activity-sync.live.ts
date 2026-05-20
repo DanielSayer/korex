@@ -1,27 +1,18 @@
-import { db } from "@korex/db";
 import { Effect, Layer } from "effect";
-import { replaceActivityMapAndQueueHeatmapCalculation } from "../activities/artifacts/activity-artifacts.repository";
-import {
-  deleteActivity,
-  replaceActivityLaps,
-  upsertActivity,
-} from "../activities/artifacts/activity-import.repository";
+import { ActivityArtifactWorkflowLive } from "../activities/artifacts/activity-artifact-workflow.live";
+import { replaceActivityMapAndQueueHeatmapCalculation } from "../activities/artifacts/activity-artifact-workflow.service";
 import { ActivityHeartRateZoneTimeWorkflowLive } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
 import { replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
-import { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
 import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
+import { ActivityImportWriterLive } from "./activity-import-writer.live";
 import {
   ActivityArtifactStore,
-  ActivityImportWriter,
   ActivitySyncRepository,
   IntervalsIcuActivitySync,
 } from "./activity-sync.dependencies";
 import { syncIntervalsIcuActivity } from "./providers/intervals-icu/intervals-icu-sync";
 import {
-  clearExternalActivityActivityLink,
-  linkExternalActivityToActivity,
-  upsertExternalActivity,
   upsertExternalActivityMap,
   upsertExternalActivityStream,
 } from "./repositories/external-activities.repository";
@@ -42,45 +33,14 @@ const ActivitySyncRepositoryLive = Layer.succeed(ActivitySyncRepository, {
   markProviderConnectionSynced,
 });
 
-export const ActivityImportWriterLive = Layer.succeed(ActivityImportWriter, {
-  storeExternalActivity: upsertExternalActivity,
-  storeCoreActivity: ({ activity, activityId, externalActivityId, laps }) =>
-    db.transaction(async (tx) => {
-      const upsertedActivity = await upsertActivity({
-        activityId,
-        database: tx,
-        input: activity,
-      });
-
-      await replaceActivityLaps({
-        activityId: upsertedActivity.activityId,
-        database: tx,
-        laps,
-      });
-
-      await linkExternalActivityToActivity({
-        activityId: upsertedActivity.activityId,
-        database: tx,
-        externalActivityId,
-      });
-
-      await enqueueActivityRouteHeatmapCalculation({
-        activityId: upsertedActivity.activityId,
-        database: tx,
-      });
-
-      return upsertedActivity;
-    }),
-  unlinkUnsupportedActivity: ({ activityId, externalActivityId }) =>
-    db.transaction(async (tx) => {
-      await clearExternalActivityActivityLink(externalActivityId, tx);
-      await deleteActivity(activityId, tx);
-    }),
-});
-
 const ActivityArtifactStoreLive = Layer.succeed(ActivityArtifactStore, {
   storeExternalMap: upsertExternalActivityMap,
-  replaceCoreMap: replaceActivityMapAndQueueHeatmapCalculation,
+  replaceCoreMap: (input) =>
+    Effect.runPromise(
+      replaceActivityMapAndQueueHeatmapCalculation(input).pipe(
+        Effect.provide(ActivityArtifactWorkflowLive),
+      ),
+    ),
   storeExternalStream: upsertExternalActivityStream,
   replaceCoreStreamsAndQueueCalculation: (input) =>
     Effect.runPromise(
@@ -103,6 +63,7 @@ export const ActivitySyncLive = Layer.mergeAll(
   ActivityArtifactStoreLive,
   ActivityImportWriterLive,
   ActivitySyncRepositoryLive,
+  ActivityArtifactWorkflowLive,
   ActivityHeartRateZoneTimeWorkflowLive,
   ProviderSessionLive,
   IntervalsIcuActivitySyncLive,
