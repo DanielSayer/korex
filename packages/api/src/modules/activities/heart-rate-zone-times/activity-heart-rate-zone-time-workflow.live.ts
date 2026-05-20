@@ -5,18 +5,27 @@ import { enqueueActivityBestEffortCalculation } from "../best-efforts/activity-b
 import {
   clearActivityHeartRateZoneCalculation,
   clearActivityHeartRateZoneTimes,
+  getActivityHeartRateZoneCalculationInputs,
   listUserHeartRateZoneSnapshots,
   replaceActivityHeartRateZoneSnapshots,
+  replaceActivityHeartRateZoneTimes,
 } from "./activity-heart-rate-zone-time.repository";
 import {
+  type ActivityHeartRateZoneTimeCalculationJob,
+  claimActivityHeartRateZoneTimeCalculationJobs,
   deleteActivityHeartRateZoneTimeCalculationJob,
   enqueueActivityHeartRateZoneTimeCalculation,
+  markActivityHeartRateZoneTimeCalculationFailed,
+  markActivityHeartRateZoneTimeCalculationSucceeded,
 } from "./activity-heart-rate-zone-time-jobs.repository";
 import { ActivityHeartRateZoneTimeWorkflow } from "./activity-heart-rate-zone-time-workflow.dependencies";
+import { calculateActivityHeartRateZoneTimes } from "./activity-heart-rate-zone-times";
 
 export const ActivityHeartRateZoneTimeWorkflowLive = Layer.succeed(
   ActivityHeartRateZoneTimeWorkflow,
   {
+    processActivityHeartRateZoneTimeCalculationJob: (job) =>
+      Effect.promise(() => processActivityHeartRateZoneTimeCalculationJob(job)),
     replaceActivityHeartRateZoneSnapshotsAndQueueCalculation: ({
       activityId,
       snapshots,
@@ -97,6 +106,28 @@ export const ActivityHeartRateZoneTimeWorkflowLive = Layer.succeed(
           });
         }),
       ),
+    runActivityHeartRateZoneTimeWorkerOnce: ({
+      batchSize,
+      now = new Date(),
+      staleLockMs,
+      workerId,
+    }) =>
+      Effect.promise(async () => {
+        const jobs = await claimActivityHeartRateZoneTimeCalculationJobs({
+          batchSize,
+          now,
+          staleLockedBefore: new Date(now.getTime() - staleLockMs),
+          workerId,
+        });
+
+        for (const job of jobs) {
+          await processActivityHeartRateZoneTimeCalculationJob(job);
+        }
+
+        return {
+          processed: jobs.length,
+        };
+      }),
   },
 );
 
@@ -119,4 +150,41 @@ async function resetActivityHeartRateZoneTimeCalculation({
     activityId,
     database,
   });
+}
+
+async function processActivityHeartRateZoneTimeCalculationJob(
+  job: ActivityHeartRateZoneTimeCalculationJob,
+) {
+  try {
+    const inputs = await getActivityHeartRateZoneCalculationInputs({
+      activityId: job.activityId,
+    });
+
+    if (inputs.movingTimeSeconds === null) {
+      throw new Error("Activity moving time is required");
+    }
+
+    if (inputs.heartRateSamples.length === 0) {
+      throw new Error("Activity heart-rate stream is required");
+    }
+
+    if (inputs.snapshots.length === 0) {
+      throw new Error("Activity heart-rate zone snapshots are required");
+    }
+
+    const times = calculateActivityHeartRateZoneTimes(inputs);
+
+    await replaceActivityHeartRateZoneTimes({
+      activityId: job.activityId,
+      times,
+    });
+    await markActivityHeartRateZoneTimeCalculationSucceeded({
+      jobId: job.id,
+    });
+  } catch (error) {
+    await markActivityHeartRateZoneTimeCalculationFailed({
+      error: error instanceof Error ? error.message : "Unknown error",
+      jobId: job.id,
+    });
+  }
 }
