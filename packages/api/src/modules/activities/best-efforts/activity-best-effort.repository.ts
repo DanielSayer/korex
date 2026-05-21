@@ -5,11 +5,15 @@ import {
   db,
   personalBestEfforts,
 } from "@korex/db";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type {
   ActivityBestEffortInput,
   BestEffortStandardDistanceCode,
 } from "../activities.types";
+import {
+  collectAffectedBestEffortDistanceCodes,
+  selectPersonalBestEffortCandidate,
+} from "./activity-best-effort-projection";
 
 type ActivityBestEffortDatabase = Pick<
   typeof db,
@@ -73,17 +77,9 @@ export async function replaceActivityBestEfforts({
     .select({ standardDistanceCode: activityBestEfforts.standardDistanceCode })
     .from(activityBestEfforts)
     .where(eq(activityBestEfforts.activityId, activityId));
-  const affectedDistanceCodes = new Set<BestEffortStandardDistanceCode>(
-    existing.map((effort) => effort.standardDistanceCode),
-  );
-
   await database
     .delete(activityBestEfforts)
     .where(eq(activityBestEfforts.activityId, activityId));
-
-  for (const effort of efforts) {
-    affectedDistanceCodes.add(effort.standardDistanceCode);
-  }
 
   if (efforts.length > 0) {
     await database.insert(activityBestEfforts).values(
@@ -103,7 +99,12 @@ export async function replaceActivityBestEfforts({
     );
   }
 
-  return [...affectedDistanceCodes];
+  return collectAffectedBestEffortDistanceCodes({
+    efforts,
+    existingDistanceCodes: existing.map(
+      (effort) => effort.standardDistanceCode,
+    ),
+  });
 }
 
 export async function refreshPersonalBestEfforts({
@@ -116,7 +117,7 @@ export async function refreshPersonalBestEfforts({
   userId: string;
 }) {
   for (const standardDistanceCode of standardDistanceCodes) {
-    const [bestEffort] = await database
+    const candidates = await database
       .select({
         activityBestEffortId: activityBestEfforts.id,
         activityId: activityBestEfforts.activityId,
@@ -134,13 +135,8 @@ export async function refreshPersonalBestEfforts({
           eq(activityBestEfforts.userId, userId),
           eq(activityBestEfforts.standardDistanceCode, standardDistanceCode),
         ),
-      )
-      .orderBy(
-        asc(activityBestEfforts.durationSeconds),
-        asc(activityBestEfforts.activityStartAt),
-        asc(activityBestEfforts.id),
-      )
-      .limit(1);
+      );
+    const bestEffort = selectPersonalBestEffortCandidate(candidates);
 
     if (!bestEffort) {
       await database
