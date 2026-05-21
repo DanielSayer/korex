@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   db,
   externalActivities,
@@ -6,6 +5,10 @@ import {
   externalActivityStreams,
 } from "@korex/db";
 import { and, eq } from "drizzle-orm";
+import {
+  hasExternalActivityPayloadChanged,
+  hashExternalActivityPayload,
+} from "../external-activity-change-detection";
 
 type ExternalActivityDatabase = Pick<typeof db, "update">;
 
@@ -43,7 +46,7 @@ export async function upsertExternalActivity({
   sportType,
   userId,
 }: UpsertExternalActivityInput): Promise<UpsertExternalActivityResult> {
-  const payloadHash = hashPayload(rawData);
+  const payloadHash = hashExternalActivityPayload(rawData);
   const [existing] = await db
     .select({
       activityId: externalActivities.activityId,
@@ -114,7 +117,10 @@ export async function upsertExternalActivity({
     created: false,
     activityId: existing.activityId,
     externalActivityId: existing.id,
-    updated: existing.payloadHash !== payloadHash,
+    updated: hasExternalActivityPayloadChanged({
+      nextPayloadHash: payloadHash,
+      previousPayloadHash: existing.payloadHash,
+    }),
   };
 }
 
@@ -164,7 +170,7 @@ export async function upsertExternalActivityMap({
   rawData: unknown;
   userId: string;
 }) {
-  const payloadHash = hashPayload(rawData);
+  const payloadHash = hashExternalActivityPayload(rawData);
 
   await db
     .insert(externalActivityMaps)
@@ -207,7 +213,7 @@ export async function upsertExternalActivityStream({
   streamType: string;
   userId: string;
 }) {
-  const payloadHash = hashPayload(rawData);
+  const payloadHash = hashExternalActivityPayload(rawData);
 
   await db
     .insert(externalActivityStreams)
@@ -235,8 +241,4 @@ export async function upsertExternalActivityStream({
         updatedAt: new Date(),
       },
     });
-}
-
-function hashPayload(payload: unknown) {
-  return createHash("sha256").update(JSON.stringify(payload)).digest("hex");
 }
