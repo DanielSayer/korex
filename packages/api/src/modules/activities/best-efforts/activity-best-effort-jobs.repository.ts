@@ -1,7 +1,9 @@
 import { activityBestEffortCalculationJobs, db } from "@korex/db";
 import { and, asc, eq, lt, lte, or } from "drizzle-orm";
-
-const retryDelaysSeconds = [1, 2, 4] as const;
+import {
+  durableJobMaxRetryAttempts,
+  getDurableJobFailureState,
+} from "../../durable-jobs/durable-job-policy";
 
 type ActivityBestEffortJobDatabase = Pick<
   typeof db,
@@ -68,7 +70,7 @@ export async function claimActivityBestEffortCalculationJobs({
         eq(activityBestEffortCalculationJobs.status, "failed"),
         lt(
           activityBestEffortCalculationJobs.attemptCount,
-          retryDelaysSeconds.length,
+          durableJobMaxRetryAttempts,
         ),
         lte(activityBestEffortCalculationJobs.runAfter, now),
       ),
@@ -159,22 +161,10 @@ export async function markActivityBestEffortCalculationFailed({
     return;
   }
 
-  const attemptCount = job.attemptCount + 1;
-  const retryDelaySeconds = retryDelaysSeconds[attemptCount - 1];
-
   await db
     .update(activityBestEffortCalculationJobs)
-    .set({
-      attemptCount,
-      lastError: error,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter:
-        retryDelaySeconds === undefined
-          ? now
-          : new Date(now.getTime() + retryDelaySeconds * 1000),
-      status: "failed",
-      updatedAt: now,
-    })
+    .set(
+      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
+    )
     .where(eq(activityBestEffortCalculationJobs.id, jobId));
 }

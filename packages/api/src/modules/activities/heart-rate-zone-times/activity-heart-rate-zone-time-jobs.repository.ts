@@ -1,7 +1,9 @@
 import { activityHeartRateZoneTimeCalculationJobs, db } from "@korex/db";
 import { and, asc, eq, lt, lte, or } from "drizzle-orm";
-
-const retryDelaysSeconds = [1, 2, 4] as const;
+import {
+  durableJobMaxRetryAttempts,
+  getDurableJobFailureState,
+} from "../../durable-jobs/durable-job-policy";
 
 type ActivityHeartRateZoneTimeJobDatabase = Pick<
   typeof db,
@@ -80,7 +82,7 @@ export async function claimActivityHeartRateZoneTimeCalculationJobs({
         eq(activityHeartRateZoneTimeCalculationJobs.status, "failed"),
         lt(
           activityHeartRateZoneTimeCalculationJobs.attemptCount,
-          retryDelaysSeconds.length,
+          durableJobMaxRetryAttempts,
         ),
         lte(activityHeartRateZoneTimeCalculationJobs.runAfter, now),
       ),
@@ -178,22 +180,10 @@ export async function markActivityHeartRateZoneTimeCalculationFailed({
     return;
   }
 
-  const attemptCount = job.attemptCount + 1;
-  const retryDelaySeconds = retryDelaysSeconds[attemptCount - 1];
-
   await db
     .update(activityHeartRateZoneTimeCalculationJobs)
-    .set({
-      attemptCount,
-      lastError: error,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter:
-        retryDelaySeconds === undefined
-          ? now
-          : new Date(now.getTime() + retryDelaySeconds * 1000),
-      status: "failed",
-      updatedAt: now,
-    })
+    .set(
+      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
+    )
     .where(eq(activityHeartRateZoneTimeCalculationJobs.id, jobId));
 }

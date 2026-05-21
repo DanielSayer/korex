@@ -6,8 +6,10 @@ import {
   db,
 } from "@korex/db";
 import { and, asc, eq, isNull, lt, lte, or } from "drizzle-orm";
-
-const retryDelaysSeconds = [1, 2, 4] as const;
+import {
+  durableJobMaxRetryAttempts,
+  getDurableJobFailureState,
+} from "../../durable-jobs/durable-job-policy";
 
 type ActivityRouteHeatmapJobDatabase = Pick<
   typeof db,
@@ -108,7 +110,7 @@ export async function claimActivityRouteHeatmapCalculationJobs({
         eq(activityRouteHeatmapCalculationJobs.status, "failed"),
         lt(
           activityRouteHeatmapCalculationJobs.attemptCount,
-          retryDelaysSeconds.length,
+          durableJobMaxRetryAttempts,
         ),
         lte(activityRouteHeatmapCalculationJobs.runAfter, now),
       ),
@@ -203,22 +205,10 @@ export async function markActivityRouteHeatmapCalculationFailed({
     return;
   }
 
-  const attemptCount = job.attemptCount + 1;
-  const retryDelaySeconds = retryDelaysSeconds[attemptCount - 1];
-
   await db
     .update(activityRouteHeatmapCalculationJobs)
-    .set({
-      attemptCount,
-      lastError: error,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter:
-        retryDelaySeconds === undefined
-          ? now
-          : new Date(now.getTime() + retryDelaySeconds * 1000),
-      status: "failed",
-      updatedAt: now,
-    })
+    .set(
+      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
+    )
     .where(eq(activityRouteHeatmapCalculationJobs.id, jobId));
 }

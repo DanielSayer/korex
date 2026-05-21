@@ -1,7 +1,10 @@
 import { activities, db, weeklyTrainingSummaryGenerationJobs } from "@korex/db";
 import { and, asc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
+import {
+  durableJobMaxRetryAttempts,
+  getDurableJobFailureState,
+} from "../../durable-jobs/durable-job-policy";
 
-const retryDelaysSeconds = [1, 2, 4] as const;
 const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
 
 type WeeklyTrainingSummaryJobDatabase = Pick<
@@ -114,7 +117,7 @@ export async function claimWeeklyTrainingSummaryGenerationJobs({
         eq(weeklyTrainingSummaryGenerationJobs.status, "failed"),
         lt(
           weeklyTrainingSummaryGenerationJobs.attemptCount,
-          retryDelaysSeconds.length,
+          durableJobMaxRetryAttempts,
         ),
         lte(weeklyTrainingSummaryGenerationJobs.runAfter, now),
       ),
@@ -210,23 +213,11 @@ export async function markWeeklyTrainingSummaryGenerationFailed({
     return;
   }
 
-  const attemptCount = job.attemptCount + 1;
-  const retryDelaySeconds = retryDelaysSeconds[attemptCount - 1];
-
   await db
     .update(weeklyTrainingSummaryGenerationJobs)
-    .set({
-      attemptCount,
-      lastError: error,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter:
-        retryDelaySeconds === undefined
-          ? now
-          : new Date(now.getTime() + retryDelaySeconds * 1000),
-      status: "failed",
-      updatedAt: now,
-    })
+    .set(
+      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
+    )
     .where(eq(weeklyTrainingSummaryGenerationJobs.id, jobId));
 }
 
