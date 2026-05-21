@@ -3,21 +3,13 @@ import { and, asc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 
 import type {
   AnalyticsVolume,
-  AnalyticsVolumeBucket,
   AnalyticsVolumeBucketMode,
 } from "../activities.types";
-import { getTrainingWeekStartAt } from "../weekly-training-summaries/training-week";
-
-const brisbaneUtcOffsetHours = 10;
-const millisecondsPerDay = 24 * 60 * 60 * 1000;
-const millisecondsPerHour = 60 * 60 * 1000;
-
-type AnalyticsVolumeRow = {
-  activityCount: number;
-  bucketStartAt: Date | string;
-  distanceMeters: number;
-  durationSeconds: number;
-};
+import {
+  buildAnalyticsVolume,
+  createMonthlyAnalyticsVolumeBuckets,
+  createWeeklyAnalyticsVolumeBuckets,
+} from "./analytics-volume";
 
 export async function getAnalyticsVolume({
   bucketMode,
@@ -30,10 +22,10 @@ export async function getAnalyticsVolume({
 }): Promise<AnalyticsVolume> {
   const chartBuckets =
     bucketMode === "monthly"
-      ? createMonthlyBuckets(year)
-      : createWeeklyBuckets(year);
-  const monthlyBuckets = createMonthlyBuckets(year);
-  const weeklyBuckets = createWeeklyBuckets(year);
+      ? createMonthlyAnalyticsVolumeBuckets(year)
+      : createWeeklyAnalyticsVolumeBuckets(year);
+  const monthlyBuckets = createMonthlyAnalyticsVolumeBuckets(year);
+  const weeklyBuckets = createWeeklyAnalyticsVolumeBuckets(year);
   const firstBucket = monthlyBuckets.at(0);
   const lastBucket = monthlyBuckets.at(-1);
 
@@ -139,121 +131,4 @@ async function listAnalyticsVolumeRows({
     )
     .groupBy(bucketExpression)
     .orderBy(asc(bucketExpression));
-}
-
-function buildAnalyticsVolume({
-  bucketMode,
-  buckets,
-  rows,
-  year,
-}: {
-  bucketMode: AnalyticsVolumeBucketMode;
-  buckets: AnalyticsVolumeBucket[];
-  rows: AnalyticsVolumeRow[];
-  year: number;
-}): AnalyticsVolume {
-  const rowsByBucket = new Map(
-    rows.map((row) => [toDate(row.bucketStartAt).toISOString(), row]),
-  );
-  let cumulativeDistanceMeters = 0;
-  let totalActivityCount = 0;
-  let totalDurationSeconds = 0;
-
-  const filledBuckets = buckets.map((bucket) => {
-    const row = rowsByBucket.get(bucket.bucketStartAt.toISOString());
-    const distanceMeters = row?.distanceMeters ?? 0;
-    const durationSeconds = row?.durationSeconds ?? 0;
-    const activityCount = row?.activityCount ?? 0;
-
-    cumulativeDistanceMeters += distanceMeters;
-    totalActivityCount += activityCount;
-    totalDurationSeconds += durationSeconds;
-
-    return {
-      ...bucket,
-      activityCount,
-      cumulativeDistanceMeters,
-      distanceMeters,
-      durationSeconds,
-    };
-  });
-
-  return {
-    bucketMode,
-    buckets: filledBuckets,
-    monthlyBuckets: [],
-    totalActivityCount,
-    totalDistanceMeters: cumulativeDistanceMeters,
-    totalDurationSeconds,
-    weeklyBuckets: [],
-    year,
-  };
-}
-
-function createMonthlyBuckets(year: number): AnalyticsVolumeBucket[] {
-  return Array.from({ length: 12 }, (_, month) => {
-    const bucketStartAt = getBrisbaneCalendarDateStartAt(year, month, 1);
-    const bucketEndAt = getBrisbaneCalendarDateStartAt(year, month + 1, 1);
-
-    return createEmptyBucket({ bucketEndAt, bucketStartAt });
-  });
-}
-
-function createWeeklyBuckets(year: number): AnalyticsVolumeBucket[] {
-  const yearStartAt = getBrisbaneCalendarDateStartAt(year, 0, 1);
-  const nextYearStartAt = getBrisbaneCalendarDateStartAt(year + 1, 0, 1);
-  let bucketStartAt = getTrainingWeekStartAt(yearStartAt);
-
-  if (bucketStartAt < yearStartAt) {
-    bucketStartAt = new Date(bucketStartAt.getTime() + 7 * millisecondsPerDay);
-  }
-
-  const buckets: AnalyticsVolumeBucket[] = [];
-
-  while (bucketStartAt < nextYearStartAt) {
-    const bucketEndAt = new Date(
-      bucketStartAt.getTime() + 7 * millisecondsPerDay,
-    );
-
-    buckets.push(createEmptyBucket({ bucketEndAt, bucketStartAt }));
-    bucketStartAt = bucketEndAt;
-  }
-
-  return buckets;
-}
-
-function createEmptyBucket({
-  bucketEndAt,
-  bucketStartAt,
-}: {
-  bucketEndAt: Date;
-  bucketStartAt: Date;
-}): AnalyticsVolumeBucket {
-  return {
-    activityCount: 0,
-    bucketEndAt,
-    bucketStartAt,
-    cumulativeDistanceMeters: 0,
-    distanceMeters: 0,
-    durationSeconds: 0,
-  };
-}
-
-function getBrisbaneCalendarDateStartAt(
-  year: number,
-  monthIndex: number,
-  day: number,
-) {
-  return new Date(
-    Date.UTC(year, monthIndex, day) -
-      brisbaneUtcOffsetHours * millisecondsPerHour,
-  );
-}
-
-function toDate(value: Date | string) {
-  if (value instanceof Date) {
-    return value;
-  }
-
-  return new Date(`${value.replace(" ", "T")}Z`);
 }
