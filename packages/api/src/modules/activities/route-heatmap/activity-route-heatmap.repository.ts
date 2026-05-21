@@ -8,6 +8,10 @@ import {
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { ActivityMapInput } from "../activities.types";
 import type { ActivityRouteHeatmapContributionInput } from "./activity-route-heatmap";
+import {
+  type ActivityRouteHeatmapCellCoordinate,
+  calculateActivityRouteHeatmapCellDeltas,
+} from "./activity-route-heatmap-projection";
 
 type ActivityDatabase = Pick<
   typeof db,
@@ -28,14 +32,6 @@ export type ActivityRouteHeatmapCell = {
   cellY: number;
   tileX: number;
   tileY: number;
-};
-
-type ActivityRouteHeatmapCellCoordinate = {
-  cellX: number;
-  cellY: number;
-  tileX: number;
-  tileY: number;
-  zoom: number;
 };
 
 export async function getActivityRouteHeatmapCalculationInputs({
@@ -253,26 +249,12 @@ async function applyActivityRouteHeatmapCellDeltas({
   tx: HeatmapCellDeltaTransaction;
   userId: string;
 }) {
-  const deltas = new Map<
-    string,
-    ActivityRouteHeatmapCellCoordinate & {
-      delta: number;
-    }
-  >();
+  const deltas = calculateActivityRouteHeatmapCellDeltas({
+    contributions,
+    existingContributions,
+  });
 
-  for (const contribution of existingContributions) {
-    addCellDelta({ contribution, delta: -1, deltas });
-  }
-
-  for (const contribution of contributions) {
-    addCellDelta({ contribution, delta: 1, deltas });
-  }
-
-  for (const contribution of deltas.values()) {
-    if (contribution.delta === 0) {
-      continue;
-    }
-
+  for (const contribution of deltas) {
     if (contribution.delta > 0) {
       await tx
         .insert(activityRouteHeatmapCells)
@@ -323,33 +305,4 @@ async function applyActivityRouteHeatmapCellDeltas({
   await tx
     .delete(activityRouteHeatmapCells)
     .where(lte(activityRouteHeatmapCells.activityCount, 0));
-}
-
-function addCellDelta({
-  contribution,
-  delta,
-  deltas,
-}: {
-  contribution: ActivityRouteHeatmapCellCoordinate;
-  delta: number;
-  deltas: Map<
-    string,
-    ActivityRouteHeatmapCellCoordinate & {
-      delta: number;
-    }
-  >;
-}) {
-  const key = [
-    contribution.zoom,
-    contribution.tileX,
-    contribution.tileY,
-    contribution.cellX,
-    contribution.cellY,
-  ].join(":");
-  const existing = deltas.get(key);
-
-  deltas.set(key, {
-    ...contribution,
-    delta: (existing?.delta ?? 0) + delta,
-  });
 }
