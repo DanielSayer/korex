@@ -1,5 +1,9 @@
 import { activities, db, trainingStreaks } from "@korex/db";
 import { and, eq, gte, inArray, lt } from "drizzle-orm";
+import type {
+  CurrentTrainingWeekQualifyingActivities,
+  TrainingStreak,
+} from "../activities.types";
 import {
   getNextTrainingWeekStartAt,
   getTrainingWeekStartAt,
@@ -11,14 +15,6 @@ type TrainingStreakDatabase = Pick<
   typeof db,
   "insert" | "select" | "transaction" | "update"
 >;
-
-export type TrainingStreak = {
-  currentStreak: number;
-  lastQualifiedWeekStartAt: Date | null;
-  maxStreak: number;
-  updatedAt: Date;
-  userId: string;
-};
 
 export async function getTrainingStreak({
   userId,
@@ -67,6 +63,37 @@ export async function getTrainingStreakProjectionInputs({
   return {
     hasQualifyingActivity: qualifyingActivity.length > 0,
     streak,
+  };
+}
+
+export async function listCurrentTrainingWeekQualifyingActivities({
+  now = new Date(),
+  userId,
+}: {
+  now?: Date;
+  userId: string;
+}): Promise<CurrentTrainingWeekQualifyingActivities> {
+  const weekStartAt = getTrainingWeekStartAt(now);
+  const weekEndAt = getNextTrainingWeekStartAt(weekStartAt);
+  const weekActivities = await db
+    .select({
+      id: activities.id,
+      startAt: activities.startAt,
+    })
+    .from(activities)
+    .where(
+      and(
+        eq(activities.userId, userId),
+        inArray(activities.sportType, trainingStreakQualifyingSportTypes),
+        gte(activities.startAt, weekStartAt),
+        lt(activities.startAt, weekEndAt),
+      ),
+    );
+
+  return {
+    activities: weekActivities,
+    weekEndAt,
+    weekStartAt,
   };
 }
 

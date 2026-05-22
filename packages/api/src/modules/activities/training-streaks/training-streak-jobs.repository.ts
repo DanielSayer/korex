@@ -37,21 +37,24 @@ const durableJobRepository =
 
 export async function enqueueTrainingStreakUpdate({
   database = db,
+  runAfter,
   userId,
   weekStartAt,
 }: {
   database?: TrainingStreakJobDatabase;
+  runAfter?: Date;
   userId: string;
   weekStartAt: Date;
 }) {
   const now = new Date();
+  const pendingState = getDurableJobPendingState(runAfter ?? now);
 
   await database
     .insert(trainingStreakUpdateJobs)
     .values({
+      ...pendingState,
       userId,
       weekStartAt,
-      ...getDurableJobPendingState(now),
     })
     .onConflictDoUpdate({
       target: [
@@ -59,7 +62,7 @@ export async function enqueueTrainingStreakUpdate({
         trainingStreakUpdateJobs.weekStartAt,
       ],
       set: {
-        ...getDurableJobPendingState(now),
+        ...pendingState,
         updatedAt: now,
       },
     });

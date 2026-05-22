@@ -4,6 +4,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CloudSyncIcon } from "lucide-react";
 import { toast } from "sonner";
 import { LastFiveRunsSection } from "@/features/dashboard/components/last-five-runs-section";
+import { TrainingStreakSection } from "@/features/dashboard/components/training-streak-section";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -13,6 +14,9 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 function RouteComponent() {
   const queryClient = useQueryClient();
   const recentActivitiesQuery = orpc.activities.recent.queryOptions();
+  const trainingStreakQuery = orpc.activities.trainingStreak.queryOptions();
+  const trainingStreakCurrentWeekQuery =
+    orpc.activities.trainingStreakCurrentWeek.queryOptions();
   const incrementalSyncMutation = useMutation(
     orpc.syncs.incremental.mutationOptions({
       onError: (error) => {
@@ -22,6 +26,12 @@ function RouteComponent() {
         toast.success(`${result.activitiesStored} activities synced`);
         queryClient.invalidateQueries({
           queryKey: recentActivitiesQuery.queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: trainingStreakQuery.queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: trainingStreakCurrentWeekQuery.queryKey,
         });
       },
     }),
@@ -48,6 +58,7 @@ function RouteComponent() {
           Sync now
         </Button>
       </div>
+      <TrainingStreakSection />
       <LastFiveRunsSection />
     </div>
   );

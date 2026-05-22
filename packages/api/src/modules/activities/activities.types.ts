@@ -156,6 +156,23 @@ export type AnalyticsBestEfforts = {
   year: number;
 };
 
+export type CurrentTrainingWeekQualifyingActivities = {
+  activities: Array<{
+    id: number;
+    startAt: Date;
+  }>;
+  weekEndAt: Date;
+  weekStartAt: Date;
+};
+
+export type TrainingStreak = {
+  currentStreak: number;
+  lastQualifiedWeekStartAt: Date | null;
+  maxStreak: number;
+  updatedAt: Date;
+  userId: string;
+};
+
 export type ActivityStreamInput = {
   data: number[];
   streamType: ActivityStreamType;
