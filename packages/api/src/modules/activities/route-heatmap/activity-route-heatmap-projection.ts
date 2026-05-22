@@ -28,7 +28,9 @@ export function calculateActivityRouteHeatmapCellDeltas({
     addCellDelta({ contribution, delta: 1, deltas });
   }
 
-  return [...deltas.values()].filter((contribution) => contribution.delta !== 0);
+  return [...deltas.values()].filter(
+    (contribution) => contribution.delta !== 0,
+  );
 }
 
 function addCellDelta({
