@@ -12,6 +12,7 @@ import {
   getRecentActivities,
   listActivitiesForDateRange,
 } from "./catalog/activity-catalog.repository";
+import { getTrainingStreak } from "./training-streaks/training-streak.repository";
 import {
   getWeeklyTrainingSummary,
   listWeeklyTrainingSummaries,
@@ -73,6 +74,11 @@ export const activitiesRouter = {
     }),
   recent: protectedProcedure.handler(async ({ context }) => {
     return getRecentActivities({
+      userId: context.session.user.id,
+    });
+  }),
+  trainingStreak: protectedProcedure.handler(async ({ context }) => {
+    return getTrainingStreak({
       userId: context.session.user.id,
     });
   }),

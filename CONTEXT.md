@@ -80,6 +80,14 @@ _Avoid_: Wrapped, weekly report, generated artifact
 A Monday-start calendar week used to group **Activities** for weekly analysis.
 _Avoid_: Calendar week, ISO week, reporting week
 
+**Training Streak**:
+A count of consecutive **Training Weeks** in which a **User** has at least one qualifying **Activity**.
+_Avoid_: Activity streak, weekly streak
+
+**Qualifying Activity**:
+An **Activity** that can extend a **Training Streak**, initially limited to run and treadmill **Activities**.
+_Avoid_: Streak activity, counted workout
+
 **Analytics Volume**:
 A live distance or duration aggregate calculated from current **Activities** for a selected time bucket.
 _Avoid_: Weekly summary volume, snapshot volume
@@ -196,6 +204,13 @@ _Avoid_: Activity PR, lap best, best split
 - A **Weekly Training Summary** can be regenerated for a specific week by user action when the stored snapshot no longer reflects the user's expected imported **Activities**.
 - Scheduled **Weekly Training Summary** generation only creates summaries for users with at least one **Activity** in the completed **Training Week**.
 - **Training Weeks** currently use the Australia/Brisbane timezone until Korex supports a user-defined timezone setting.
+- A **Training Streak** belongs to exactly one **User**.
+- A completed **Training Week** increases a **Training Streak** when it contains at least one **Qualifying Activity**.
+- A completed **Training Week** with zero **Qualifying Activities** resets a **Training Streak**.
+- The current in-progress **Training Week** can visibly extend a **Training Streak** once the user has at least one **Qualifying Activity**, but it does not cause the streak to drop before the **Training Week** completes.
+- A **Training Streak** maximum can increase during the current in-progress **Training Week** once that week has a **Qualifying Activity**.
+- **Training Streak** boundaries align with **Weekly Training Summary** boundaries.
+- **Training Streak** updates are handled by durable background work, not by provider sync request lifetimes or UI render paths.
 - **Analytics Volume** is calculated from current **Activities**, not from **Weekly Training Summaries**.
 - **Analytics Volume** may be grouped by **Training Week** or by calendar month for chart display.
 - The first **Analytics Volume** chart uses distance as its default volume metric.

@@ -6,6 +6,8 @@ import {
   upsertActivity,
 } from "../activities/artifacts/activity-import.repository";
 import { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
+import { enqueueCurrentTrainingStreakUpdateForActivity } from "../activities/training-streaks/training-streak.repository";
+import { isTrainingStreakQualifyingSportType } from "../activities/training-streaks/training-streaks";
 import {
   type ActivityImportDatabase,
   ActivityImportRepository,
@@ -82,6 +84,14 @@ export const ActivityImportWriterLayer = Layer.effect(
               database,
             },
           );
+
+          if (isTrainingStreakQualifyingSportType(activity.sportType)) {
+            await enqueueCurrentTrainingStreakUpdateForActivity({
+              activityStartAt: activity.startAt,
+              database,
+              userId: activity.userId,
+            });
+          }
 
           return upsertedActivity;
         }),

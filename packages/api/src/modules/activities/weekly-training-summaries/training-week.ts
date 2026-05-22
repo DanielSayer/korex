@@ -1,6 +1,7 @@
 const brisbaneUtcOffsetHours = 10;
 const millisecondsPerDay = 24 * 60 * 60 * 1000;
 const millisecondsPerHour = 60 * 60 * 1000;
+export const millisecondsPerTrainingWeek = 7 * millisecondsPerDay;
 
 export function getCompletedTrainingWeek(now = new Date()) {
   const currentWeekStartAt = getTrainingWeekStartAt(now);
@@ -8,9 +9,17 @@ export function getCompletedTrainingWeek(now = new Date()) {
   return {
     weekEndAt: currentWeekStartAt,
     weekStartAt: new Date(
-      currentWeekStartAt.getTime() - 7 * millisecondsPerDay,
+      currentWeekStartAt.getTime() - millisecondsPerTrainingWeek,
     ),
   };
+}
+
+export function getNextTrainingWeekStartAt(weekStartAt: Date) {
+  return new Date(weekStartAt.getTime() + millisecondsPerTrainingWeek);
+}
+
+export function getPreviousTrainingWeekStartAt(weekStartAt: Date) {
+  return new Date(weekStartAt.getTime() - millisecondsPerTrainingWeek);
 }
 
 export function getTrainingWeekStartAt(date: Date) {

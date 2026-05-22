@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { activities } from "./activities";
+import { user } from "./auth";
 
 export const activityHeartRateZoneTimeCalculationJobStatus = pgEnum(
   "activity_heart_rate_zone_time_calculation_job_status",
@@ -155,6 +156,57 @@ export const activityBestEffortCalculationJobsRelations = relations(
     activity: one(activities, {
       fields: [activityBestEffortCalculationJobs.activityId],
       references: [activities.id],
+    }),
+  }),
+);
+
+export const trainingStreakUpdateJobStatus = pgEnum(
+  "training_streak_update_job_status",
+  ["pending", "processing", "succeeded", "failed"],
+);
+
+export const trainingStreakUpdateJobs = pgTable(
+  "training_streak_update_jobs",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    weekStartAt: timestamp("week_start_at").notNull(),
+    status: trainingStreakUpdateJobStatus("status")
+      .default("pending")
+      .notNull(),
+    attemptCount: integer("attempt_count").default(0).notNull(),
+    lastError: text("last_error"),
+    runAfter: timestamp("run_after").defaultNow().notNull(),
+    lockedAt: timestamp("locked_at"),
+    lockedBy: text("locked_by"),
+    finishedAt: timestamp("finished_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("training_streak_update_jobs_user_week_idx").on(
+      table.userId,
+      table.weekStartAt,
+    ),
+    index("training_streak_update_jobs_status_run_after_idx").on(
+      table.status,
+      table.runAfter,
+    ),
+    index("training_streak_update_jobs_locked_at_idx").on(table.lockedAt),
+  ],
+);
+
+export const trainingStreakUpdateJobsRelations = relations(
+  trainingStreakUpdateJobs,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [trainingStreakUpdateJobs.userId],
+      references: [user.id],
     }),
   }),
 );

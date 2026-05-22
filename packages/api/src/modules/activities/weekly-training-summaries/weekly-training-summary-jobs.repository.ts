@@ -4,8 +4,7 @@ import {
   createDurableJobRepository,
   getDurableJobPendingState,
 } from "../../durable-jobs/durable-job-repository";
-
-const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
+import { getNextTrainingWeekStartAt } from "./training-week";
 
 type WeeklyTrainingSummaryJobDatabase = Pick<
   typeof db,
@@ -156,5 +155,5 @@ export async function markWeeklyTrainingSummaryGenerationFailed({
 }
 
 export function getTrainingWeekEndAt(weekStartAt: Date) {
-  return new Date(weekStartAt.getTime() + millisecondsPerWeek);
+  return getNextTrainingWeekStartAt(weekStartAt);
 }

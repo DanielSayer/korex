@@ -1,7 +1,9 @@
 import {
+  enqueueCompletedTrainingStreakUpdates,
   runActivityBestEffortWorkerOnce,
   runActivityHeartRateZoneTimeWorkerOnce,
   runActivityRouteHeatmapWorkerOnce,
+  runTrainingStreakWorkerOnce,
   runWeeklyTrainingSummaryWorkerOnce,
 } from "@korex/api/modules/activities/activities.workers";
 import { runWeeklyTrainingSummarySchedulerOnce } from "./weekly-training-summary-scheduler";
@@ -37,6 +39,18 @@ while (!shuttingDown) {
       if (schedulerResult.skipped === false && schedulerResult.enqueued > 0) {
         console.info(
           `Enqueued ${schedulerResult.enqueued} weekly training summary jobs for ${schedulerResult.weekStartAt.toISOString()}`,
+        );
+      }
+
+      const streakSchedulerResult = await enqueueCompletedTrainingStreakUpdates(
+        {
+          now: new Date(now),
+        },
+      );
+
+      if (streakSchedulerResult.enqueued > 0) {
+        console.info(
+          `Enqueued ${streakSchedulerResult.enqueued} training streak jobs for ${streakSchedulerResult.weekStartAt.toISOString()}`,
         );
       }
     }
@@ -75,6 +89,16 @@ while (!shuttingDown) {
       console.info(
         `Processed ${heatmapResult.processed} activity route heatmap jobs`,
       );
+    }
+
+    const streakResult = await runTrainingStreakWorkerOnce({
+      batchSize,
+      staleLockMs,
+      workerId,
+    });
+
+    if (streakResult.processed > 0) {
+      console.info(`Processed ${streakResult.processed} training streak jobs`);
     }
 
     const bestEffortResult = await runActivityBestEffortWorkerOnce({

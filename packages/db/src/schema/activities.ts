@@ -404,6 +404,30 @@ export const personalBestEfforts = pgTable(
   ],
 );
 
+export const trainingStreaks = pgTable(
+  "training_streaks",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    currentStreak: integer("current_streak").default(0).notNull(),
+    maxStreak: integer("max_streak").default(0).notNull(),
+    lastQualifiedWeekStartAt: timestamp("last_qualified_week_start_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("training_streaks_user_id_idx").on(table.userId),
+    index("training_streaks_last_qualified_week_idx").on(
+      table.lastQualifiedWeekStartAt,
+    ),
+  ],
+);
+
 export const activitiesRelations = relations(activities, ({ many, one }) => ({
   bestEfforts: many(activityBestEfforts),
   heartRateZoneSnapshots: many(activityHeartRateZoneSnapshots),
@@ -513,6 +537,16 @@ export const personalBestEffortsRelations = relations(
     }),
     user: one(user, {
       fields: [personalBestEfforts.userId],
+      references: [user.id],
+    }),
+  }),
+);
+
+export const trainingStreaksRelations = relations(
+  trainingStreaks,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [trainingStreaks.userId],
       references: [user.id],
     }),
   }),

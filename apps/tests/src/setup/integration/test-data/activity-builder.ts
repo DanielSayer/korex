@@ -96,6 +96,11 @@ export class ActivityBuilder {
     return this;
   }
 
+  withSportType(sportType: SportType) {
+    this.value.sportType = sportType;
+    return this;
+  }
+
   build(): ActivityTestData {
     return this.value;
   }

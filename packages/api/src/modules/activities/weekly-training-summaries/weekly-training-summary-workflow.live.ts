@@ -3,7 +3,10 @@ import {
   TimeProvider,
   TimeProviderLive,
 } from "../../time-provider.dependencies";
-import { getCompletedTrainingWeek } from "./training-week";
+import {
+  getCompletedTrainingWeek,
+  getPreviousTrainingWeekStartAt,
+} from "./training-week";
 import {
   listActivitiesForTrainingWeek,
   upsertWeeklyTrainingSummary,
@@ -57,8 +60,8 @@ export const WeeklyTrainingSummaryWorkflowLayer = Layer.effect(
     }) => {
       try {
         const weekEndAt = jobRepository.getTrainingWeekEndAt(job.weekStartAt);
-        const previousWeekStartAt = new Date(
-          job.weekStartAt.getTime() - 7 * 24 * 60 * 60 * 1000,
+        const previousWeekStartAt = getPreviousTrainingWeekStartAt(
+          job.weekStartAt,
         );
 
         const [currentActivities, previousActivities] = await Promise.all([
