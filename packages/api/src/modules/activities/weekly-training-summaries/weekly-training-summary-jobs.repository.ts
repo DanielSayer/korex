@@ -1,9 +1,9 @@
 import { activities, db, weeklyTrainingSummaryGenerationJobs } from "@korex/db";
-import { and, asc, eq, gte, isNull, lt, lte, or } from "drizzle-orm";
+import { and, eq, gte, isNull, lt } from "drizzle-orm";
 import {
-  durableJobMaxRetryAttempts,
-  getDurableJobFailureState,
-} from "../../durable-jobs/durable-job-policy";
+  createDurableJobRepository,
+  getDurableJobPendingState,
+} from "../../durable-jobs/durable-job-repository";
 
 const millisecondsPerWeek = 7 * 24 * 60 * 60 * 1000;
 
@@ -19,6 +19,26 @@ export type WeeklyTrainingSummaryGenerationJob = {
   weekStartAt: Date;
 };
 
+const durableJobRepository =
+  createDurableJobRepository<WeeklyTrainingSummaryGenerationJob>({
+    mapClaimedJob: (row) => ({
+      attemptCount: Number(row.attemptCount),
+      id: Number(row.id),
+      userId: String(row.userId),
+      weekStartAt:
+        row.weekStartAt instanceof Date
+          ? row.weekStartAt
+          : new Date(String(row.weekStartAt)),
+    }),
+    returning: {
+      attemptCount: weeklyTrainingSummaryGenerationJobs.attemptCount,
+      id: weeklyTrainingSummaryGenerationJobs.id,
+      userId: weeklyTrainingSummaryGenerationJobs.userId,
+      weekStartAt: weeklyTrainingSummaryGenerationJobs.weekStartAt,
+    },
+    table: weeklyTrainingSummaryGenerationJobs,
+  });
+
 export async function enqueueWeeklyTrainingSummaryGeneration({
   database = db,
   userId,
@@ -33,13 +53,7 @@ export async function enqueueWeeklyTrainingSummaryGeneration({
   await database
     .insert(weeklyTrainingSummaryGenerationJobs)
     .values({
-      attemptCount: 0,
-      finishedAt: null,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter: now,
-      status: "pending",
+      ...getDurableJobPendingState(now),
       userId,
       weekStartAt,
     })
@@ -49,13 +63,7 @@ export async function enqueueWeeklyTrainingSummaryGeneration({
         weeklyTrainingSummaryGenerationJobs.weekStartAt,
       ],
       set: {
-        attemptCount: 0,
-        finishedAt: null,
-        lastError: null,
-        lockedAt: null,
-        lockedBy: null,
-        runAfter: now,
-        status: "pending",
+        ...getDurableJobPendingState(now),
         updatedAt: now,
       },
     });
@@ -110,66 +118,11 @@ export async function claimWeeklyTrainingSummaryGenerationJobs({
   staleLockedBefore: Date;
   workerId: string;
 }): Promise<WeeklyTrainingSummaryGenerationJob[]> {
-  return db.transaction(async (tx) => {
-    const claimableCondition = or(
-      eq(weeklyTrainingSummaryGenerationJobs.status, "pending"),
-      and(
-        eq(weeklyTrainingSummaryGenerationJobs.status, "failed"),
-        lt(
-          weeklyTrainingSummaryGenerationJobs.attemptCount,
-          durableJobMaxRetryAttempts,
-        ),
-        lte(weeklyTrainingSummaryGenerationJobs.runAfter, now),
-      ),
-      and(
-        eq(weeklyTrainingSummaryGenerationJobs.status, "processing"),
-        lte(weeklyTrainingSummaryGenerationJobs.lockedAt, staleLockedBefore),
-      ),
-    );
-
-    const claimableJobs = await tx
-      .select({
-        id: weeklyTrainingSummaryGenerationJobs.id,
-      })
-      .from(weeklyTrainingSummaryGenerationJobs)
-      .where(claimableCondition)
-      .orderBy(asc(weeklyTrainingSummaryGenerationJobs.runAfter))
-      .limit(batchSize);
-
-    if (claimableJobs.length === 0) {
-      return [];
-    }
-
-    const claimed: WeeklyTrainingSummaryGenerationJob[] = [];
-
-    for (const job of claimableJobs) {
-      const [updated] = await tx
-        .update(weeklyTrainingSummaryGenerationJobs)
-        .set({
-          lockedAt: now,
-          lockedBy: workerId,
-          status: "processing",
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(weeklyTrainingSummaryGenerationJobs.id, job.id),
-            claimableCondition,
-          ),
-        )
-        .returning({
-          attemptCount: weeklyTrainingSummaryGenerationJobs.attemptCount,
-          id: weeklyTrainingSummaryGenerationJobs.id,
-          userId: weeklyTrainingSummaryGenerationJobs.userId,
-          weekStartAt: weeklyTrainingSummaryGenerationJobs.weekStartAt,
-        });
-
-      if (updated) {
-        claimed.push(updated);
-      }
-    }
-
-    return claimed;
+  return durableJobRepository.claim({
+    batchSize,
+    now,
+    staleLockedBefore,
+    workerId,
   });
 }
 
@@ -180,17 +133,10 @@ export async function markWeeklyTrainingSummaryGenerationSucceeded({
   jobId: number;
   now?: Date;
 }) {
-  await db
-    .update(weeklyTrainingSummaryGenerationJobs)
-    .set({
-      finishedAt: now,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      status: "succeeded",
-      updatedAt: now,
-    })
-    .where(eq(weeklyTrainingSummaryGenerationJobs.id, jobId));
+  await durableJobRepository.markSucceeded({
+    jobId,
+    now,
+  });
 }
 
 export async function markWeeklyTrainingSummaryGenerationFailed({
@@ -202,23 +148,11 @@ export async function markWeeklyTrainingSummaryGenerationFailed({
   jobId: number;
   now?: Date;
 }) {
-  const [job] = await db
-    .select({
-      attemptCount: weeklyTrainingSummaryGenerationJobs.attemptCount,
-    })
-    .from(weeklyTrainingSummaryGenerationJobs)
-    .where(eq(weeklyTrainingSummaryGenerationJobs.id, jobId));
-
-  if (!job) {
-    return;
-  }
-
-  await db
-    .update(weeklyTrainingSummaryGenerationJobs)
-    .set(
-      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
-    )
-    .where(eq(weeklyTrainingSummaryGenerationJobs.id, jobId));
+  await durableJobRepository.markFailed({
+    error,
+    jobId,
+    now,
+  });
 }
 
 export function getTrainingWeekEndAt(weekStartAt: Date) {

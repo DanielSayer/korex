@@ -1,9 +1,9 @@
 import { activityHeartRateZoneTimeCalculationJobs, db } from "@korex/db";
-import { and, asc, eq, lt, lte, or } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import {
-  durableJobMaxRetryAttempts,
-  getDurableJobFailureState,
-} from "../../durable-jobs/durable-job-policy";
+  createDurableJobRepository,
+  getDurableJobPendingState,
+} from "../../durable-jobs/durable-job-repository";
 
 type ActivityHeartRateZoneTimeJobDatabase = Pick<
   typeof db,
@@ -15,6 +15,21 @@ export type ActivityHeartRateZoneTimeCalculationJob = {
   attemptCount: number;
   id: number;
 };
+
+const durableJobRepository =
+  createDurableJobRepository<ActivityHeartRateZoneTimeCalculationJob>({
+    mapClaimedJob: (row) => ({
+      activityId: Number(row.activityId),
+      attemptCount: Number(row.attemptCount),
+      id: Number(row.id),
+    }),
+    returning: {
+      activityId: activityHeartRateZoneTimeCalculationJobs.activityId,
+      attemptCount: activityHeartRateZoneTimeCalculationJobs.attemptCount,
+      id: activityHeartRateZoneTimeCalculationJobs.id,
+    },
+    table: activityHeartRateZoneTimeCalculationJobs,
+  });
 
 export async function enqueueActivityHeartRateZoneTimeCalculation({
   activityId,
@@ -29,24 +44,12 @@ export async function enqueueActivityHeartRateZoneTimeCalculation({
     .insert(activityHeartRateZoneTimeCalculationJobs)
     .values({
       activityId,
-      attemptCount: 0,
-      finishedAt: null,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter: now,
-      status: "pending",
+      ...getDurableJobPendingState(now),
     })
     .onConflictDoUpdate({
       target: [activityHeartRateZoneTimeCalculationJobs.activityId],
       set: {
-        attemptCount: 0,
-        finishedAt: null,
-        lastError: null,
-        lockedAt: null,
-        lockedBy: null,
-        runAfter: now,
-        status: "pending",
+        ...getDurableJobPendingState(now),
         updatedAt: now,
       },
     });
@@ -75,68 +78,11 @@ export async function claimActivityHeartRateZoneTimeCalculationJobs({
   staleLockedBefore: Date;
   workerId: string;
 }): Promise<ActivityHeartRateZoneTimeCalculationJob[]> {
-  return db.transaction(async (tx) => {
-    const claimableCondition = or(
-      eq(activityHeartRateZoneTimeCalculationJobs.status, "pending"),
-      and(
-        eq(activityHeartRateZoneTimeCalculationJobs.status, "failed"),
-        lt(
-          activityHeartRateZoneTimeCalculationJobs.attemptCount,
-          durableJobMaxRetryAttempts,
-        ),
-        lte(activityHeartRateZoneTimeCalculationJobs.runAfter, now),
-      ),
-      and(
-        eq(activityHeartRateZoneTimeCalculationJobs.status, "processing"),
-        lte(
-          activityHeartRateZoneTimeCalculationJobs.lockedAt,
-          staleLockedBefore,
-        ),
-      ),
-    );
-
-    const claimableJobs = await tx
-      .select({
-        id: activityHeartRateZoneTimeCalculationJobs.id,
-      })
-      .from(activityHeartRateZoneTimeCalculationJobs)
-      .where(claimableCondition)
-      .orderBy(asc(activityHeartRateZoneTimeCalculationJobs.runAfter))
-      .limit(batchSize);
-
-    if (claimableJobs.length === 0) {
-      return [];
-    }
-
-    const claimed: ActivityHeartRateZoneTimeCalculationJob[] = [];
-
-    for (const job of claimableJobs) {
-      const [updated] = await tx
-        .update(activityHeartRateZoneTimeCalculationJobs)
-        .set({
-          lockedAt: now,
-          lockedBy: workerId,
-          status: "processing",
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(activityHeartRateZoneTimeCalculationJobs.id, job.id),
-            claimableCondition,
-          ),
-        )
-        .returning({
-          activityId: activityHeartRateZoneTimeCalculationJobs.activityId,
-          attemptCount: activityHeartRateZoneTimeCalculationJobs.attemptCount,
-          id: activityHeartRateZoneTimeCalculationJobs.id,
-        });
-
-      if (updated) {
-        claimed.push(updated);
-      }
-    }
-
-    return claimed;
+  return durableJobRepository.claim({
+    batchSize,
+    now,
+    staleLockedBefore,
+    workerId,
   });
 }
 
@@ -147,17 +93,10 @@ export async function markActivityHeartRateZoneTimeCalculationSucceeded({
   jobId: number;
   now?: Date;
 }) {
-  await db
-    .update(activityHeartRateZoneTimeCalculationJobs)
-    .set({
-      finishedAt: now,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      status: "succeeded",
-      updatedAt: now,
-    })
-    .where(eq(activityHeartRateZoneTimeCalculationJobs.id, jobId));
+  await durableJobRepository.markSucceeded({
+    jobId,
+    now,
+  });
 }
 
 export async function markActivityHeartRateZoneTimeCalculationFailed({
@@ -169,21 +108,9 @@ export async function markActivityHeartRateZoneTimeCalculationFailed({
   jobId: number;
   now?: Date;
 }) {
-  const [job] = await db
-    .select({
-      attemptCount: activityHeartRateZoneTimeCalculationJobs.attemptCount,
-    })
-    .from(activityHeartRateZoneTimeCalculationJobs)
-    .where(eq(activityHeartRateZoneTimeCalculationJobs.id, jobId));
-
-  if (!job) {
-    return;
-  }
-
-  await db
-    .update(activityHeartRateZoneTimeCalculationJobs)
-    .set(
-      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
-    )
-    .where(eq(activityHeartRateZoneTimeCalculationJobs.id, jobId));
+  await durableJobRepository.markFailed({
+    error,
+    jobId,
+    now,
+  });
 }

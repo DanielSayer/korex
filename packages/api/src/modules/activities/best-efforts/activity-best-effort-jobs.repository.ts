@@ -1,9 +1,8 @@
 import { activityBestEffortCalculationJobs, db } from "@korex/db";
-import { and, asc, eq, lt, lte, or } from "drizzle-orm";
 import {
-  durableJobMaxRetryAttempts,
-  getDurableJobFailureState,
-} from "../../durable-jobs/durable-job-policy";
+  createDurableJobRepository,
+  getDurableJobPendingState,
+} from "../../durable-jobs/durable-job-repository";
 
 type ActivityBestEffortJobDatabase = Pick<
   typeof db,
@@ -15,6 +14,21 @@ export type ActivityBestEffortCalculationJob = {
   attemptCount: number;
   id: number;
 };
+
+const durableJobRepository =
+  createDurableJobRepository<ActivityBestEffortCalculationJob>({
+    mapClaimedJob: (row) => ({
+      activityId: Number(row.activityId),
+      attemptCount: Number(row.attemptCount),
+      id: Number(row.id),
+    }),
+    returning: {
+      activityId: activityBestEffortCalculationJobs.activityId,
+      attemptCount: activityBestEffortCalculationJobs.attemptCount,
+      id: activityBestEffortCalculationJobs.id,
+    },
+    table: activityBestEffortCalculationJobs,
+  });
 
 export async function enqueueActivityBestEffortCalculation({
   activityId,
@@ -29,24 +43,12 @@ export async function enqueueActivityBestEffortCalculation({
     .insert(activityBestEffortCalculationJobs)
     .values({
       activityId,
-      attemptCount: 0,
-      finishedAt: null,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter: now,
-      status: "pending",
+      ...getDurableJobPendingState(now),
     })
     .onConflictDoUpdate({
       target: [activityBestEffortCalculationJobs.activityId],
       set: {
-        attemptCount: 0,
-        finishedAt: null,
-        lastError: null,
-        lockedAt: null,
-        lockedBy: null,
-        runAfter: now,
-        status: "pending",
+        ...getDurableJobPendingState(now),
         updatedAt: now,
       },
     });
@@ -63,63 +65,11 @@ export async function claimActivityBestEffortCalculationJobs({
   staleLockedBefore: Date;
   workerId: string;
 }): Promise<ActivityBestEffortCalculationJob[]> {
-  return db.transaction(async (tx) => {
-    const claimableCondition = or(
-      eq(activityBestEffortCalculationJobs.status, "pending"),
-      and(
-        eq(activityBestEffortCalculationJobs.status, "failed"),
-        lt(
-          activityBestEffortCalculationJobs.attemptCount,
-          durableJobMaxRetryAttempts,
-        ),
-        lte(activityBestEffortCalculationJobs.runAfter, now),
-      ),
-      and(
-        eq(activityBestEffortCalculationJobs.status, "processing"),
-        lte(activityBestEffortCalculationJobs.lockedAt, staleLockedBefore),
-      ),
-    );
-
-    const claimableJobs = await tx
-      .select({ id: activityBestEffortCalculationJobs.id })
-      .from(activityBestEffortCalculationJobs)
-      .where(claimableCondition)
-      .orderBy(asc(activityBestEffortCalculationJobs.runAfter))
-      .limit(batchSize);
-
-    if (claimableJobs.length === 0) {
-      return [];
-    }
-
-    const claimed: ActivityBestEffortCalculationJob[] = [];
-
-    for (const job of claimableJobs) {
-      const [updated] = await tx
-        .update(activityBestEffortCalculationJobs)
-        .set({
-          lockedAt: now,
-          lockedBy: workerId,
-          status: "processing",
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(activityBestEffortCalculationJobs.id, job.id),
-            claimableCondition,
-          ),
-        )
-        .returning({
-          activityId: activityBestEffortCalculationJobs.activityId,
-          attemptCount: activityBestEffortCalculationJobs.attemptCount,
-          id: activityBestEffortCalculationJobs.id,
-        });
-
-      if (updated) {
-        claimed.push(updated);
-      }
-    }
-
-    return claimed;
+  return durableJobRepository.claim({
+    batchSize,
+    now,
+    staleLockedBefore,
+    workerId,
   });
 }
 
@@ -130,17 +80,10 @@ export async function markActivityBestEffortCalculationSucceeded({
   jobId: number;
   now?: Date;
 }) {
-  await db
-    .update(activityBestEffortCalculationJobs)
-    .set({
-      finishedAt: now,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      status: "succeeded",
-      updatedAt: now,
-    })
-    .where(eq(activityBestEffortCalculationJobs.id, jobId));
+  await durableJobRepository.markSucceeded({
+    jobId,
+    now,
+  });
 }
 
 export async function markActivityBestEffortCalculationFailed({
@@ -152,19 +95,9 @@ export async function markActivityBestEffortCalculationFailed({
   jobId: number;
   now?: Date;
 }) {
-  const [job] = await db
-    .select({ attemptCount: activityBestEffortCalculationJobs.attemptCount })
-    .from(activityBestEffortCalculationJobs)
-    .where(eq(activityBestEffortCalculationJobs.id, jobId));
-
-  if (!job) {
-    return;
-  }
-
-  await db
-    .update(activityBestEffortCalculationJobs)
-    .set(
-      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
-    )
-    .where(eq(activityBestEffortCalculationJobs.id, jobId));
+  await durableJobRepository.markFailed({
+    error,
+    jobId,
+    now,
+  });
 }

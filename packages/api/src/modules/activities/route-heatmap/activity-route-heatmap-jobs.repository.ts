@@ -5,11 +5,11 @@ import {
   activityRouteHeatmapContributions,
   db,
 } from "@korex/db";
-import { and, asc, eq, isNull, lt, lte, or } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import {
-  durableJobMaxRetryAttempts,
-  getDurableJobFailureState,
-} from "../../durable-jobs/durable-job-policy";
+  createDurableJobRepository,
+  getDurableJobPendingState,
+} from "../../durable-jobs/durable-job-repository";
 
 type ActivityRouteHeatmapJobDatabase = Pick<
   typeof db,
@@ -21,6 +21,21 @@ export type ActivityRouteHeatmapCalculationJob = {
   attemptCount: number;
   id: number;
 };
+
+const durableJobRepository =
+  createDurableJobRepository<ActivityRouteHeatmapCalculationJob>({
+    mapClaimedJob: (row) => ({
+      activityId: Number(row.activityId),
+      attemptCount: Number(row.attemptCount),
+      id: Number(row.id),
+    }),
+    returning: {
+      activityId: activityRouteHeatmapCalculationJobs.activityId,
+      attemptCount: activityRouteHeatmapCalculationJobs.attemptCount,
+      id: activityRouteHeatmapCalculationJobs.id,
+    },
+    table: activityRouteHeatmapCalculationJobs,
+  });
 
 export async function enqueueActivityRouteHeatmapCalculation({
   activityId,
@@ -35,24 +50,12 @@ export async function enqueueActivityRouteHeatmapCalculation({
     .insert(activityRouteHeatmapCalculationJobs)
     .values({
       activityId,
-      attemptCount: 0,
-      finishedAt: null,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      runAfter: now,
-      status: "pending",
+      ...getDurableJobPendingState(now),
     })
     .onConflictDoUpdate({
       target: [activityRouteHeatmapCalculationJobs.activityId],
       set: {
-        attemptCount: 0,
-        finishedAt: null,
-        lastError: null,
-        lockedAt: null,
-        lockedBy: null,
-        runAfter: now,
-        status: "pending",
+        ...getDurableJobPendingState(now),
         updatedAt: now,
       },
     });
@@ -103,65 +106,11 @@ export async function claimActivityRouteHeatmapCalculationJobs({
   staleLockedBefore: Date;
   workerId: string;
 }): Promise<ActivityRouteHeatmapCalculationJob[]> {
-  return db.transaction(async (tx) => {
-    const claimableCondition = or(
-      eq(activityRouteHeatmapCalculationJobs.status, "pending"),
-      and(
-        eq(activityRouteHeatmapCalculationJobs.status, "failed"),
-        lt(
-          activityRouteHeatmapCalculationJobs.attemptCount,
-          durableJobMaxRetryAttempts,
-        ),
-        lte(activityRouteHeatmapCalculationJobs.runAfter, now),
-      ),
-      and(
-        eq(activityRouteHeatmapCalculationJobs.status, "processing"),
-        lte(activityRouteHeatmapCalculationJobs.lockedAt, staleLockedBefore),
-      ),
-    );
-
-    const claimableJobs = await tx
-      .select({
-        id: activityRouteHeatmapCalculationJobs.id,
-      })
-      .from(activityRouteHeatmapCalculationJobs)
-      .where(claimableCondition)
-      .orderBy(asc(activityRouteHeatmapCalculationJobs.runAfter))
-      .limit(batchSize);
-
-    if (claimableJobs.length === 0) {
-      return [];
-    }
-
-    const claimed: ActivityRouteHeatmapCalculationJob[] = [];
-
-    for (const job of claimableJobs) {
-      const [updated] = await tx
-        .update(activityRouteHeatmapCalculationJobs)
-        .set({
-          lockedAt: now,
-          lockedBy: workerId,
-          status: "processing",
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(activityRouteHeatmapCalculationJobs.id, job.id),
-            claimableCondition,
-          ),
-        )
-        .returning({
-          activityId: activityRouteHeatmapCalculationJobs.activityId,
-          attemptCount: activityRouteHeatmapCalculationJobs.attemptCount,
-          id: activityRouteHeatmapCalculationJobs.id,
-        });
-
-      if (updated) {
-        claimed.push(updated);
-      }
-    }
-
-    return claimed;
+  return durableJobRepository.claim({
+    batchSize,
+    now,
+    staleLockedBefore,
+    workerId,
   });
 }
 
@@ -172,17 +121,10 @@ export async function markActivityRouteHeatmapCalculationSucceeded({
   jobId: number;
   now?: Date;
 }) {
-  await db
-    .update(activityRouteHeatmapCalculationJobs)
-    .set({
-      finishedAt: now,
-      lastError: null,
-      lockedAt: null,
-      lockedBy: null,
-      status: "succeeded",
-      updatedAt: now,
-    })
-    .where(eq(activityRouteHeatmapCalculationJobs.id, jobId));
+  await durableJobRepository.markSucceeded({
+    jobId,
+    now,
+  });
 }
 
 export async function markActivityRouteHeatmapCalculationFailed({
@@ -194,21 +136,9 @@ export async function markActivityRouteHeatmapCalculationFailed({
   jobId: number;
   now?: Date;
 }) {
-  const [job] = await db
-    .select({
-      attemptCount: activityRouteHeatmapCalculationJobs.attemptCount,
-    })
-    .from(activityRouteHeatmapCalculationJobs)
-    .where(eq(activityRouteHeatmapCalculationJobs.id, jobId));
-
-  if (!job) {
-    return;
-  }
-
-  await db
-    .update(activityRouteHeatmapCalculationJobs)
-    .set(
-      getDurableJobFailureState({ attemptCount: job.attemptCount, error, now }),
-    )
-    .where(eq(activityRouteHeatmapCalculationJobs.id, jobId));
+  await durableJobRepository.markFailed({
+    error,
+    jobId,
+    now,
+  });
 }
