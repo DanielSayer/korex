@@ -19,19 +19,22 @@ function RouteHeatmapMap() {
         minZoom={routeHeatmapMinMaterializedZoom}
         preferCanvas
         scrollWheelZoom
+        style={{ background: "#111827" }}
         zoom={routeHeatmapInitialLocationZoom}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          keepBuffer={6}
           url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
         />
         <TileLayer
           attribution="Route heatmap"
-          keepBuffer={4}
+          keepBuffer={8}
           maxNativeZoom={routeHeatmapMaxMaterializedZoom}
           minNativeZoom={routeHeatmapMinMaterializedZoom}
           opacity={0.92}
-          updateWhenIdle
+          updateInterval={100}
+          updateWhenIdle={false}
           url={`${env.VITE_SERVER_URL}/api/activities/route-heatmap/tiles/{z}/{x}/{y}.png`}
         />
         <InitialUserLocationView />
