@@ -48,6 +48,10 @@ export type ActivityInput = {
   userId: string;
 };
 
+export type ActivityDetailSummaryActivity = Omit<ActivityInput, "userId"> & {
+  id: number;
+};
+
 export type ActivityLapInput = {
   averageCadenceStepsPerMinute: number | null;
   averageHeartRateBeatsPerMinute: number | null;
@@ -62,6 +66,10 @@ export type ActivityLapInput = {
   movingTimeSeconds: number | null;
   startTimeSeconds: number;
   totalElevationGainMeters: number | null;
+};
+
+export type ActivityLapSummary = ActivityLapInput & {
+  id: number;
 };
 
 export type ActivityMapCoordinateInput = {
@@ -188,4 +196,23 @@ export type ActivityHeartRateZoneSnapshotInput = {
 export type ActivityHeartRateZoneTimeInput = {
   position: number;
   timeSeconds: number;
+};
+
+export type ActivityBestEffortSummary = {
+  distanceMeters: number;
+  durationSeconds: number;
+  endDistanceMeters: number;
+  endElapsedTimeSeconds: number;
+  standardDistanceCode: BestEffortStandardDistanceCode;
+  startDistanceMeters: number;
+  startElapsedTimeSeconds: number;
+};
+
+export type ActivityDetailSummary = {
+  activity: ActivityDetailSummaryActivity;
+  bestEfforts: ActivityBestEffortSummary[];
+  heartRateZoneSnapshots: ActivityHeartRateZoneSnapshotInput[];
+  heartRateZoneTimes: ActivityHeartRateZoneTimeInput[];
+  laps: ActivityLapSummary[];
+  map: ActivityMapInput | null;
 };

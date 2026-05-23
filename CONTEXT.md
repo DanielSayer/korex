@@ -174,6 +174,7 @@ _Avoid_: Activity PR, lap best, best split
 - **Activity Lap** summary metrics such as speed, heart rate, cadence, stride length, and elevation gain are optional.
 - An **Activity** can have a **Device Name**, but **Device Name** is display-only and must not drive identity, deduplication, or analytics.
 - An **Activity** can retain **Provider Activity Metadata** as import provenance, but **Provider Activity Metadata** is not part of the **Activity** identity inside Korex.
+- Upstream activity identifiers in **Provider Activity Metadata** exist for import convenience and backfilling only; app-facing Activity usage must identify the core **Activity**.
 - An imported provider activity that maps successfully creates or updates one **Activity**; cross-provider duplicate detection is intentionally deferred.
 - **Provider Activity Metadata** may reference the **Activity** it produced, but an **Activity** does not reference provider metadata.
 - An **Anti-Corruption Layer** translates provider activity data into an **Activity**.
@@ -238,6 +239,8 @@ _Avoid_: Activity PR, lap best, best split
 - Replacing distance or elapsed-time **Activity Streams** makes an **Activity's** **Activity Best Efforts** stale.
 - Changing or deleting an **Activity** can make both **Activity Best Efforts** and **Personal Best Efforts** stale.
 - Existing eligible **Activities** can be backfilled into **Activity Best Efforts** by enqueueing durable calculation jobs.
+- The initial Activity detail summary exposes concepts already present in the Korex domain language; old application fields without a resolved Korex domain concept are deferred.
+- The initial Activity detail summary is shaped around domain boundaries: an **Activity** with nested **Activity Map**, **Activity Laps**, **Activity Heart Rate Zone Snapshots**, **Activity Heart Rate Zone Times**, and **Activity Best Efforts**.
 
 ## Architecture Boundaries
 
@@ -257,6 +260,9 @@ _Avoid_: Activity PR, lap best, best split
 - "heart rate bucket" was used for the same concept as **Heart Rate Zone**; resolved: use **Heart Rate Zone** in domain language.
 - "Intervals" can mean the upstream provider **Intervals.icu** or interval running training; resolved: use **Intervals.icu** for the provider and avoid bare "intervals" in domain language.
 - "activity" can mean either the provider record or the Korex-owned workout; resolved: use **Activity** for the Korex domain object and **Provider Activity Metadata** only for upstream provenance.
+- "activity id" can mean an upstream provider identifier or the Korex-owned **Activity** id; resolved: app-facing Activity usage means the core **Activity** id, while upstream ids stay inside **Provider Activity Metadata** for import and backfill work.
+- The old application Activity detail contract included fields that do not yet exist in Korex domain language; resolved: omit those fields from the initial Activity detail summary rather than carrying old contract vocabulary forward.
+- "summary" can mean a page-shaped flat object or a domain-shaped read model; resolved: the initial Activity detail summary uses nested domain concepts rather than flattening child concepts into the **Activity**.
 - "lap" and "split" can refer to provider-shaped segment records; resolved: use **Activity Lap** for the Korex-owned segment of an **Activity**.
 - "zone time" can mean provider-reported durations or Korex-calculated activity summaries; resolved: use **Activity Heart Rate Zone Time** only for point-in-time durations calculated by Korex.
 - "pending zone time" was considered for captured zones awaiting calculation; resolved: use **Activity Heart Rate Zone Snapshot** for the captured historical zone definition and **Activity Heart Rate Zone Time** only for calculated durations.
