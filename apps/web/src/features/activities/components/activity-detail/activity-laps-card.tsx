@@ -1,18 +1,7 @@
 import type { ActivityLapSummary } from "@korex/api/modules/activities/activities.types";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@korex/ui/components/card";
 import { RouteIcon } from "lucide-react";
-import {
-  formatBpm,
-  formatDistance,
-  formatDurationClock,
-  formatMeters,
-  formatSpeed,
-} from "@/utils/formatters";
+import { formatDurationClock } from "@/utils/formatters";
+import { MetricValue } from "./metric-value";
 
 type ActivityLapsCardProps = {
   laps: ActivityLapSummary[];
@@ -24,53 +13,133 @@ function ActivityLapsCard({ laps }: ActivityLapsCardProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <RouteIcon className="size-5" />
+    <section className="space-y-4">
+      <div>
+        <h2 className="flex items-center gap-2 font-bold text-3xl">
+          <RouteIcon className="size-6" />
           Laps
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <table className="w-full min-w-160 text-sm">
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          Detailed lap data for your activity.
+        </p>
+      </div>
+
+      <div className="overflow-x-auto border-y">
+        <table className="w-full min-w-280 text-sm">
           <thead>
             <tr className="border-b text-muted-foreground">
-              <th className="py-2 text-left font-medium">Lap</th>
-              <th className="py-2 text-right font-medium">Distance</th>
-              <th className="py-2 text-right font-medium">Time</th>
-              <th className="py-2 text-right font-medium">Speed</th>
-              <th className="py-2 text-right font-medium">Avg HR</th>
-              <th className="py-2 text-right font-medium">Elevation</th>
+              <th className="px-3 py-2 text-left font-medium">Lap</th>
+              <th className="px-3 py-2 text-right font-medium">Distance</th>
+              <th className="px-3 py-2 text-right font-medium">Moving</th>
+              <th className="px-3 py-2 text-right font-medium">Elapsed</th>
+              <th className="px-3 py-2 text-right font-medium">Start</th>
+              <th className="px-3 py-2 text-right font-medium">End</th>
+              <th className="px-3 py-2 text-right font-medium">Avg Speed</th>
+              <th className="px-3 py-2 text-right font-medium">Max Speed</th>
+              <th className="px-3 py-2 text-right font-medium">Avg HR</th>
+              <th className="px-3 py-2 text-right font-medium">Max HR</th>
+              <th className="px-3 py-2 text-right font-medium">Cadence</th>
+              <th className="px-3 py-2 text-right font-medium">Stride</th>
+              <th className="px-3 py-2 text-right font-medium">Elevation</th>
             </tr>
           </thead>
           <tbody>
             {laps.map((lap) => (
               <tr key={lap.id} className="border-b last:border-0">
-                <td className="py-2 font-medium">{lap.index}</td>
-                <td className="py-2 text-right">
-                  {formatDistance(lap.distanceMeters)}
+                <td className="px-3 py-2 font-medium">{lap.index + 1}</td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="km"
+                    value={formatDistanceValue(lap.distanceMeters)}
+                  />
                 </td>
-                <td className="py-2 text-right">
-                  {formatDurationClock(
-                    lap.movingTimeSeconds ?? lap.elapsedTimeSeconds,
-                  )}
+                <td className="px-3 py-2 text-right">
+                  {formatDurationClock(lap.movingTimeSeconds)}
                 </td>
-                <td className="py-2 text-right">
-                  {formatSpeed(lap.averageSpeedMetersPerSecond)}
+                <td className="px-3 py-2 text-right">
+                  {formatDurationClock(lap.elapsedTimeSeconds)}
                 </td>
-                <td className="py-2 text-right">
-                  {formatBpm(lap.averageHeartRateBeatsPerMinute)}
+                <td className="px-3 py-2 text-right">
+                  {formatDurationClock(lap.startTimeSeconds)}
                 </td>
-                <td className="py-2 text-right">
-                  {formatMeters(lap.totalElevationGainMeters)}
+                <td className="px-3 py-2 text-right">
+                  {formatDurationClock(lap.endTimeSeconds)}
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="km/h"
+                    value={formatSpeedValue(lap.averageSpeedMetersPerSecond)}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="km/h"
+                    value={formatSpeedValue(lap.maxSpeedMetersPerSecond)}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="bpm"
+                    value={formatRoundedValue(
+                      lap.averageHeartRateBeatsPerMinute,
+                    )}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="bpm"
+                    value={formatRoundedValue(lap.maxHeartRateBeatsPerMinute)}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="spm"
+                    value={formatRoundedValue(lap.averageCadenceStepsPerMinute)}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="m"
+                    value={formatStrideLength(lap.averageStrideLengthMeters)}
+                  />
+                </td>
+                <td className="px-3 py-2 text-right">
+                  <MetricValue
+                    align="right"
+                    unit="m"
+                    value={formatRoundedValue(lap.totalElevationGainMeters)}
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
+}
+
+function formatDistanceValue(value: number | null) {
+  return value === null ? "--" : (value / 1000).toFixed(1);
+}
+
+function formatSpeedValue(value: number | null) {
+  return value === null ? "--" : (value * 3.6).toFixed(1);
+}
+
+function formatRoundedValue(value: number | null) {
+  return value ? Math.round(value).toString() : "--";
+}
+
+function formatStrideLength(value: number | null) {
+  return value ? value.toFixed(2) : "--";
 }
 
 export { ActivityLapsCard };

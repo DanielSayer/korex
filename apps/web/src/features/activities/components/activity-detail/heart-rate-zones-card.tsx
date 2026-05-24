@@ -1,10 +1,4 @@
 import type { ActivityDetailSummary } from "@korex/api/modules/activities/activities.types";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@korex/ui/components/card";
 import { HeartPulseIcon } from "lucide-react";
 import { formatDurationClock } from "@/utils/formatters";
 
@@ -26,14 +20,15 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <HeartPulseIcon className="size-5" />
+    <section className="space-y-4">
+      <div>
+        <h2 className="flex items-center gap-2 font-bold text-3xl">
+          <HeartPulseIcon className="size-6" />
           Heart Rate Zones
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+        </h2>
+      </div>
+
+      <div className="space-y-3 border-y py-4">
         {summary.heartRateZoneSnapshots.map((zone) => {
           const zoneTime =
             summary.heartRateZoneTimes.find(
@@ -41,6 +36,7 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
             )?.timeSeconds ?? 0;
           const percentage =
             totalSeconds > 0 ? (zoneTime / totalSeconds) * 100 : 0;
+          const color = getZoneColor(zone.position);
 
           return (
             <div key={zone.position} className="space-y-1.5">
@@ -52,16 +48,29 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${percentage}%` }}
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: color, width: `${percentage}%` }}
                 />
               </div>
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   );
+}
+
+function getZoneColor(position: number) {
+  const zoneColors = [
+    "#7c3aed",
+    "#2563eb",
+    "#16a34a",
+    "#eab308",
+    "#f97316",
+    "#dc2626",
+  ];
+
+  return zoneColors[position - 1] ?? zoneColors.at(-1) ?? "#dc2626";
 }
 
 export { HeartRateZonesCard };

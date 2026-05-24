@@ -11,27 +11,23 @@ type ActivityDetailHeaderProps = {
 function ActivityDetailHeader({ activity }: ActivityDetailHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div className="space-y-3">
+      <div>
         <Button
+          className="mb-3 px-0"
           variant="ghost"
           size="sm"
-          className="px-0"
           render={<Link to="/dashboard" />}
         >
           <ArrowLeftIcon className="size-4" />
           Back
         </Button>
-        <div>
-          <h1 className="font-semibold text-3xl tracking-tight">
-            {activity.name}
-          </h1>
-          <p className="mt-1 flex items-center gap-1.5 text-muted-foreground text-sm">
-            <CalendarIcon className="size-4" />
-            {formatActivityDateTime(activity.startAt)}
-          </p>
-        </div>
+        <h1 className="font-bold text-4xl">{activity.name}</h1>
+        <p className="mt-1 flex items-center gap-1.5 text-muted-foreground">
+          <CalendarIcon className="size-4" />
+          {formatActivityDateTime(activity.startAt)}
+        </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+      <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
         {activity.deviceName ? (
           <span className="text-muted-foreground text-sm">
             {activity.deviceName}

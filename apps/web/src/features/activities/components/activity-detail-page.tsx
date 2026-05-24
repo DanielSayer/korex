@@ -1,6 +1,7 @@
 import type { ActivityDetailSummary } from "@korex/api/modules/activities/activities.types";
 import { Button } from "@korex/ui/components/button";
 import { Card, CardContent } from "@korex/ui/components/card";
+import { Separator } from "@korex/ui/components/separator";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "lucide-react";
@@ -50,17 +51,19 @@ function ActivityDetailView({ summary }: { summary: ActivityDetailSummary }) {
     <div className="space-y-6">
       <ActivityDetailHeader activity={summary.activity} />
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(20rem,1fr)]">
-        <div className="space-y-6">
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
           <ActivityRouteMap map={summary.map} />
-          <ActivityLapsCard laps={summary.laps} />
         </div>
-        <div className="space-y-6">
+        <div className="flex flex-col justify-between rounded-xl border bg-card p-6">
           <ActivityStats summary={summary} />
+          <Separator className="my-6" />
           <BestEffortsCard efforts={summary.bestEfforts} />
-          <HeartRateZonesCard summary={summary} />
         </div>
       </div>
+
+      <ActivityLapsCard laps={summary.laps} />
+      <HeartRateZonesCard summary={summary} />
     </div>
   );
 }

@@ -50,6 +50,18 @@ function formatSpeed(speedMetersPerSecond: number | null) {
   return `${(speedMetersPerSecond * 3.6).toFixed(1)} km/h`;
 }
 
+function formatPaceFromSpeed(speedMetersPerSecond: number | null) {
+  if (speedMetersPerSecond === null || speedMetersPerSecond <= 0) {
+    return "--";
+  }
+
+  const roundedSeconds = Math.round(1000 / speedMetersPerSecond);
+  const minutes = Math.floor(roundedSeconds / 60);
+  const seconds = roundedSeconds % 60;
+
+  return `${minutes}:${padTime(seconds)}`;
+}
+
 function formatActivityDateTime(value: Date | string) {
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
@@ -95,6 +107,7 @@ export {
   formatDurationClock,
   formatDurationCompact,
   formatMeters,
+  formatPaceFromSpeed,
   formatShortDate,
   formatShortMonth,
   formatSignedNumber,

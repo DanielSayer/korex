@@ -1,27 +1,13 @@
 import type { ActivityDetailSummary } from "@korex/api/modules/activities/activities.types";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@korex/ui/components/card";
 import { Separator } from "@korex/ui/components/separator";
-import {
-  ClockIcon,
-  FlameIcon,
-  FootprintsIcon,
-  GaugeIcon,
-  HeartPulseIcon,
-  MountainIcon,
-} from "lucide-react";
 import {
   formatBpm,
   formatDistanceValue,
   formatDurationClock,
-  formatMeters,
-  formatSpeed,
+  formatPaceFromSpeed,
 } from "@/utils/formatters";
-import { MetricGrid } from "./metric-grid";
+import { MetricValue } from "./metric-value";
+import { StatGroup } from "./stat-group";
 
 type ActivityStatsProps = {
   summary: ActivityDetailSummary;
@@ -33,64 +19,74 @@ function ActivityStats({ summary }: ActivityStatsProps) {
     activity.movingTimeSeconds ?? activity.elapsedTimeSeconds;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Activity Summary</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div>
-          <p className="font-medium text-muted-foreground text-xs uppercase">
-            Distance
-          </p>
-          <div className="mt-1 flex items-baseline gap-2">
-            <span className="font-bold text-5xl">
-              {formatDistanceValue(activity.distanceMeters)}
-            </span>
-            <span className="text-muted-foreground">km</span>
-          </div>
-        </div>
-        <Separator />
-        <MetricGrid
-          metrics={[
-            {
-              icon: ClockIcon,
-              label: "Time",
-              value: formatDurationClock(durationSeconds),
-            },
-            {
-              icon: GaugeIcon,
-              label: "Avg Speed",
-              value: formatSpeed(activity.averageSpeedMetersPerSecond),
-            },
-            {
-              icon: HeartPulseIcon,
-              label: "Avg HR",
-              value: formatBpm(activity.averageHeartRateBeatsPerMinute),
-            },
-            {
-              icon: MountainIcon,
-              label: "Elevation",
-              value: formatMeters(activity.totalElevationGainMeters),
-            },
-            {
-              icon: FootprintsIcon,
-              label: "Cadence",
-              value: activity.averageCadenceStepsPerMinute
-                ? `${Math.round(activity.averageCadenceStepsPerMinute)} spm`
-                : "--",
-            },
-            {
-              icon: FlameIcon,
-              label: "Calories",
-              value: activity.energyKilocalories
-                ? `${Math.round(activity.energyKilocalories)} kcal`
-                : "--",
-            },
-          ]}
+    <div className="space-y-6">
+      <div>
+        <p className="mb-1 font-medium text-muted-foreground text-xs uppercase">
+          Distance
+        </p>
+        <MetricValue
+          unit="km"
+          value={formatDistanceValue(activity.distanceMeters)}
+          valueClassName="font-black text-6xl leading-none"
         />
-      </CardContent>
-    </Card>
+      </div>
+
+      <Separator />
+
+      <StatGroup
+        items={[
+          {
+            label: "Time",
+            value: formatDurationClock(durationSeconds),
+          },
+          {
+            label: "Avg Pace",
+            unit: "/km",
+            value: formatPaceFromSpeed(activity.averageSpeedMetersPerSecond),
+          },
+          {
+            label: "Avg HR",
+            unit: "bpm",
+            value: formatBpmValue(activity.averageHeartRateBeatsPerMinute),
+          },
+        ]}
+      />
+
+      <Separator />
+
+      <StatGroup
+        items={[
+          {
+            label: "Elevation",
+            unit: "m",
+            value: formatRoundedValue(activity.totalElevationGainMeters),
+          },
+          {
+            label: "Cadence",
+            unit: "spm",
+            value: activity.averageCadenceStepsPerMinute
+              ? Math.round(activity.averageCadenceStepsPerMinute).toString()
+              : "--",
+          },
+          {
+            label: "Calories",
+            unit: "kcal",
+            value: activity.energyKilocalories
+              ? Math.round(activity.energyKilocalories).toString()
+              : "--",
+          },
+        ]}
+      />
+    </div>
   );
+}
+
+function formatBpmValue(value: number | null) {
+  return value ? Math.round(value).toString() : "--";
+}
+
+function formatRoundedValue(value: number | null) {
+  return value ? Math.round(value).toString() : "--";
 }
 
 export { ActivityStats };
