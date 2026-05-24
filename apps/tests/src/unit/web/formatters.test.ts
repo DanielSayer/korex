@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatActivityDateTime,
+  formatBpm,
   formatDistance,
+  formatDistanceValue,
   formatDurationClock,
   formatDurationCompact,
+  formatMeters,
   formatSignedNumber,
   formatSpeed,
 } from "../../../../web/src/utils/formatters";
@@ -15,6 +19,16 @@ describe("web formatters", () => {
 
     it("formats missing distance with an empty metric value", () => {
       expect(formatDistance(null)).toBe("-- km");
+    });
+  });
+
+  describe("formatDistanceValue", () => {
+    it("formats meters as a kilometer value with two decimal places", () => {
+      expect(formatDistanceValue(12_345)).toBe("12.35");
+    });
+
+    it("formats missing distance with an empty value", () => {
+      expect(formatDistanceValue(null)).toBe("--");
     });
   });
 
@@ -49,6 +63,35 @@ describe("web formatters", () => {
 
     it("formats missing speed with an empty metric value", () => {
       expect(formatSpeed(null)).toBe("-- km/h");
+    });
+  });
+
+  describe("formatActivityDateTime", () => {
+    it("formats dates with date and time", () => {
+      const formatted = formatActivityDateTime("2026-05-24T08:30:00.000Z");
+
+      expect(formatted).toContain("2026");
+      expect(formatted.length).toBeGreaterThan(8);
+    });
+  });
+
+  describe("formatBpm", () => {
+    it("formats heart rate values as rounded bpm", () => {
+      expect(formatBpm(142.6)).toBe("143 bpm");
+    });
+
+    it("formats missing heart rate with an empty value", () => {
+      expect(formatBpm(null)).toBe("--");
+    });
+  });
+
+  describe("formatMeters", () => {
+    it("formats meter values as rounded meters", () => {
+      expect(formatMeters(123.6)).toBe("124 m");
+    });
+
+    it("formats missing meters with an empty value", () => {
+      expect(formatMeters(null)).toBe("--");
     });
   });
 

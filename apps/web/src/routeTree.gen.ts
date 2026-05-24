@@ -18,6 +18,7 @@ import { Route as AuthenticatedHeatmapRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedActivityActivityIdRouteImport } from './routes/_authenticated/activity.$activityId'
 
 const AuthSignUpLazyRouteImport = createFileRoute('/auth/sign-up')()
 const AuthSignInLazyRouteImport = createFileRoute('/auth/sign-in')()
@@ -67,6 +68,12 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedActivityActivityIdRoute =
+  AuthenticatedActivityActivityIdRouteImport.update({
+    id: '/activity/$activityId',
+    path: '/activity/$activityId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -77,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
+  '/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -87,6 +95,7 @@ export interface FileRoutesByTo {
   '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
+  '/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -99,6 +108,7 @@ export interface FileRoutesById {
   '/_authenticated/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
+  '/_authenticated/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/activity/$activityId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/activity/$activityId'
   id:
     | '__root__'
     | '/'
@@ -132,6 +144,7 @@ export interface FileRouteTypes {
     | '/_authenticated/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
+    | '/_authenticated/activity/$activityId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/activity/$activityId': {
+      id: '/_authenticated/activity/$activityId'
+      path: '/activity/$activityId'
+      fullPath: '/activity/$activityId'
+      preLoaderRoute: typeof AuthenticatedActivityActivityIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -215,6 +235,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedHeatmapRoute: typeof AuthenticatedHeatmapRoute
   AuthenticatedWeeklySummariesRoute: typeof AuthenticatedWeeklySummariesRoute
+  AuthenticatedActivityActivityIdRoute: typeof AuthenticatedActivityActivityIdRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -223,6 +244,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedHeatmapRoute: AuthenticatedHeatmapRoute,
   AuthenticatedWeeklySummariesRoute: AuthenticatedWeeklySummariesRoute,
+  AuthenticatedActivityActivityIdRoute: AuthenticatedActivityActivityIdRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

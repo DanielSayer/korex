@@ -6,6 +6,14 @@ function formatDistance(distanceMeters: number | null) {
   return `${(distanceMeters / 1000).toFixed(1)} km`;
 }
 
+function formatDistanceValue(distanceMeters: number | null) {
+  if (distanceMeters === null) {
+    return "--";
+  }
+
+  return (distanceMeters / 1000).toFixed(2);
+}
+
 function formatDurationClock(durationSeconds: number | null) {
   if (durationSeconds === null || !Number.isFinite(durationSeconds)) {
     return "--";
@@ -42,6 +50,21 @@ function formatSpeed(speedMetersPerSecond: number | null) {
   return `${(speedMetersPerSecond * 3.6).toFixed(1)} km/h`;
 }
 
+function formatActivityDateTime(value: Date | string) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
+}
+
+function formatBpm(value: number | null) {
+  return value ? `${Math.round(value)} bpm` : "--";
+}
+
+function formatMeters(value: number | null) {
+  return value ? `${Math.round(value)} m` : "--";
+}
+
 function formatSignedNumber(value: number) {
   return value >= 0 ? `+${value}` : value.toString();
 }
@@ -65,9 +88,13 @@ function padTime(value: number) {
 }
 
 export {
+  formatActivityDateTime,
+  formatBpm,
   formatDistance,
+  formatDistanceValue,
   formatDurationClock,
   formatDurationCompact,
+  formatMeters,
   formatShortDate,
   formatShortMonth,
   formatSignedNumber,

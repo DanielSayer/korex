@@ -1,4 +1,5 @@
 import type { RecentActivity } from "@korex/api/modules/activities/activities.types";
+import { Link } from "@tanstack/react-router";
 import { ClockIcon, HeartPulseIcon, RouteIcon } from "lucide-react";
 import {
   formatActivityDate,
@@ -12,7 +13,11 @@ type RunCardProps = {
 
 function RunCard({ run }: RunCardProps) {
   return (
-    <article className="group min-w-0 overflow-hidden rounded-lg border">
+    <Link
+      to="/activity/$activityId"
+      params={{ activityId: String(run.id) }}
+      className="group block min-w-0 overflow-hidden rounded-lg border transition-colors hover:border-primary/60"
+    >
       <MapPlaceholder run={run} />
       <div className="space-y-2 p-3">
         <div className="flex items-center justify-between gap-3">
@@ -23,7 +28,7 @@ function RunCard({ run }: RunCardProps) {
         </div>
         <RunMetrics run={run} />
       </div>
-    </article>
+    </Link>
   );
 }
 
