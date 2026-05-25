@@ -1,6 +1,7 @@
 import { protectedProcedure } from "../../index";
 import {
   getActivityDetailSummaryInput,
+  getActivityStreamsInput,
   getAnalyticsBestEffortsInput,
   getAnalyticsVolumeInput,
   getWeeklyTrainingSummaryInput,
@@ -14,6 +15,7 @@ import {
   listActivitiesForDateRange,
 } from "./catalog/activity-catalog.repository";
 import { getActivityDetailSummary } from "./catalog/activity-detail-summary.service";
+import { getActivityStreams } from "./catalog/activity-streams.service";
 import {
   getTrainingStreak,
   listCurrentTrainingWeekQualifyingActivities,
@@ -53,6 +55,14 @@ export const activitiesRouter = {
     .input(getActivityDetailSummaryInput)
     .handler(async ({ context, input }) => {
       return getActivityDetailSummary({
+        activityId: input.activityId,
+        userId: context.session.user.id,
+      });
+    }),
+  streams: protectedProcedure
+    .input(getActivityStreamsInput)
+    .handler(async ({ context, input }) => {
+      return getActivityStreams({
         activityId: input.activityId,
         userId: context.session.user.id,
       });

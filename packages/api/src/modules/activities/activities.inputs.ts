@@ -20,6 +20,10 @@ export const getActivityDetailSummaryInput = z.object({
   activityId: z.coerce.number().int().positive(),
 });
 
+export const getActivityStreamsInput = z.object({
+  activityId: z.coerce.number().int().positive(),
+});
+
 export const getAnalyticsVolumeInput = z.object({
   bucketMode: z.enum(["monthly", "weekly"]).default("monthly"),
   year: z.coerce.number().int().min(2000).max(currentYear).default(currentYear),

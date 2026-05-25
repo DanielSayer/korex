@@ -186,6 +186,19 @@ export type ActivityStreamInput = {
   streamType: ActivityStreamType;
 };
 
+export type ActivityStreamChartPoint = {
+  second: number;
+  value: number;
+};
+
+export type ActivityStreamsChartData = {
+  altitude: ActivityStreamChartPoint[];
+  cadence: ActivityStreamChartPoint[];
+  distance: ActivityStreamChartPoint[];
+  heartRate: ActivityStreamChartPoint[];
+  velocity: ActivityStreamChartPoint[];
+};
+
 export type ActivityHeartRateZoneSnapshotInput = {
   maxBpm: number | null;
   minBpm: number;
