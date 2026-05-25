@@ -41,7 +41,9 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
           return (
             <div key={zone.position} className="space-y-1.5">
               <div className="flex items-center justify-between gap-3 text-sm">
-                <span className="font-medium">{zone.name}</span>
+                <span className="font-medium">
+                  {zone.name} ({formatZoneRange(zone)})
+                </span>
                 <span className="text-muted-foreground">
                   {formatDurationClock(zoneTime)}
                 </span>
@@ -58,6 +60,13 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
       </div>
     </section>
   );
+}
+
+function formatZoneRange({
+  maxBpm,
+  minBpm,
+}: ActivityDetailSummary["heartRateZoneSnapshots"][number]) {
+  return maxBpm === null ? `${minBpm}+` : `${minBpm}-${maxBpm}`;
 }
 
 function getZoneColor(position: number) {

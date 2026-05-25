@@ -1,7 +1,6 @@
 import type { ActivityDetailSummary } from "@korex/api/modules/activities/activities.types";
 import { Separator } from "@korex/ui/components/separator";
 import {
-  formatBpm,
   formatDistanceValue,
   formatDurationClock,
   formatPaceFromSpeed,

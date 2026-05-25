@@ -22,14 +22,14 @@ function ActivityRouteMap({ map }: ActivityRouteMapProps) {
   const center = positions[Math.floor(positions.length / 2)] ?? positions[0];
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-background">
+    <div className="h-full overflow-hidden rounded-lg border">
       <MapContainer
         center={center}
-        className="h-96 w-full"
+        className="h-full w-full"
         maxZoom={18}
         preferCanvas
         scrollWheelZoom
-        zoom={13}
+        zoom={10}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
