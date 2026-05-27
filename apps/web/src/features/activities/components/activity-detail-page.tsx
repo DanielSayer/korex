@@ -12,6 +12,7 @@ import { ActivityDetailSkeleton } from "./activity-detail/activity-detail-skelet
 import { ActivityLapsCard } from "./activity-detail/activity-laps-card";
 import { ActivityRouteMap } from "./activity-detail/activity-route-map";
 import { ActivityStats } from "./activity-detail/activity-stats";
+import { ActivityStreamCharts } from "./activity-detail/activity-stream-charts";
 import { BestEffortsCard } from "./activity-detail/best-efforts-card";
 import { HeartRateZonesCard } from "./activity-detail/heart-rate-zones-card";
 
@@ -47,6 +48,12 @@ function ActivityDetailPage({ activityId }: ActivityDetailPageProps) {
 }
 
 function ActivityDetailView({ summary }: { summary: ActivityDetailSummary }) {
+  const streamsQuery = useQuery(
+    orpc.activities.streams.queryOptions({
+      input: { activityId: summary.activity.id },
+    }),
+  );
+
   return (
     <div className="space-y-6">
       <ActivityDetailHeader activity={summary.activity} />
@@ -64,7 +71,36 @@ function ActivityDetailView({ summary }: { summary: ActivityDetailSummary }) {
 
       <ActivityLapsCard laps={summary.laps} />
       <HeartRateZonesCard summary={summary} />
+      <QueryRenderer
+        error={null}
+        loading={<ActivityStreamChartsSkeleton />}
+        query={streamsQuery}
+      >
+        {(streams) =>
+          streams ? (
+            <ActivityStreamCharts streams={streams} summary={summary} />
+          ) : null
+        }
+      </QueryRenderer>
     </div>
+  );
+}
+
+function ActivityStreamChartsSkeleton() {
+  const skeletonChartKeys = ["heart-rate", "cadence", "pace", "elevation"];
+
+  return (
+    <section className="space-y-4">
+      <div className="h-9 w-64 animate-pulse rounded-md bg-muted" />
+      <div className="grid gap-4 xl:grid-cols-2">
+        {skeletonChartKeys.map((key) => (
+          <div
+            className="h-88 animate-pulse rounded-lg border bg-muted/30"
+            key={key}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 
