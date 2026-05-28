@@ -35,34 +35,46 @@ export async function getActivityStreams({
     record.streams.map((stream) => [stream.streamType, stream]),
   );
   const elapsedTimeStream = streamByType.get("elapsedTime") ?? null;
+  const activityDurationSeconds = getActivityDurationSeconds(record);
+  const distancePoints = toBaseChartPoints({
+    activityDurationSeconds,
+    elapsedTimeStream,
+    stream: streamByType.get("distance") ?? null,
+    streamType: "distance",
+  });
 
   return {
     altitude: toChartPoints({
-      activityDurationSeconds: getActivityDurationSeconds(record),
+      activityDurationSeconds,
+      distancePoints,
       elapsedTimeStream,
       stream: streamByType.get("altitude") ?? null,
       streamType: "altitude",
     }),
     cadence: toChartPoints({
-      activityDurationSeconds: getActivityDurationSeconds(record),
+      activityDurationSeconds,
+      distancePoints,
       elapsedTimeStream,
       stream: streamByType.get("cadence") ?? null,
       streamType: "cadence",
     }),
     distance: toChartPoints({
-      activityDurationSeconds: getActivityDurationSeconds(record),
+      activityDurationSeconds,
+      distancePoints,
       elapsedTimeStream,
       stream: streamByType.get("distance") ?? null,
       streamType: "distance",
     }),
     heartRate: toChartPoints({
-      activityDurationSeconds: getActivityDurationSeconds(record),
+      activityDurationSeconds,
+      distancePoints,
       elapsedTimeStream,
       stream: streamByType.get("heartRate") ?? null,
       streamType: "heartRate",
     }),
     velocity: toChartPoints({
-      activityDurationSeconds: getActivityDurationSeconds(record),
+      activityDurationSeconds,
+      distancePoints,
       elapsedTimeStream,
       stream: streamByType.get("velocity") ?? null,
       streamType: "velocity",
@@ -78,6 +90,35 @@ function getActivityDurationSeconds(input: {
 }
 
 function toChartPoints({
+  activityDurationSeconds,
+  distancePoints,
+  elapsedTimeStream,
+  stream,
+  streamType,
+}: {
+  activityDurationSeconds: number | null;
+  distancePoints: ActivityStreamChartPoint[];
+  elapsedTimeStream: ActivityStreamInput | null;
+  stream: ActivityStreamInput | null;
+  streamType: ChartStreamType;
+}): ActivityStreamChartPoint[] {
+  const points = toBaseChartPoints({
+    activityDurationSeconds,
+    elapsedTimeStream,
+    stream,
+    streamType,
+  }).map((point) => ({
+    ...point,
+    distanceMeters:
+      streamType === "distance"
+        ? point.value
+        : getDistanceAtSecond(distancePoints, point.second),
+  }));
+
+  return downsampleChartPoints(points, maxActivityStreamChartPoints);
+}
+
+function toBaseChartPoints({
   activityDurationSeconds,
   elapsedTimeStream,
   stream,
@@ -99,6 +140,7 @@ function toChartPoints({
 
     return [
       {
+        distanceMeters: null,
         second: getSampleSecond({
           activityDurationSeconds,
           elapsedTimeStream,
@@ -110,7 +152,7 @@ function toChartPoints({
     ];
   });
 
-  return downsampleChartPoints(points, maxActivityStreamChartPoints);
+  return points;
 }
 
 function isValidStreamValue(streamType: ChartStreamType, value: number) {
@@ -260,4 +302,66 @@ function downsampleChartPoints(
       const point = points[index];
       return point ? [point] : [];
     });
+}
+
+function getDistanceAtSecond(
+  distancePoints: ActivityStreamChartPoint[],
+  second: number,
+) {
+  if (distancePoints.length === 0) {
+    return null;
+  }
+
+  const first = distancePoints[0];
+  const last = distancePoints.at(-1);
+
+  if (!first || !last) {
+    return null;
+  }
+
+  if (second <= first.second) {
+    return first.value;
+  }
+
+  if (second >= last.second) {
+    return last.value;
+  }
+
+  let low = 0;
+  let high = distancePoints.length - 1;
+
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2);
+    const current = distancePoints[mid];
+
+    if (!current) {
+      return null;
+    }
+
+    if (current.second === second) {
+      return current.value;
+    }
+
+    if (current.second < second) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
+    }
+  }
+
+  const before = distancePoints[high];
+  const after = distancePoints[low];
+
+  if (!before || !after) {
+    return null;
+  }
+
+  const span = after.second - before.second;
+
+  if (span <= 0) {
+    return before.value;
+  }
+
+  const ratio = (second - before.second) / span;
+  return before.value + (after.value - before.value) * ratio;
 }

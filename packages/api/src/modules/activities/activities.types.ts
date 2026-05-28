@@ -187,6 +187,7 @@ export type ActivityStreamInput = {
 };
 
 export type ActivityStreamChartPoint = {
+  distanceMeters: number | null;
   second: number;
   value: number;
 };

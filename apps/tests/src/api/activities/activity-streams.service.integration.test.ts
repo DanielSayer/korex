@@ -40,14 +40,14 @@ describe("activity streams service", () => {
       altitude: [],
       cadence: [],
       distance: [
-        { second: 0, value: 0 },
-        { second: 60, value: 320 },
-        { second: 125, value: 710 },
+        { distanceMeters: 0, second: 0, value: 0 },
+        { distanceMeters: 320, second: 60, value: 320 },
+        { distanceMeters: 710, second: 125, value: 710 },
       ],
       heartRate: [
-        { second: 0, value: 132 },
-        { second: 60, value: 148 },
-        { second: 125, value: 151 },
+        { distanceMeters: 0, second: 0, value: 132 },
+        { distanceMeters: 320, second: 60, value: 148 },
+        { distanceMeters: 710, second: 125, value: 151 },
       ],
       velocity: [],
     });
@@ -105,14 +105,19 @@ describe("activity streams service", () => {
     });
 
     expect(result?.distance).toHaveLength(1200);
-    expect(result?.distance[0]).toEqual({ second: 0, value: 0 });
+    expect(result?.distance[0]).toEqual({
+      distanceMeters: 0,
+      second: 0,
+      value: 0,
+    });
     expect(result?.distance.at(-1)).toEqual({
+      distanceMeters: 1300,
       second: 2400,
       value: 1300,
     });
     expect(result?.velocity).toEqual([
-      { second: 60, value: 3.2 },
-      { second: 2400, value: 3.4 },
+      { distanceMeters: 32.5, second: 60, value: 3.2 },
+      { distanceMeters: 1300, second: 2400, value: 3.4 },
     ]);
   });
 });
