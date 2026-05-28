@@ -215,15 +215,19 @@ function ActivityStreamCompareChart({
     () => buildCompareChartData(streams, activeSelectedMetrics, xAxisMode),
     [activeSelectedMetrics, streams, xAxisMode],
   );
-  const chartConfig = Object.fromEntries(
-    activeSelectedMetrics.map((metric) => [
-      metric,
-      {
-        color: metricSpecs[metric].color,
-        label: metricSpecs[metric].label,
-      },
-    ]),
-  ) satisfies ChartConfig;
+  const chartConfig = useMemo(
+    () =>
+      Object.fromEntries(
+        activeSelectedMetrics.map((metric) => [
+          metric,
+          {
+            color: metricSpecs[metric].color,
+            label: metricSpecs[metric].label,
+          },
+        ]),
+      ) satisfies ChartConfig,
+    [activeSelectedMetrics],
+  );
 
   if (availableMetrics.length < 2 || activeSelectedMetrics.length === 0) {
     return null;
@@ -332,13 +336,20 @@ function ActivityStreamChart({
 
   const spec = metricSpecs[metric];
   const Icon = spec.icon;
-  const chartConfig = {
-    value: {
-      color: spec.color,
-      label: spec.label,
-    },
-  } satisfies ChartConfig;
-  const chartData = series.map((point) => toStreamChartPoint(point, xAxisMode));
+  const chartConfig = useMemo(
+    () =>
+      ({
+        value: {
+          color: spec.color,
+          label: spec.label,
+        },
+      }) satisfies ChartConfig,
+    [spec.color, spec.label],
+  );
+  const chartData = useMemo(
+    () => series.map((point) => toStreamChartPoint(point, xAxisMode)),
+    [series, xAxisMode],
+  );
   const gradientId = `${metric}StreamFill`;
 
   return (

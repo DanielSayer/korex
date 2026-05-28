@@ -1,24 +1,31 @@
 import type { ActivityMapInput } from "@korex/api/modules/activities/activities.types";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { MapContainer, Polyline, TileLayer, useMap } from "react-leaflet";
 
 type ActivityRouteMapProps = {
   map: ActivityMapInput | null;
 };
 
+const emptyCoordinates: ActivityMapInput["coordinates"] = [];
+
 function ActivityRouteMap({ map }: ActivityRouteMapProps) {
-  if (!map || map.coordinates.length === 0) {
+  const coordinates = map?.coordinates ?? emptyCoordinates;
+  const positions = useMemo(
+    () =>
+      coordinates.map((coordinate) => [
+        coordinate.latitude,
+        coordinate.longitude,
+      ]) satisfies [number, number][],
+    [coordinates],
+  );
+
+  if (!map || positions.length === 0) {
     return (
       <div className="flex h-96 items-center justify-center rounded-lg border bg-muted text-muted-foreground text-sm">
         Route unavailable
       </div>
     );
   }
-
-  const positions = map.coordinates.map((coordinate) => [
-    coordinate.latitude,
-    coordinate.longitude,
-  ]) satisfies [number, number][];
   const center = positions[Math.floor(positions.length / 2)] ?? positions[0];
 
   return (
