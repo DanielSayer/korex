@@ -13,6 +13,11 @@ import {
   YAxis,
 } from "recharts";
 import { formatDistance, formatDistanceValue } from "@/utils/formatters";
+import {
+  formatLongDate,
+  formatShortDate,
+  formatWeekRange,
+} from "./weekly-distance-formatters";
 
 type WeeklyDistanceWidgetProps = {
   weeklyDistance: DashboardWeeklyDistance;
@@ -211,29 +216,6 @@ function formatSignedDistance(distanceMeters: number) {
   const sign = distanceMeters >= 0 ? "+" : "-";
 
   return `${sign}${formatDistance(Math.abs(distanceMeters))}`;
-}
-
-function formatWeekRange(weekStartAt: Date | string) {
-  const startAt = new Date(weekStartAt);
-  const endAt = new Date(startAt);
-  endAt.setDate(startAt.getDate() + 6);
-
-  return `${formatShortDate(startAt)} - ${formatShortDate(endAt)}`;
-}
-
-function formatShortDate(date: Date) {
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "short",
-  }).format(date);
-}
-
-function formatLongDate(date: Date) {
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
 }
 
 export { WeeklyDistanceWidget };
