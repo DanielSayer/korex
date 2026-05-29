@@ -1,3 +1,4 @@
+import { Effect } from "effect";
 import { protectedProcedure } from "../../index";
 import {
   getActivityDetailSummaryInput,
@@ -16,6 +17,8 @@ import {
 } from "./catalog/activity-catalog.repository";
 import { getActivityDetailSummary } from "./catalog/activity-detail-summary.service";
 import { getActivityStreams } from "./catalog/activity-streams.service";
+import { DashboardWeeklyDistanceLive } from "./dashboard/dashboard-weekly-distance.live";
+import { getDashboardWeeklyDistance } from "./dashboard/dashboard-weekly-distance.service";
 import {
   getTrainingStreak,
   listCurrentTrainingWeekQualifyingActivities,
@@ -43,6 +46,13 @@ export const activitiesRouter = {
         year: input.year,
       });
     }),
+  dashboardWeeklyDistance: protectedProcedure.handler(async ({ context }) => {
+    return Effect.runPromise(
+      getDashboardWeeklyDistance({
+        userId: context.session.user.id,
+      }).pipe(Effect.provide(DashboardWeeklyDistanceLive)),
+    );
+  }),
   getWeeklyTrainingSummary: protectedProcedure
     .input(getWeeklyTrainingSummaryInput)
     .handler(async ({ context, input }) => {

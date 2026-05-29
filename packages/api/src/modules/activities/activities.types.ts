@@ -143,6 +143,23 @@ export type AnalyticsVolume = {
   year: number;
 };
 
+export type DashboardWeeklyDistanceBucket = {
+  activityCount: number;
+  bucketEndAt: Date;
+  bucketStartAt: Date;
+  distanceMeters: number;
+};
+
+export type DashboardWeeklyDistance = {
+  averageWeeklyDistanceMeters: number;
+  distanceDeltaMeters: number;
+  lastWeekAtSamePointDistanceMeters: number;
+  thisWeekDistanceMeters: number;
+  weekEndAt: Date;
+  weekStartAt: Date;
+  weeklyDistanceBuckets: DashboardWeeklyDistanceBucket[];
+};
+
 export type PersonalBestEffort = {
   activityId: number;
   activityStartAt: Date;

@@ -92,6 +92,10 @@ _Avoid_: Streak activity, counted workout
 A live distance or duration aggregate calculated from current **Activities** for a selected time bucket.
 _Avoid_: Weekly summary volume, snapshot volume
 
+**Dashboard Weekly Distance**:
+A live dashboard read model showing recent weekly distance from current **Activities**, with the newest point representing the current in-progress **Training Week**.
+_Avoid_: Dashboard mileage, snapshot graph, weekly summary graph
+
 **Personal Best Effort**:
 The fastest known contiguous distance effort by a **User** over a standard distance, derived from current **Activities**.
 _Avoid_: PR, record, best split
@@ -220,6 +224,10 @@ _Avoid_: Activity PR, lap best, best split
 - Analytics cumulative distance accumulates the visible chart buckets, so monthly and weekly views may have different boundary totals for the same selected year.
 - The initial **Analytics Volume** chart includes run and treadmill **Activities**; finer sport filters such as all, run-only, or treadmill-only can be added later.
 - **Weekly Training Summaries** remain replayable snapshot artifacts and must not be treated as the source of truth for live analytics charts.
+- **Dashboard Weekly Distance** is calculated from current run and treadmill **Activities**, not from **Weekly Training Summaries**.
+- **Dashboard Weekly Distance** includes the current in-progress **Training Week** as the newest chart point.
+- **Dashboard Weekly Distance** average weekly distance is calculated across the visible chart buckets, including the current in-progress **Training Week**.
+- **Dashboard Weekly Distance** compares the current in-progress **Training Week** to the previous **Training Week** at the same elapsed wall-clock point in the week.
 - A **Personal Best Effort** belongs to exactly one **User**.
 - A **Personal Best Effort** is derived from one **Activity Best Effort**.
 - A **Personal Best Effort** covers one standard distance.
