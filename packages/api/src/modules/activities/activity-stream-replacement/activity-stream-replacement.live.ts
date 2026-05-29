@@ -1,5 +1,6 @@
 import { db } from "@korex/db";
 import { Effect, Layer } from "effect";
+import type { ActivityStreamInput } from "../activities.types";
 import { replaceActivityStreams } from "../artifacts/activity-artifacts.repository";
 import { enqueueActivityBestEffortCalculation } from "../best-efforts/activity-best-effort-jobs.repository";
 import {
@@ -20,6 +21,15 @@ import {
   HeartRateZoneSnapshotRepository,
   HeartRateZoneTimeJobRepository,
 } from "./activity-stream-replacement.dependencies";
+
+type HeartRateZoneInvalidationDecision =
+  | { type: "clearCalculation" }
+  | {
+      snapshots: Parameters<
+        typeof replaceActivityHeartRateZoneSnapshots
+      >[0]["snapshots"];
+      type: "queueCalculation";
+    };
 
 export const ActivityStreamsRepositoryLive = Layer.succeed(
   ActivityStreamsRepository,
@@ -84,6 +94,55 @@ export const ActivityStreamReplacementWorkflowLayer = Layer.effect(
           }),
         );
 
+    const clearActivityHeartRateZoneTimeCalculation = ({
+      activityId,
+      database,
+    }: {
+      activityId: number;
+      database: ActivityStreamReplacementDatabase;
+    }) =>
+      heartRateZoneRepository
+        .clearActivityHeartRateZoneCalculation({
+          activityId,
+          database,
+        })
+        .then(() =>
+          jobRepository.deleteActivityHeartRateZoneTimeCalculationJob({
+            activityId,
+            database,
+          }),
+        );
+
+    const planHeartRateZoneInvalidation = async ({
+      database,
+      streams,
+      userId,
+    }: {
+      database: ActivityStreamReplacementDatabase;
+      streams: ActivityStreamInput[];
+      userId: string;
+    }): Promise<HeartRateZoneInvalidationDecision> => {
+      const hasHeartRateStream = streams.some(
+        (stream) => stream.streamType === "heartRate",
+      );
+
+      if (!hasHeartRateStream) {
+        return { type: "clearCalculation" };
+      }
+
+      const snapshots =
+        await heartRateZoneRepository.listUserHeartRateZoneSnapshots({
+          database,
+          userId,
+        });
+
+      if (snapshots.length === 0) {
+        return { type: "clearCalculation" };
+      }
+
+      return { snapshots, type: "queueCalculation" };
+    };
+
     return {
       replaceActivityStreamsAndInvalidateDerivedData: ({
         activityId,
@@ -102,45 +161,17 @@ export const ActivityStreamReplacementWorkflowLayer = Layer.effect(
               database,
             });
 
-            const hasHeartRateStream = streams.some(
-              (stream) => stream.streamType === "heartRate",
-            );
+            const decision = await planHeartRateZoneInvalidation({
+              database,
+              streams,
+              userId,
+            });
 
-            if (!hasHeartRateStream) {
-              await heartRateZoneRepository.clearActivityHeartRateZoneCalculation(
-                {
-                  activityId,
-                  database,
-                },
-              );
-              await jobRepository.deleteActivityHeartRateZoneTimeCalculationJob(
-                {
-                  activityId,
-                  database,
-                },
-              );
-              return;
-            }
-
-            const snapshots =
-              await heartRateZoneRepository.listUserHeartRateZoneSnapshots({
+            if (decision.type === "clearCalculation") {
+              await clearActivityHeartRateZoneTimeCalculation({
+                activityId,
                 database,
-                userId,
               });
-
-            if (snapshots.length === 0) {
-              await heartRateZoneRepository.clearActivityHeartRateZoneCalculation(
-                {
-                  activityId,
-                  database,
-                },
-              );
-              await jobRepository.deleteActivityHeartRateZoneTimeCalculationJob(
-                {
-                  activityId,
-                  database,
-                },
-              );
               return;
             }
 
@@ -148,7 +179,7 @@ export const ActivityStreamReplacementWorkflowLayer = Layer.effect(
               {
                 activityId,
                 database,
-                snapshots,
+                snapshots: decision.snapshots,
               },
             );
 
