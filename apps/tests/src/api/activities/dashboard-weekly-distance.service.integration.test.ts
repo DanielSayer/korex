@@ -1,5 +1,5 @@
-import { getDashboardWeeklyDistance } from "@korex/api/modules/activities/dashboard/dashboard-weekly-distance.service";
 import { DashboardWeeklyDistanceLive } from "@korex/api/modules/activities/dashboard/dashboard-weekly-distance.live";
+import { getDashboardWeeklyDistance } from "@korex/api/modules/activities/dashboard/dashboard-weekly-distance.service";
 import { db, user } from "@korex/db";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";

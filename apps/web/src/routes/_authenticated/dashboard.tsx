@@ -5,6 +5,7 @@ import { CloudSyncIcon } from "lucide-react";
 import { toast } from "sonner";
 import { LastFiveRunsSection } from "@/features/dashboard/components/last-five-runs-section";
 import { TrainingStreakSection } from "@/features/dashboard/components/training-streak-section";
+import { WeeklyDistanceSection } from "@/features/dashboard/components/weekly-distance-section";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -17,6 +18,8 @@ function RouteComponent() {
   const trainingStreakQuery = orpc.activities.trainingStreak.queryOptions();
   const trainingStreakCurrentWeekQuery =
     orpc.activities.trainingStreakCurrentWeek.queryOptions();
+  const dashboardWeeklyDistanceQuery =
+    orpc.activities.dashboardWeeklyDistance.queryOptions();
   const incrementalSyncMutation = useMutation(
     orpc.syncs.incremental.mutationOptions({
       onError: (error) => {
@@ -32,6 +35,9 @@ function RouteComponent() {
         });
         queryClient.invalidateQueries({
           queryKey: trainingStreakCurrentWeekQuery.queryKey,
+        });
+        queryClient.invalidateQueries({
+          queryKey: dashboardWeeklyDistanceQuery.queryKey,
         });
       },
     }),
@@ -58,6 +64,7 @@ function RouteComponent() {
           Sync now
         </Button>
       </div>
+      <WeeklyDistanceSection />
       <TrainingStreakSection />
       <LastFiveRunsSection />
     </div>

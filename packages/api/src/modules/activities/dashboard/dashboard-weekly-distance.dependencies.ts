@@ -16,7 +16,10 @@ export type DashboardWeeklyDistanceRepositoryService = {
 
 export class DashboardWeeklyDistanceRepository extends Context.Tag(
   "DashboardWeeklyDistanceRepository",
-)<DashboardWeeklyDistanceRepository, DashboardWeeklyDistanceRepositoryService>() {}
+)<
+  DashboardWeeklyDistanceRepository,
+  DashboardWeeklyDistanceRepositoryService
+>() {}
 
 export type GetDashboardWeeklyDistanceInput = {
   now?: Date;

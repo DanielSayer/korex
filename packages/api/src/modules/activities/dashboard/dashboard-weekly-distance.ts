@@ -92,7 +92,8 @@ export function buildDashboardWeeklyDistance({
 
 export function getLastWeekSamePointRange(now = new Date()) {
   const currentWeekStartAt = getTrainingWeekStartAt(now);
-  const previousWeekStartAt = getPreviousTrainingWeekStartAt(currentWeekStartAt);
+  const previousWeekStartAt =
+    getPreviousTrainingWeekStartAt(currentWeekStartAt);
   const elapsedInCurrentWeekMilliseconds =
     now.getTime() - currentWeekStartAt.getTime();
 
