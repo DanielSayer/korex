@@ -78,35 +78,21 @@ describe("activity stream chart utils", () => {
 
       expect(chartData).toEqual([
         {
+          cadence: 0,
+          cadenceRaw: 150,
           distanceMeters: 100,
           heartRate: 0,
           heartRateRaw: 120,
           second: 10,
-          value: 120,
           xValue: 10,
-        },
-        {
-          cadence: 0,
-          cadenceRaw: 150,
-          distanceMeters: 100,
-          second: 10,
-          value: 150,
-          xValue: 10,
-        },
-        {
-          distanceMeters: 200,
-          heartRate: 100,
-          heartRateRaw: 160,
-          second: 20,
-          value: 160,
-          xValue: 20,
         },
         {
           cadence: 100,
           cadenceRaw: 170,
           distanceMeters: 200,
+          heartRate: 100,
+          heartRateRaw: 160,
           second: 20,
-          value: 170,
           xValue: 20,
         },
       ]);

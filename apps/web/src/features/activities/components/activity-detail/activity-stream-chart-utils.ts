@@ -92,21 +92,32 @@ function buildCompareChartData(
   selectedMetrics: ChartMetric[],
   xAxisMode: XAxisMode,
 ): CompareChartPoint[] {
-  return selectedMetrics
-    .flatMap((metric) => {
-      const sampledPoints = sampleChartPoints(
-        streams[metric],
-        maxComparePointsPerMetric,
-      );
-      const valueRange = getValueRange(sampledPoints);
+  const pointsByXValue = new Map<number, CompareChartPoint>();
 
-      return sampledPoints.map((point) => ({
-        ...toStreamChartPoint(point, xAxisMode),
-        [metric]: normalizeValue(point.value, valueRange),
-        [`${metric}Raw`]: point.value,
-      }));
-    })
-    .sort((left, right) => left.xValue - right.xValue);
+  for (const metric of selectedMetrics) {
+    const sampledPoints = sampleChartPoints(
+      streams[metric],
+      maxComparePointsPerMetric,
+    );
+    const valueRange = getValueRange(sampledPoints);
+
+    for (const point of sampledPoints) {
+      const streamPoint = toStreamChartPoint(point, xAxisMode);
+      const comparePoint = pointsByXValue.get(streamPoint.xValue) ?? {
+        distanceMeters: streamPoint.distanceMeters,
+        second: streamPoint.second,
+        xValue: streamPoint.xValue,
+      };
+
+      comparePoint[metric] = normalizeValue(point.value, valueRange);
+      comparePoint[`${metric}Raw`] = point.value;
+      pointsByXValue.set(streamPoint.xValue, comparePoint);
+    }
+  }
+
+  return Array.from(pointsByXValue.values()).sort(
+    (left, right) => left.xValue - right.xValue,
+  );
 }
 
 function sampleChartPoints<T>(points: T[], maxPoints: number) {
