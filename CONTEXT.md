@@ -36,6 +36,10 @@ _Avoid_: Provider map, external map, raw route
 A core-owned ordered numeric series for an **Activity**, imported from provider stream data for point-by-point analysis inside Korex.
 _Avoid_: Provider stream, external stream, raw stream
 
+**Activity Stream Replacement**:
+The transactional replacement of an **Activity's** full **Activity Stream** set, including invalidation of derived **Activity** data made stale by the new streams.
+_Avoid_: Stream update, stream save, zone-time stream replacement
+
 **Activity Heart Rate Zone Time**:
 A point-in-time duration summary for an **Activity** calculated from heart-rate data using a snapshot of the user's **Heart Rate Zones** at calculation time.
 _Avoid_: Provider zone time, live zone time
@@ -125,6 +129,9 @@ _Avoid_: Activity PR, lap best, best split
 - **Activity Streams** are initially limited to cadence, distance, altitude, heart rate, velocity, and elapsed time.
 - Intervals.icu cadence stream values are revolutions per minute and become steps per minute in Korex by doubling each value.
 - Intervals.icu `time` stream values become elapsed-time **Activity Stream** values in Korex.
+- **Activity Stream Replacement** replaces the full **Activity Stream** set for one **Activity**.
+- **Activity Stream Replacement** makes derived **Activity** data stale, including **Activity Heart Rate Zone Times** and **Activity Best Efforts**.
+- **Activity Stream Replacement** captures fresh **Activity Heart Rate Zone Snapshots** when the replacement includes a heart-rate **Activity Stream** and the **User** has active **Heart Rate Zones**.
 - An **Activity** can have zero or more **Activity Heart Rate Zone Times**.
 - An **Activity** can have zero or more **Activity Heart Rate Zone Snapshots**.
 - An **Activity Heart Rate Zone Snapshot** belongs to exactly one **Activity**.

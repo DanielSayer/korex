@@ -1,3 +1,6 @@
+import type { ActivityStreamReplacementWorkflow } from "@korex/api/modules/activities/activity-stream-replacement/activity-stream-replacement.dependencies";
+import { ActivityStreamReplacementWorkflowLive } from "@korex/api/modules/activities/activity-stream-replacement/activity-stream-replacement.live";
+import { replaceActivityStreamsAndInvalidateDerivedData } from "@korex/api/modules/activities/activity-stream-replacement/activity-stream-replacement.service";
 import { replaceActivityHeartRateZoneTimes } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
 import {
   claimActivityHeartRateZoneTimeCalculationJobs,
@@ -7,10 +10,7 @@ import {
 } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-jobs.repository";
 import type { ActivityHeartRateZoneTimeWorkflow } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.dependencies";
 import { ActivityHeartRateZoneTimeWorkflowLive } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
-import {
-  replaceActivityHeartRateZoneSnapshotsAndQueueCalculation,
-  replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation,
-} from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
+import { replaceActivityHeartRateZoneSnapshotsAndQueueCalculation } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.service";
 import {
   activityHeartRateZoneSnapshots,
   activityHeartRateZoneTimeCalculationJobs,
@@ -18,7 +18,7 @@ import {
   db,
 } from "@korex/db";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -254,7 +254,7 @@ describe("activity heart rate zone time workflow", () => {
     });
 
     await runWorkflow(
-      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+      replaceActivityStreamsAndInvalidateDerivedData({
         activityId: activity.id,
         streams: [{ data: [130, 150], streamType: "heartRate" }],
         userId: userDataExtensions.HughJass.id,
@@ -320,7 +320,7 @@ describe("activity heart rate zone time workflow", () => {
     });
 
     await runWorkflow(
-      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+      replaceActivityStreamsAndInvalidateDerivedData({
         activityId: activity.id,
         streams: [{ data: [0, 10], streamType: "distance" }],
         userId: userDataExtensions.HughJass.id,
@@ -369,7 +369,7 @@ describe("activity heart rate zone time workflow", () => {
     });
 
     await runWorkflow(
-      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation({
+      replaceActivityStreamsAndInvalidateDerivedData({
         activityId: activity.id,
         streams: [{ data: [130, 150], streamType: "heartRate" }],
         userId: "user-without-heart-rate-zones",
@@ -430,9 +430,20 @@ function requireJob<T>(job: T | undefined): T {
 }
 
 function runWorkflow(
-  effect: Effect.Effect<void, never, ActivityHeartRateZoneTimeWorkflow>,
+  effect: Effect.Effect<
+    void,
+    never,
+    ActivityHeartRateZoneTimeWorkflow | ActivityStreamReplacementWorkflow
+  >,
 ) {
   return Effect.runPromise(
-    effect.pipe(Effect.provide(ActivityHeartRateZoneTimeWorkflowLive)),
+    effect.pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          ActivityHeartRateZoneTimeWorkflowLive,
+          ActivityStreamReplacementWorkflowLive,
+        ),
+      ),
+    ),
   );
 }

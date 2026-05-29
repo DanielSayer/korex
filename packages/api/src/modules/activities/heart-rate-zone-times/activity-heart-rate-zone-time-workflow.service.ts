@@ -1,8 +1,5 @@
 import { Effect } from "effect";
-import type {
-  ActivityHeartRateZoneSnapshotInput,
-  ActivityStreamInput,
-} from "../activities.types";
+import type { ActivityHeartRateZoneSnapshotInput } from "../activities.types";
 import type { ActivityHeartRateZoneTimeCalculationJob } from "./activity-heart-rate-zone-time-jobs.repository";
 import {
   ActivityHeartRateZoneTimeWorkflow,
@@ -27,20 +24,6 @@ export function replaceActivityHeartRateZoneSnapshotsAndQueueCalculation(input: 
     const workflow = yield* ActivityHeartRateZoneTimeWorkflow;
 
     return yield* workflow.replaceActivityHeartRateZoneSnapshotsAndQueueCalculation(
-      input,
-    );
-  });
-}
-
-export function replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation(input: {
-  activityId: number;
-  streams: ActivityStreamInput[];
-  userId: string;
-}) {
-  return Effect.gen(function* () {
-    const workflow = yield* ActivityHeartRateZoneTimeWorkflow;
-
-    return yield* workflow.replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation(
       input,
     );
   });

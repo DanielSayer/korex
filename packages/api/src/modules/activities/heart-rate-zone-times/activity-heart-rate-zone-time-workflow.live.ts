@@ -4,54 +4,31 @@ import {
   TimeProvider,
   TimeProviderLive,
 } from "../../time-provider.dependencies";
-import { replaceActivityStreams } from "../artifacts/activity-artifacts.repository";
-import { enqueueActivityBestEffortCalculation } from "../best-efforts/activity-best-effort-jobs.repository";
 import {
-  clearActivityHeartRateZoneCalculation,
   clearActivityHeartRateZoneTimes,
   getActivityHeartRateZoneCalculationInputs,
-  listUserHeartRateZoneSnapshots,
   replaceActivityHeartRateZoneSnapshots,
   replaceActivityHeartRateZoneTimes,
 } from "./activity-heart-rate-zone-time.repository";
 import {
   claimActivityHeartRateZoneTimeCalculationJobs,
-  deleteActivityHeartRateZoneTimeCalculationJob,
   enqueueActivityHeartRateZoneTimeCalculation,
   markActivityHeartRateZoneTimeCalculationFailed,
   markActivityHeartRateZoneTimeCalculationSucceeded,
 } from "./activity-heart-rate-zone-time-jobs.repository";
 import {
-  ActivityBestEffortJobRepository,
   type ActivityHeartRateZoneTimeDatabase,
   ActivityHeartRateZoneTimeWorkflow,
-  ActivityStreamsRepository,
   HeartRateZoneSnapshotRepository,
   HeartRateZoneTimeJobRepository,
 } from "./activity-heart-rate-zone-time-workflow.dependencies";
 import { calculateActivityHeartRateZoneTimes } from "./activity-heart-rate-zone-times";
 
-export const ActivityStreamsRepositoryLive = Layer.succeed(
-  ActivityStreamsRepository,
-  {
-    replaceActivityStreams,
-  },
-);
-
-export const ActivityBestEffortJobRepositoryLive = Layer.succeed(
-  ActivityBestEffortJobRepository,
-  {
-    enqueueActivityBestEffortCalculation,
-  },
-);
-
 export const HeartRateZoneSnapshotRepositoryLive = Layer.succeed(
   HeartRateZoneSnapshotRepository,
   {
-    clearActivityHeartRateZoneCalculation,
     clearActivityHeartRateZoneTimes,
     getActivityHeartRateZoneCalculationInputs,
-    listUserHeartRateZoneSnapshots,
     replaceActivityHeartRateZoneSnapshots,
     replaceActivityHeartRateZoneTimes,
     transaction: (work) =>
@@ -63,7 +40,6 @@ export const HeartRateZoneTimeJobRepositoryLive = Layer.succeed(
   HeartRateZoneTimeJobRepository,
   {
     claimActivityHeartRateZoneTimeCalculationJobs,
-    deleteActivityHeartRateZoneTimeCalculationJob,
     enqueueActivityHeartRateZoneTimeCalculation,
     markActivityHeartRateZoneTimeCalculationFailed,
     markActivityHeartRateZoneTimeCalculationSucceeded,
@@ -73,8 +49,6 @@ export const HeartRateZoneTimeJobRepositoryLive = Layer.succeed(
 export const ActivityHeartRateZoneTimeWorkflowLayer = Layer.effect(
   ActivityHeartRateZoneTimeWorkflow,
   Effect.gen(function* () {
-    const activityStreamsRepository = yield* ActivityStreamsRepository;
-    const bestEffortJobRepository = yield* ActivityBestEffortJobRepository;
     const heartRateZoneRepository = yield* HeartRateZoneSnapshotRepository;
     const jobRepository = yield* HeartRateZoneTimeJobRepository;
     const timeProvider = yield* TimeProvider;
@@ -166,79 +140,6 @@ export const ActivityHeartRateZoneTimeWorkflowLayer = Layer.effect(
             });
           }),
         ),
-      replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation: ({
-        activityId,
-        streams,
-        userId,
-      }) =>
-        Effect.promise(() =>
-          heartRateZoneRepository.transaction(async (database) => {
-            await activityStreamsRepository.replaceActivityStreams({
-              activityId,
-              database,
-              streams,
-            });
-            await bestEffortJobRepository.enqueueActivityBestEffortCalculation({
-              activityId,
-              database,
-            });
-
-            const hasHeartRateStream = streams.some(
-              (stream) => stream.streamType === "heartRate",
-            );
-
-            if (!hasHeartRateStream) {
-              await heartRateZoneRepository.clearActivityHeartRateZoneCalculation(
-                {
-                  activityId,
-                  database,
-                },
-              );
-              await jobRepository.deleteActivityHeartRateZoneTimeCalculationJob(
-                {
-                  activityId,
-                  database,
-                },
-              );
-              return;
-            }
-
-            const snapshots =
-              await heartRateZoneRepository.listUserHeartRateZoneSnapshots({
-                database,
-                userId,
-              });
-
-            if (snapshots.length === 0) {
-              await heartRateZoneRepository.clearActivityHeartRateZoneCalculation(
-                {
-                  activityId,
-                  database,
-                },
-              );
-              await jobRepository.deleteActivityHeartRateZoneTimeCalculationJob(
-                {
-                  activityId,
-                  database,
-                },
-              );
-              return;
-            }
-
-            await heartRateZoneRepository.replaceActivityHeartRateZoneSnapshots(
-              {
-                activityId,
-                database,
-                snapshots,
-              },
-            );
-
-            await resetActivityHeartRateZoneTimeCalculation({
-              activityId,
-              database,
-            });
-          }),
-        ),
       runActivityHeartRateZoneTimeWorkerOnce: ({
         batchSize,
         now = timeProvider.now(),
@@ -270,8 +171,6 @@ export const ActivityHeartRateZoneTimeWorkflowLive =
   ActivityHeartRateZoneTimeWorkflowLayer.pipe(
     Layer.provide(
       Layer.mergeAll(
-        ActivityBestEffortJobRepositoryLive,
-        ActivityStreamsRepositoryLive,
         HeartRateZoneSnapshotRepositoryLive,
         HeartRateZoneTimeJobRepositoryLive,
         TimeProviderLive,

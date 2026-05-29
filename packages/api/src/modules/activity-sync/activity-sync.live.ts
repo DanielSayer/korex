@@ -1,7 +1,8 @@
 import { Effect, Layer } from "effect";
+import { ActivityStreamReplacementWorkflow } from "../activities/activity-stream-replacement/activity-stream-replacement.dependencies";
+import { ActivityStreamReplacementWorkflowLive } from "../activities/activity-stream-replacement/activity-stream-replacement.live";
 import { ActivityArtifactWorkflow } from "../activities/artifacts/activity-artifact-workflow.dependencies";
 import { ActivityArtifactWorkflowLive } from "../activities/artifacts/activity-artifact-workflow.live";
-import { ActivityHeartRateZoneTimeWorkflow } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.dependencies";
 import { ActivityHeartRateZoneTimeWorkflowLive } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
 import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
 import { ProviderSessionLive } from "../provider-connections/provider-session.live";
@@ -38,7 +39,8 @@ const ActivityArtifactStoreLive = Layer.effect(
   ActivityArtifactStore,
   Effect.gen(function* () {
     const activityArtifactWorkflow = yield* ActivityArtifactWorkflow;
-    const heartRateZoneTimeWorkflow = yield* ActivityHeartRateZoneTimeWorkflow;
+    const activityStreamReplacementWorkflow =
+      yield* ActivityStreamReplacementWorkflow;
 
     return {
       storeExternalMap: upsertExternalActivityMap,
@@ -51,7 +53,7 @@ const ActivityArtifactStoreLive = Layer.effect(
       storeExternalStream: upsertExternalActivityStream,
       replaceCoreStreamsAndQueueCalculation: (input) =>
         Effect.runPromise(
-          heartRateZoneTimeWorkflow.replaceActivityStreamsAndQueueHeartRateZoneTimeCalculation(
+          activityStreamReplacementWorkflow.replaceActivityStreamsAndInvalidateDerivedData(
             input,
           ),
         ),
@@ -94,6 +96,7 @@ export const ActivitySyncLive = ActivitySyncLayer.pipe(
   Layer.provide(
     Layer.mergeAll(
       ActivityArtifactWorkflowLive,
+      ActivityStreamReplacementWorkflowLive,
       ActivityHeartRateZoneTimeWorkflowLive,
     ),
   ),
