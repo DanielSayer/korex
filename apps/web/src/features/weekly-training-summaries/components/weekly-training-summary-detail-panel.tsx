@@ -2,6 +2,13 @@ import type {
   WeeklyTrainingSummaryDetail as WeeklyTrainingSummaryDetailType,
   WeeklyTrainingSummaryListItem,
 } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary.types";
+import { Button } from "@korex/ui/components/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@korex/ui/components/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -9,19 +16,22 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@korex/ui/components/sheet";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ActivityIcon,
   ClockIcon,
   GaugeIcon,
   MedalIcon,
+  MoreHorizontalIcon,
   MountainSnowIcon,
+  RefreshCwIcon,
   RouteIcon,
   TrendingDownIcon,
   TrendingUpIcon,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type React from "react";
+import { toast } from "sonner";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { cn } from "@/lib/utils";
@@ -42,12 +52,38 @@ function WeeklyTrainingSummaryDetailPanel({
   onOpenChange,
   summary,
 }: WeeklyTrainingSummaryDetailPanelProps) {
-  const detailQuery = useQuery({
-    ...orpc.activities.getWeeklyTrainingSummary.queryOptions({
+  const queryClient = useQueryClient();
+  const listQuery = orpc.activities.weeklyTrainingSummaries.queryOptions();
+  const detailQueryOptions =
+    orpc.activities.getWeeklyTrainingSummary.queryOptions({
       input: { weekStartAt: summary?.weekStartAt ?? new Date(0) },
-    }),
+    });
+  const detailQuery = useQuery({
+    ...detailQueryOptions,
     enabled: summary !== null,
   });
+  const regenerateMutation = useMutation(
+    orpc.activities.regenerateWeeklyTrainingSummary.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSuccess: () => {
+        toast.success("Weekly Training Summary regeneration queued");
+        queryClient.invalidateQueries({
+          queryKey: detailQueryOptions.queryKey,
+        });
+        queryClient.invalidateQueries({ queryKey: listQuery.queryKey });
+      },
+    }),
+  );
+
+  const handleRegenerate = () => {
+    if (!summary) {
+      return;
+    }
+
+    regenerateMutation.mutate({ weekStartAt: summary.weekStartAt });
+  };
 
   return (
     <Sheet onOpenChange={onOpenChange} open={summary !== null}>
@@ -55,19 +91,52 @@ function WeeklyTrainingSummaryDetailPanel({
         {summary ? (
           <>
             <SheetHeader className="border-b bg-background p-6">
-              <div className="flex items-start gap-3 pr-10">
-                <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-muted/40">
-                  <MountainSnowIcon className="size-5 text-primary" />
+              <div className="flex items-start justify-between gap-3 pr-10">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-muted/40">
+                    <MountainSnowIcon className="size-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <SheetTitle className="text-xl">
+                      {formatTrainingWeek(
+                        summary.weekStartAt,
+                        summary.weekEndAt,
+                      )}
+                    </SheetTitle>
+                    <SheetDescription>
+                      Weekly Training Summary generated{" "}
+                      {formatGeneratedAt(summary.generatedAt)}
+                    </SheetDescription>
+                  </div>
                 </div>
-                <div>
-                  <SheetTitle className="text-xl">
-                    {formatTrainingWeek(summary.weekStartAt, summary.weekEndAt)}
-                  </SheetTitle>
-                  <SheetDescription>
-                    Weekly Training Summary generated{" "}
-                    {formatGeneratedAt(summary.generatedAt)}
-                  </SheetDescription>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <Button
+                        aria-label="Weekly summary actions"
+                        size="icon-sm"
+                        type="button"
+                        variant="outline"
+                      />
+                    }
+                  >
+                    <MoreHorizontalIcon className="size-4" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem
+                      disabled={regenerateMutation.isPending}
+                      onClick={handleRegenerate}
+                    >
+                      <RefreshCwIcon
+                        className={cn(
+                          "size-4",
+                          regenerateMutation.isPending && "animate-spin",
+                        )}
+                      />
+                      Regenerate
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </SheetHeader>
 

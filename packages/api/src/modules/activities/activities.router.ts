@@ -7,6 +7,7 @@ import {
   getAnalyticsVolumeInput,
   getWeeklyTrainingSummaryInput,
   listActivitiesInput,
+  regenerateWeeklyTrainingSummaryInput,
 } from "./activities.inputs";
 import { getAnalyticsVolume } from "./analytics/activity-analytics.repository";
 import { getAnalyticsBestEfforts } from "./analytics/activity-best-effort-analytics.repository";
@@ -27,6 +28,7 @@ import {
   getWeeklyTrainingSummary,
   listWeeklyTrainingSummaries,
 } from "./weekly-training-summaries/weekly-training-summary.repository";
+import { enqueueWeeklyTrainingSummaryGeneration } from "./weekly-training-summaries/weekly-training-summary-jobs.repository";
 
 export const activitiesRouter = {
   analyticsBestEfforts: protectedProcedure
@@ -110,6 +112,16 @@ export const activitiesRouter = {
       userId: context.session.user.id,
     });
   }),
+  regenerateWeeklyTrainingSummary: protectedProcedure
+    .input(regenerateWeeklyTrainingSummaryInput)
+    .handler(async ({ context, input }) => {
+      await enqueueWeeklyTrainingSummaryGeneration({
+        userId: context.session.user.id,
+        weekStartAt: input.weekStartAt,
+      });
+
+      return { queued: true };
+    }),
   trainingStreak: protectedProcedure.handler(async ({ context }) => {
     return getTrainingStreak({
       userId: context.session.user.id,

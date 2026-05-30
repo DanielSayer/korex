@@ -1,3 +1,4 @@
+import { enqueueWeeklyTrainingSummaryGeneration } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-jobs.repository";
 import { enqueueCompletedWeeklyTrainingSummaries } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-scheduler.service";
 import { runWeeklyTrainingSummaryWorkerOnce } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-worker";
 import {
@@ -198,6 +199,44 @@ describe("weekly training summary worker", () => {
       expect.objectContaining({
         status: "succeeded",
         userId,
+      }),
+    ]);
+  });
+
+  it("re-queues a succeeded weekly summary when regeneration is requested", async () => {
+    const userId = userDataExtensions.HughJass.id;
+    const weekStartAt = new Date("2026-05-03T14:00:00.000Z");
+
+    await DataSeedAsync.withActivities(
+      ActivityBuilder.initWithUser(userId)
+        .withId(1601)
+        .withStartAt(new Date("2026-05-05T20:00:00.000Z"))
+        .withDistanceMeters(1000)
+        .withMovingTimeSeconds(500)
+        .build(),
+    ).seedAsync();
+
+    await enqueueWeeklyTrainingSummaryGeneration({ userId, weekStartAt });
+    await runWeeklyTrainingSummaryWorkerOnce({
+      batchSize: 10,
+      now: new Date("2026-05-15T02:00:00.000Z"),
+      staleLockMs: 60_000,
+      workerId: "worker-1",
+    });
+    await enqueueWeeklyTrainingSummaryGeneration({ userId, weekStartAt });
+
+    const jobs = await db.select().from(weeklyTrainingSummaryGenerationJobs);
+
+    expect(jobs).toEqual([
+      expect.objectContaining({
+        attemptCount: 0,
+        finishedAt: null,
+        lastError: null,
+        lockedAt: null,
+        lockedBy: null,
+        status: "pending",
+        userId,
+        weekStartAt,
       }),
     ]);
   });

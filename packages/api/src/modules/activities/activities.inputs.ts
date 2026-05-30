@@ -16,6 +16,10 @@ export const getWeeklyTrainingSummaryInput = z.object({
   weekStartAt: z.coerce.date(),
 });
 
+export const regenerateWeeklyTrainingSummaryInput = z.object({
+  weekStartAt: z.coerce.date(),
+});
+
 export const getActivityDetailSummaryInput = z.object({
   activityId: z.coerce.number().int().positive(),
 });

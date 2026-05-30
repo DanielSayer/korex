@@ -53,9 +53,7 @@ export const HeartRateZoneSnapshotRepositoryLive = Layer.succeed(
     listUserHeartRateZoneSnapshots,
     replaceActivityHeartRateZoneSnapshots,
     transaction: (work) =>
-      db.transaction((tx) =>
-        work(tx as ActivityStreamReplacementDatabase),
-      ),
+      db.transaction((tx) => work(tx as ActivityStreamReplacementDatabase)),
   },
 );
 
