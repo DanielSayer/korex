@@ -101,6 +101,7 @@ export type ActivityListItem = {
   averageHeartRateBeatsPerMinute: number | null;
   distanceMeters: number | null;
   durationSeconds: number | null;
+  id: number;
   name: string;
   startAt: Date;
 };

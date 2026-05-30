@@ -5,6 +5,7 @@ import type {
 import { Button } from "@korex/ui/components/button";
 import { cn } from "@korex/ui/lib/utils";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import { addMonths, format, isSameMonth, subMonths } from "date-fns";
 import {
   ChevronLeftIcon,
@@ -297,10 +298,7 @@ function CalendarCell({
       </div>
       <div className="space-y-1">
         {activities.map((activity) => (
-          <ActivityCard
-            activity={activity}
-            key={`${activity.name}-${activity.startAt}`}
-          />
+          <ActivityCard activity={activity} key={activity.id} />
         ))}
       </div>
     </div>
@@ -309,7 +307,11 @@ function CalendarCell({
 
 function ActivityCard({ activity }: { activity: ActivityListItem }) {
   return (
-    <article className="rounded-md border bg-card px-2 py-1.5 text-card-foreground shadow-xs">
+    <Link
+      to="/activity/$activityId"
+      params={{ activityId: String(activity.id) }}
+      className="block rounded-md border bg-card px-2 py-1.5 text-card-foreground shadow-xs transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+    >
       <div className="flex items-start justify-between gap-2">
         <h2 className="line-clamp-1 font-medium text-xs">{activity.name}</h2>
         <span className="shrink-0 text-[11px] text-muted-foreground">
@@ -332,7 +334,7 @@ function ActivityCard({ activity }: { activity: ActivityListItem }) {
           </span>
         ) : null}
       </div>
-    </article>
+    </Link>
   );
 }
 

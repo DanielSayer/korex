@@ -9,6 +9,7 @@ function activity(
     averageHeartRateBeatsPerMinute: null,
     distanceMeters: null,
     durationSeconds: null,
+    id: 1,
     name: "Run",
     totalElevationGainMeters: null,
     ...input,

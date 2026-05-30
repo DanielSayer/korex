@@ -55,6 +55,7 @@ export async function listActivitiesForDateRange({
       averageHeartRateBeatsPerMinute: activities.averageHeartRateBeatsPerMinute,
       distanceMeters: activities.distanceMeters,
       durationSeconds: activities.movingTimeSeconds,
+      id: activities.id,
       name: activities.name,
       startAt: activities.startAt,
       totalElevationGainMeters: activities.totalElevationGainMeters,
