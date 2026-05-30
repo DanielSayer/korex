@@ -1,9 +1,16 @@
-import { Button } from "@korex/ui/components/button";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { CloudSyncIcon } from "lucide-react";
 import { toast } from "sonner";
-import { LastFiveRunsSection } from "@/features/dashboard/components/last-five-runs-section";
+import { ErrorMessage } from "@/components/error-message";
+import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
+import { DashboardMetrics } from "@/features/dashboard/components/dashboard-metrics";
+import {
+  RecoveryCard,
+  ShoeMileageCard,
+  TrainingNotesCard,
+  WeeklyTargetCard,
+} from "@/features/dashboard/components/dashboard-supplemental-cards";
+import { RecentRunsTable } from "@/features/dashboard/components/recent-runs-table";
 import { TrainingStreakSection } from "@/features/dashboard/components/training-streak-section";
 import { WeeklyDistanceSection } from "@/features/dashboard/components/weekly-distance-section";
 import { orpc } from "@/utils/orpc";
@@ -20,6 +27,9 @@ function RouteComponent() {
     orpc.activities.trainingStreakCurrentWeek.queryOptions();
   const dashboardWeeklyDistanceQuery =
     orpc.activities.dashboardWeeklyDistance.queryOptions();
+  const [recentActivities, dashboardWeeklyDistance] = useQueries({
+    queries: [recentActivitiesQuery, dashboardWeeklyDistanceQuery],
+  });
   const incrementalSyncMutation = useMutation(
     orpc.syncs.incremental.mutationOptions({
       onError: (error) => {
@@ -27,46 +37,61 @@ function RouteComponent() {
       },
       onSuccess: (result) => {
         toast.success(`${result.activitiesStored} activities synced`);
-        queryClient.invalidateQueries({
-          queryKey: recentActivitiesQuery.queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: trainingStreakQuery.queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: trainingStreakCurrentWeekQuery.queryKey,
-        });
-        queryClient.invalidateQueries({
-          queryKey: dashboardWeeklyDistanceQuery.queryKey,
-        });
+        for (const query of [
+          recentActivitiesQuery,
+          trainingStreakQuery,
+          trainingStreakCurrentWeekQuery,
+          dashboardWeeklyDistanceQuery,
+        ]) {
+          queryClient.invalidateQueries({ queryKey: query.queryKey });
+        }
       },
     }),
   );
 
+  const recentRuns = recentActivities.data ?? [];
+  const weeklyDistance = dashboardWeeklyDistance.data;
+  const hasError = recentActivities.isError || dashboardWeeklyDistance.isError;
+  const isSummaryLoading =
+    recentActivities.isPending || dashboardWeeklyDistance.isPending;
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-sm">
-            Here's how your recent training is looking.
-          </p>
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => incrementalSyncMutation.mutate(undefined)}
-          loading={incrementalSyncMutation.isPending}
-          loadingText="Syncing"
-          className="w-full sm:w-auto"
-        >
-          <CloudSyncIcon className="size-4" />
-          Sync now
-        </Button>
+      <DashboardHeader
+        isSyncing={incrementalSyncMutation.isPending}
+        onSync={() => incrementalSyncMutation.mutate(undefined)}
+      />
+      {hasError ? (
+        <ErrorMessage
+          message="Could not load dashboard data."
+          variant="banner"
+        />
+      ) : null}
+      <DashboardMetrics
+        isLoading={isSummaryLoading}
+        recentRuns={recentRuns}
+        weeklyDistance={weeklyDistance}
+      />
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
+        <main className="grid gap-6">
+          <RecentRunsTable
+            isLoading={recentActivities.isPending}
+            runs={recentRuns}
+          />
+          <section className="grid gap-4 lg:grid-cols-2">
+            <RecoveryCard runs={recentRuns} />
+            <WeeklyTargetCard weeklyDistance={weeklyDistance} />
+          </section>
+        </main>
+        <aside className="grid content-start gap-5">
+          <TrainingStreakSection />
+          <WeeklyDistanceSection />
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+            <ShoeMileageCard weeklyDistance={weeklyDistance} />
+            <TrainingNotesCard />
+          </section>
+        </aside>
       </div>
-      <WeeklyDistanceSection />
-      <TrainingStreakSection />
-      <LastFiveRunsSection />
     </div>
   );
 }
