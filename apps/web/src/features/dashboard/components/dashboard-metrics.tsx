@@ -71,9 +71,9 @@ function MetricCard({
           <p className="font-medium text-muted-foreground text-xs uppercase">
             {stat.label}
           </p>
-          <p className="mt-1 flex items-baseline gap-1 font-semibold text-2xl tabular-nums">
+          <p className="mt-1 flex items-baseline gap-1 whitespace-nowrap font-semibold text-2xl tabular-nums">
             {isLoading ? "--" : stat.value}
-            <span className="font-normal text-muted-foreground text-sm">
+            <span className="min-w-0 font-normal text-muted-foreground text-sm">
               {stat.unit}
             </span>
           </p>

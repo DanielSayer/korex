@@ -29,7 +29,7 @@ function RecoveryCard({ runs }: { runs: RecentActivity[] }) {
   return (
     <section className="rounded-lg border p-5">
       <h2 className="font-semibold text-lg">Recovery</h2>
-      <div className="mt-5 flex items-center gap-6">
+      <div className="mt-5 flex flex-col gap-5">
         <RingGauge label="/100" value={score} />
         <div className="min-w-0">
           <p className="font-semibold">Good</p>
@@ -62,7 +62,7 @@ function WeeklyTargetCard({
   return (
     <section className="rounded-lg border p-5">
       <h2 className="font-semibold text-lg">Weekly target</h2>
-      <div className="mt-5 flex items-center gap-6">
+      <div className="mt-5 flex flex-col gap-5">
         <RingGauge label="%" value={progress} />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-2xl tabular-nums">
@@ -70,7 +70,7 @@ function WeeklyTargetCard({
             <span className="font-normal text-muted-foreground"> / 50 km</span>
           </p>
           <p className="text-muted-foreground text-sm">Distance</p>
-          <div className="mt-5 flex h-16 items-end gap-4 border-t pt-3">
+          <div className="mt-5 flex h-16 items-end gap-2 border-t pt-3 sm:gap-4">
             {weeklyTargetBars.map((bar) => (
               <div className="grid flex-1 place-items-end gap-1" key={bar.day}>
                 <span

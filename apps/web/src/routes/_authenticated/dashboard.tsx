@@ -72,7 +72,7 @@ function RouteComponent() {
         recentRuns={recentRuns}
         weeklyDistance={weeklyDistance}
       />
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
+      <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
         <main className="grid gap-6">
           <RecentRunsTable
             isLoading={recentActivities.isPending}
@@ -83,7 +83,7 @@ function RouteComponent() {
             <WeeklyTargetCard weeklyDistance={weeklyDistance} />
           </section>
         </main>
-        <aside className="grid content-start gap-5">
+        <aside className="grid min-w-0 content-start gap-5">
           <TrainingStreakSection />
           <WeeklyDistanceSection />
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">

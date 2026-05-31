@@ -38,7 +38,7 @@ function RunRow({ run }: { run: RecentActivity }) {
 
   return (
     <Link
-      className="grid gap-3 border-b p-3 last:border-b-0 hover:bg-muted/40 md:grid-cols-[72px_minmax(160px,1fr)_repeat(4,minmax(80px,0.48fr))] md:items-center"
+      className="grid gap-3 border-b p-3 last:border-b-0 hover:bg-muted/40 lg:grid-cols-[72px_minmax(160px,1fr)_repeat(4,minmax(76px,0.48fr))] lg:items-center"
       params={{ activityId: String(run.id) }}
       to="/activity/$activityId"
     >
@@ -49,20 +49,22 @@ function RunRow({ run }: { run: RecentActivity }) {
           {formatRunDate(run.startAt)}
         </p>
       </div>
-      <RunRowMetric
-        label="Distance"
-        value={formatDistance(run.distanceMeters)}
-      />
-      <RunRowMetric
-        label="Time"
-        value={formatDurationClock(run.durationSeconds ?? null)}
-      />
-      <RunRowMetric label="Avg pace" unit="/km" value={pace ?? "--"} />
-      <RunRowMetric
-        label="Avg HR"
-        unit="bpm"
-        value={run.averageHeartRateBeatsPerMinute?.toFixed(0) ?? "--"}
-      />
+      <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-4 lg:contents">
+        <RunRowMetric
+          label="Distance"
+          value={formatDistance(run.distanceMeters)}
+        />
+        <RunRowMetric
+          label="Time"
+          value={formatDurationClock(run.durationSeconds ?? null)}
+        />
+        <RunRowMetric label="Avg pace" unit="/km" value={pace ?? "--"} />
+        <RunRowMetric
+          label="Avg HR"
+          unit="bpm"
+          value={run.averageHeartRateBeatsPerMinute?.toFixed(0) ?? "--"}
+        />
+      </div>
     </Link>
   );
 }
@@ -79,7 +81,7 @@ function RunRowMetric({
   const [metricValue, metricUnit] = value.split(" ");
 
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 overflow-hidden">
       <p className="font-semibold text-lg tabular-nums">
         {metricValue}
         <span className="ml-1 font-normal text-muted-foreground text-xs">
