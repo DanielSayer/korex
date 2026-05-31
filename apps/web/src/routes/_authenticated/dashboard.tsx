@@ -25,10 +25,10 @@ function RouteComponent() {
   const trainingStreakQuery = orpc.activities.trainingStreak.queryOptions();
   const trainingStreakCurrentWeekQuery =
     orpc.activities.trainingStreakCurrentWeek.queryOptions();
-  const dashboardWeeklyDistanceQuery =
-    orpc.activities.dashboardWeeklyDistance.queryOptions();
-  const [recentActivities, dashboardWeeklyDistance] = useQueries({
-    queries: [recentActivitiesQuery, dashboardWeeklyDistanceQuery],
+  const dashboardThisWeekQuery =
+    orpc.activities.dashboardThisWeek.queryOptions();
+  const [recentActivities, dashboardThisWeek] = useQueries({
+    queries: [recentActivitiesQuery, dashboardThisWeekQuery],
   });
   const incrementalSyncMutation = useMutation(
     orpc.syncs.incremental.mutationOptions({
@@ -41,7 +41,7 @@ function RouteComponent() {
           recentActivitiesQuery,
           trainingStreakQuery,
           trainingStreakCurrentWeekQuery,
-          dashboardWeeklyDistanceQuery,
+          dashboardThisWeekQuery,
         ]) {
           queryClient.invalidateQueries({ queryKey: query.queryKey });
         }
@@ -50,10 +50,11 @@ function RouteComponent() {
   );
 
   const recentRuns = recentActivities.data ?? [];
-  const weeklyDistance = dashboardWeeklyDistance.data;
-  const hasError = recentActivities.isError || dashboardWeeklyDistance.isError;
+  const thisWeek = dashboardThisWeek.data;
+  const weeklyDistance = thisWeek?.weeklyDistance;
+  const hasError = recentActivities.isError || dashboardThisWeek.isError;
   const isSummaryLoading =
-    recentActivities.isPending || dashboardWeeklyDistance.isPending;
+    recentActivities.isPending || dashboardThisWeek.isPending;
 
   return (
     <div className="flex flex-col gap-6">
@@ -69,7 +70,7 @@ function RouteComponent() {
       ) : null}
       <DashboardMetrics
         isLoading={isSummaryLoading}
-        recentRuns={recentRuns}
+        thisWeek={thisWeek}
         weeklyDistance={weeklyDistance}
       />
       <div className="grid min-w-0 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.85fr)]">
@@ -85,7 +86,7 @@ function RouteComponent() {
         </main>
         <aside className="grid min-w-0 content-start gap-5">
           <TrainingStreakSection />
-          <WeeklyDistanceSection />
+          <WeeklyDistanceSection weeklyDistance={weeklyDistance} />
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
             <ShoeMileageCard weeklyDistance={weeklyDistance} />
             <TrainingNotesCard />

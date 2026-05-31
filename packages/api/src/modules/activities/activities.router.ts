@@ -19,7 +19,10 @@ import {
 import { getActivityDetailSummary } from "./catalog/activity-detail-summary.service";
 import { getActivityStreams } from "./catalog/activity-streams.service";
 import { DashboardWeeklyDistanceLive } from "./dashboard/dashboard-weekly-distance.live";
-import { getDashboardWeeklyDistance } from "./dashboard/dashboard-weekly-distance.service";
+import {
+  getDashboardThisWeek,
+  getDashboardWeeklyDistance,
+} from "./dashboard/dashboard-weekly-distance.service";
 import {
   getTrainingStreak,
   listCurrentTrainingWeekQualifyingActivities,
@@ -51,6 +54,13 @@ export const activitiesRouter = {
   dashboardWeeklyDistance: protectedProcedure.handler(async ({ context }) => {
     return Effect.runPromise(
       getDashboardWeeklyDistance({
+        userId: context.session.user.id,
+      }).pipe(Effect.provide(DashboardWeeklyDistanceLive)),
+    );
+  }),
+  dashboardThisWeek: protectedProcedure.handler(async ({ context }) => {
+    return Effect.runPromise(
+      getDashboardThisWeek({
         userId: context.session.user.id,
       }).pipe(Effect.provide(DashboardWeeklyDistanceLive)),
     );

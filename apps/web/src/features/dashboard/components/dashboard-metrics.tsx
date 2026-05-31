@@ -1,10 +1,9 @@
 import type {
+  DashboardThisWeek,
   DashboardWeeklyDistance,
-  RecentActivity,
 } from "@korex/api/modules/activities/activities.types";
 import {
   type ActivityIcon,
-  FlameIcon,
   FootprintsIcon,
   GaugeIcon,
   HeartIcon,
@@ -21,7 +20,7 @@ import {
 
 type DashboardMetricsProps = {
   isLoading: boolean;
-  recentRuns: RecentActivity[];
+  thisWeek?: DashboardThisWeek;
   weeklyDistance?: DashboardWeeklyDistance;
 };
 
@@ -38,12 +37,12 @@ type DashboardStat = {
 
 function DashboardMetrics({
   isLoading,
-  recentRuns,
+  thisWeek,
   weeklyDistance,
 }: DashboardMetricsProps) {
   return (
-    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-      {buildStats({ recentRuns, weeklyDistance }).map((stat) => (
+    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      {buildStats({ thisWeek, weeklyDistance }).map((stat) => (
         <MetricCard isLoading={isLoading} key={stat.id} stat={stat} />
       ))}
     </section>
@@ -106,32 +105,17 @@ function MetricCard({
 }
 
 function buildStats({
-  recentRuns,
+  thisWeek,
   weeklyDistance,
 }: {
-  recentRuns: RecentActivity[];
+  thisWeek?: DashboardThisWeek;
   weeklyDistance?: DashboardWeeklyDistance;
 }): DashboardStat[] {
-  const thisWeekDistance = weeklyDistance?.thisWeekDistanceMeters ?? null;
-  const thisWeekRuns = recentRuns.filter((run) =>
-    weeklyDistance
-      ? new Date(run.startAt) >= new Date(weeklyDistance.weekStartAt)
-      : false,
-  );
-  const totalDuration = sum(
-    thisWeekRuns.map((run) => run.durationSeconds ?? 0),
-  );
-  const averagePaceSeconds =
-    thisWeekDistance && totalDuration > 0
-      ? totalDuration / (thisWeekDistance / 1000)
-      : null;
-  const averageHeartRate = average(
-    thisWeekRuns
-      .map((run) => run.averageHeartRateBeatsPerMinute)
-      .filter((value): value is number => value !== null),
-  );
-  const calories = Math.round(((thisWeekDistance ?? 0) / 1000) * 83);
-
+  const thisWeekDistance =
+    thisWeek?.distanceMeters ?? weeklyDistance?.thisWeekDistanceMeters ?? null;
+  const totalDuration = thisWeek?.durationSeconds ?? 0;
+  const averagePaceSeconds = thisWeek?.averagePaceSecondsPerKilometer ?? null;
+  const averageHeartRate = thisWeek?.averageHeartRateBeatsPerMinute ?? null;
   return [
     {
       delta: formatSignedDistance(weeklyDistance?.distanceDeltaMeters ?? 0),
@@ -173,16 +157,6 @@ function buildStats({
       unit: "bpm",
       value: averageHeartRate ? Math.round(averageHeartRate).toString() : "--",
     },
-    {
-      delta: "--",
-      deltaTone: "good",
-      icon: FlameIcon,
-      id: "calories",
-      label: "Calories",
-      sublabel: "Estimated",
-      unit: "kcal",
-      value: calories > 0 ? calories.toString() : "--",
-    },
   ];
 }
 
@@ -197,18 +171,6 @@ function formatPaceSeconds(seconds: number) {
 function formatSignedDistance(distanceMeters: number) {
   const sign = distanceMeters >= 0 ? "+" : "-";
   return `${sign}${formatDistance(Math.abs(distanceMeters))}`;
-}
-
-function average(values: number[]) {
-  if (values.length === 0) {
-    return null;
-  }
-
-  return sum(values) / values.length;
-}
-
-function sum(values: number[]) {
-  return values.reduce((total, value) => total + value, 0);
 }
 
 export { DashboardMetrics };

@@ -1,4 +1,5 @@
 import type {
+  DashboardThisWeek,
   DashboardWeeklyDistance,
   DashboardWeeklyDistanceBucket,
 } from "../activities.types";
@@ -14,6 +15,14 @@ export type DashboardWeeklyDistanceRow = {
   activityCount: number;
   bucketStartAt: Date | string;
   distanceMeters: number;
+};
+
+export type DashboardThisWeekRow = {
+  activityCount: number;
+  averageHeartRateBeatsPerMinute: number | null;
+  distanceMeters: number;
+  durationSeconds: number;
+  energyKilocalories: number | null;
 };
 
 export function createDashboardWeeklyDistanceBuckets({
@@ -102,6 +111,32 @@ export function getLastWeekSamePointRange(now = new Date()) {
       previousWeekStartAt.getTime() + elapsedInCurrentWeekMilliseconds,
     ),
     startAt: previousWeekStartAt,
+  };
+}
+
+export function buildDashboardThisWeek({
+  row,
+  weeklyDistance,
+}: {
+  row: DashboardThisWeekRow | null;
+  weeklyDistance: DashboardWeeklyDistance;
+}): DashboardThisWeek {
+  const distanceMeters = row?.distanceMeters ?? 0;
+  const durationSeconds = row?.durationSeconds ?? 0;
+
+  return {
+    activityCount: row?.activityCount ?? 0,
+    averageHeartRateBeatsPerMinute: row?.averageHeartRateBeatsPerMinute ?? null,
+    averagePaceSecondsPerKilometer:
+      distanceMeters > 0 && durationSeconds > 0
+        ? durationSeconds / (distanceMeters / 1000)
+        : null,
+    distanceMeters,
+    durationSeconds,
+    energyKilocalories: row?.energyKilocalories ?? null,
+    weeklyDistance,
+    weekEndAt: weeklyDistance.weekEndAt,
+    weekStartAt: weeklyDistance.weekStartAt,
   };
 }
 

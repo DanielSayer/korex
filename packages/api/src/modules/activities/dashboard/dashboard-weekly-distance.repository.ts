@@ -1,7 +1,10 @@
 import { activities, db } from "@korex/db";
 import { and, asc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 
-import type { DashboardWeeklyDistanceRow } from "./dashboard-weekly-distance";
+import type {
+  DashboardThisWeekRow,
+  DashboardWeeklyDistanceRow,
+} from "./dashboard-weekly-distance";
 
 export async function listDashboardWeeklyDistanceRows({
   bucketEndAt,
@@ -57,4 +60,38 @@ export async function sumDashboardDistance({
     );
 
   return row?.distanceMeters ?? 0;
+}
+
+export async function getDashboardThisWeekRow({
+  endAt,
+  startAt,
+  userId,
+}: {
+  endAt: Date;
+  startAt: Date;
+  userId: string;
+}): Promise<DashboardThisWeekRow | null> {
+  const [row] = await db
+    .select({
+      activityCount: sql<number>`count(*)::int`,
+      averageHeartRateBeatsPerMinute: sql<
+        number | null
+      >`avg(${activities.averageHeartRateBeatsPerMinute})::float`,
+      distanceMeters: sql<number>`coalesce(sum(${activities.distanceMeters}), 0)::float`,
+      durationSeconds: sql<number>`coalesce(sum(${activities.movingTimeSeconds}), 0)::int`,
+      energyKilocalories: sql<
+        number | null
+      >`sum(${activities.energyKilocalories})::int`,
+    })
+    .from(activities)
+    .where(
+      and(
+        eq(activities.userId, userId),
+        inArray(activities.sportType, ["run", "treadmill"]),
+        gte(activities.startAt, startAt),
+        lt(activities.startAt, endAt),
+      ),
+    );
+
+  return row ?? null;
 }

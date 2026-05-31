@@ -1,11 +1,18 @@
 import { Context, type Effect } from "effect";
-import type { DashboardWeeklyDistance } from "../activities.types";
 import type {
+  DashboardThisWeek,
+  DashboardWeeklyDistance,
+} from "../activities.types";
+import type {
+  getDashboardThisWeekRow,
   listDashboardWeeklyDistanceRows,
   sumDashboardDistance,
 } from "./dashboard-weekly-distance.repository";
 
 export type DashboardWeeklyDistanceRepositoryService = {
+  getDashboardThisWeekRow: (
+    input: Parameters<typeof getDashboardThisWeekRow>[0],
+  ) => ReturnType<typeof getDashboardThisWeekRow>;
   listDashboardWeeklyDistanceRows: (
     input: Parameters<typeof listDashboardWeeklyDistanceRows>[0],
   ) => ReturnType<typeof listDashboardWeeklyDistanceRows>;
@@ -27,6 +34,9 @@ export type GetDashboardWeeklyDistanceInput = {
 };
 
 export type DashboardWeeklyDistanceService = {
+  getDashboardThisWeek: (
+    input: GetDashboardWeeklyDistanceInput,
+  ) => Effect.Effect<DashboardThisWeek>;
   getDashboardWeeklyDistance: (
     input: GetDashboardWeeklyDistanceInput,
   ) => Effect.Effect<DashboardWeeklyDistance>;

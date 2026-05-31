@@ -100,6 +100,10 @@ _Avoid_: Weekly summary volume, snapshot volume
 A live dashboard read model showing recent weekly distance from current **Activities**, with the newest point representing the current in-progress **Training Week**.
 _Avoid_: Dashboard mileage, snapshot graph, weekly summary graph
 
+**Dashboard This Week**:
+A live dashboard read model summarizing the current in-progress **Training Week** from current run and treadmill **Activities**.
+_Avoid_: Current weekly summary, this week snapshot, top card mock data
+
 **Personal Best Effort**:
 The fastest known contiguous distance effort by a **User** over a standard distance, derived from current **Activities**.
 _Avoid_: PR, record, best split
@@ -235,6 +239,9 @@ _Avoid_: Activity PR, lap best, best split
 - **Dashboard Weekly Distance** includes the current in-progress **Training Week** as the newest chart point.
 - **Dashboard Weekly Distance** average weekly distance is calculated across the visible chart buckets, including the current in-progress **Training Week**.
 - **Dashboard Weekly Distance** compares the current in-progress **Training Week** to the previous **Training Week** at the same elapsed wall-clock point in the week.
+- **Dashboard This Week** is calculated from current run and treadmill **Activities**, not from **Weekly Training Summaries**.
+- **Dashboard This Week** covers the current in-progress **Training Week** only.
+- **Dashboard This Week** can include **Dashboard Weekly Distance** when a dashboard screen needs both top-card metrics and the weekly-distance chart.
 - A **Personal Best Effort** belongs to exactly one **User**.
 - A **Personal Best Effort** is derived from one **Activity Best Effort**.
 - A **Personal Best Effort** covers one standard distance.

@@ -1,4 +1,5 @@
 import {
+  buildDashboardThisWeek,
   buildDashboardWeeklyDistance,
   createDashboardWeeklyDistanceBuckets,
   getLastWeekSamePointRange,
@@ -62,6 +63,36 @@ describe("dashboard weekly distance", () => {
     expect(range).toEqual({
       endAt: new Date("2026-02-26T05:30:00.000Z"),
       startAt: new Date("2026-02-22T14:00:00.000Z"),
+    });
+  });
+
+  it("builds this week metrics from current training week activity totals", () => {
+    const weeklyDistance = buildDashboardWeeklyDistance({
+      lastWeekAtSamePointDistanceMeters: 12_000,
+      now: new Date("2026-03-05T05:30:00.000Z"),
+      rows: [],
+    });
+
+    const result = buildDashboardThisWeek({
+      row: {
+        activityCount: 2,
+        averageHeartRateBeatsPerMinute: 142.5,
+        distanceMeters: 15_000,
+        durationSeconds: 4500,
+        energyKilocalories: 1040,
+      },
+      weeklyDistance,
+    });
+
+    expect(result).toMatchObject({
+      activityCount: 2,
+      averageHeartRateBeatsPerMinute: 142.5,
+      averagePaceSecondsPerKilometer: 300,
+      distanceMeters: 15_000,
+      durationSeconds: 4500,
+      energyKilocalories: 1040,
+      weekEndAt: new Date("2026-03-08T14:00:00.000Z"),
+      weekStartAt: new Date("2026-03-01T14:00:00.000Z"),
     });
   });
 });

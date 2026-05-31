@@ -161,6 +161,18 @@ export type DashboardWeeklyDistance = {
   weeklyDistanceBuckets: DashboardWeeklyDistanceBucket[];
 };
 
+export type DashboardThisWeek = {
+  activityCount: number;
+  averageHeartRateBeatsPerMinute: number | null;
+  averagePaceSecondsPerKilometer: number | null;
+  distanceMeters: number;
+  durationSeconds: number;
+  energyKilocalories: number | null;
+  weeklyDistance: DashboardWeeklyDistance;
+  weekEndAt: Date;
+  weekStartAt: Date;
+};
+
 export type PersonalBestEffort = {
   activityId: number;
   activityStartAt: Date;

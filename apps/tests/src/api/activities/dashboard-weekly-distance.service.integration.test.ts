@@ -1,5 +1,8 @@
 import { DashboardWeeklyDistanceLive } from "@korex/api/modules/activities/dashboard/dashboard-weekly-distance.live";
-import { getDashboardWeeklyDistance } from "@korex/api/modules/activities/dashboard/dashboard-weekly-distance.service";
+import {
+  getDashboardThisWeek,
+  getDashboardWeeklyDistance,
+} from "@korex/api/modules/activities/dashboard/dashboard-weekly-distance.service";
 import { db, user } from "@korex/db";
 import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
@@ -98,6 +101,56 @@ describe("dashboard weekly distance service", () => {
     expect(result.weeklyDistanceBuckets.at(-2)).toMatchObject({
       activityCount: 3,
       distanceMeters: 27_620,
+    });
+  });
+
+  it("returns this week dashboard metrics with embedded weekly distance", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    await DataSeedAsync.withActivities(
+      ActivityBuilder.initWithUser(userId)
+        .withId(1311)
+        .withName("This Week Short")
+        .withStartAt(new Date("2026-03-02T00:00:00.000Z"))
+        .withDistanceMeters(5000)
+        .withMovingTimeSeconds(1500)
+        .withAverageHeartRateBeatsPerMinute(140)
+        .build(),
+      ActivityBuilder.initWithUser(userId)
+        .withId(1312)
+        .withName("This Week Longer")
+        .withStartAt(new Date("2026-03-04T00:00:00.000Z"))
+        .withDistanceMeters(10_000)
+        .withMovingTimeSeconds(3000)
+        .withAverageHeartRateBeatsPerMinute(150)
+        .build(),
+      ActivityBuilder.initWithUser(userId)
+        .withId(1313)
+        .withName("Next Activity")
+        .withStartAt(new Date("2026-03-05T06:00:00.000Z"))
+        .withDistanceMeters(8000)
+        .build(),
+    ).seedAsync();
+
+    const result = await Effect.runPromise(
+      getDashboardThisWeek({
+        now: new Date("2026-03-05T05:30:00.000Z"),
+        userId,
+      }).pipe(Effect.provide(DashboardWeeklyDistanceLive)),
+    );
+
+    expect(result).toMatchObject({
+      activityCount: 2,
+      averageHeartRateBeatsPerMinute: 145,
+      averagePaceSecondsPerKilometer: 300,
+      distanceMeters: 15_000,
+      durationSeconds: 4500,
+      weekEndAt: new Date("2026-03-08T14:00:00.000Z"),
+      weekStartAt: new Date("2026-03-01T14:00:00.000Z"),
+    });
+    expect(result.weeklyDistance).toMatchObject({
+      thisWeekDistanceMeters: 15_000,
+      weekStartAt: new Date("2026-03-01T14:00:00.000Z"),
     });
   });
 });
