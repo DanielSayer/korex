@@ -1,6 +1,7 @@
 import { createContext } from "@korex/api/context";
 import {
   ActivityRouteHeatmapTileInputError,
+  readActivityRouteHeatmapDisplayMode,
   readActivityRouteHeatmapTileInput,
   renderActivityRouteHeatmapTile,
   renderEmptyActivityRouteHeatmapTile,
@@ -53,6 +54,7 @@ app.get(
       }
 
       const tile = await renderActivityRouteHeatmapTile({
+        displayMode: readActivityRouteHeatmapDisplayMode(c.req.query("mode")),
         tileX: tileInput.tileX,
         tileY: tileInput.tileY,
         userId: context.session.user.id,

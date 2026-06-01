@@ -1,5 +1,6 @@
 import {
   getActivityRouteHeatmapTileIntensity,
+  readActivityRouteHeatmapDisplayMode,
   readActivityRouteHeatmapTileInput,
   renderActivityRouteHeatmapTileImage,
   renderActivityRouteHeatmapTilePixels,
@@ -70,6 +71,13 @@ describe("activity route heatmap tiles", () => {
     ).toBeNull();
   });
 
+  it("defaults invalid display modes to density", () => {
+    expect(readActivityRouteHeatmapDisplayMode(undefined)).toBe("density");
+    expect(readActivityRouteHeatmapDisplayMode("not-a-mode")).toBe("density");
+    expect(readActivityRouteHeatmapDisplayMode("density")).toBe("density");
+    expect(readActivityRouteHeatmapDisplayMode("visited")).toBe("visited");
+  });
+
   it("uses log intensity so dense cells do not dominate the whole ramp", () => {
     expect(
       getActivityRouteHeatmapTileIntensity({
@@ -109,6 +117,41 @@ describe("activity route heatmap tiles", () => {
     const alphaValues = readAlphaValues(pixels);
 
     expect(alphaValues.some((alpha) => alpha > 0)).toBe(true);
+  });
+
+  it("renders visited cells with constant intensity regardless of activity count", () => {
+    const lowCountPixels = renderActivityRouteHeatmapTilePixels({
+      cells: [
+        {
+          activityCount: 1,
+          cellX: 10,
+          cellY: 12,
+          tileX: 3,
+          tileY: 4,
+        },
+      ],
+      displayMode: "visited",
+      maxActivityCount: 100,
+      tileX: 3,
+      tileY: 4,
+    });
+    const highCountPixels = renderActivityRouteHeatmapTilePixels({
+      cells: [
+        {
+          activityCount: 100,
+          cellX: 10,
+          cellY: 12,
+          tileX: 3,
+          tileY: 4,
+        },
+      ],
+      displayMode: "visited",
+      maxActivityCount: 100,
+      tileX: 3,
+      tileY: 4,
+    });
+
+    expect(readMaxAlpha(lowCountPixels)).toBe(readMaxAlpha(highCountPixels));
   });
 
   it("keeps empty or zero-count tiles transparent", () => {
@@ -185,6 +228,10 @@ function readAlphaValues(pixels: Uint8Array) {
   }
 
   return alphaValues;
+}
+
+function readMaxAlpha(pixels: Uint8Array) {
+  return Math.max(...readAlphaValues(pixels));
 }
 
 function readPngHeader(buffer: Buffer) {

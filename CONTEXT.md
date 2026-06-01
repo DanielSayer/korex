@@ -60,6 +60,10 @@ _Avoid_: Heat map, all-activity heatmap, route overlay
 A materialized spatial bucket showing that one run **Activity** passed through one area for **Activity Route Heatmap** display.
 _Avoid_: Activity route, heatmap map, raw heatmap point
 
+**Activity Route Heatmap Display Mode**:
+A presentation choice for an **Activity Route Heatmap**, initially either density display or visited display.
+_Avoid_: Binary heatmap, separate heatmap
+
 **Sport Type**:
 A Korex-owned classification for an **Activity**, initially limited to run, treadmill, and hike.
 _Avoid_: Provider sport, provider type, category
@@ -161,6 +165,7 @@ _Avoid_: Activity PR, lap best, best split
 - **Activity Route Heatmap** density counts how many distinct **Activities** pass through an area, not how many **Activity Map Coordinates** were recorded there.
 - **Activity Route Heatmap** data is materialized separately from **Activity Maps** so map display data and heatmap query data can scale independently.
 - An **Activity Route Heatmap** supports global discovery: a user can pan to any visible region and see materialized run density where that user has run.
+- An **Activity Route Heatmap** can be shown with an **Activity Route Heatmap Display Mode** without changing the underlying materialized data.
 - An **Activity Route Heatmap** initially materializes slippy-map zoom levels 4 through 15 inclusive.
 - The initial **Activity Route Heatmap** displays all-time run density; date range filtering is deferred.
 - The initial **Activity Route Heatmap** read model returns grouped cells for a requested viewport, not raw contribution rows.

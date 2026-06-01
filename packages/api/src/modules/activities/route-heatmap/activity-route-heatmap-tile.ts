@@ -13,6 +13,7 @@ const minRouteHeatmapZoom = Math.min(...activityRouteHeatmapZoomLevels);
 const maxRouteHeatmapZoom = Math.max(...activityRouteHeatmapZoomLevels);
 
 export type RenderActivityRouteHeatmapTileInput = {
+  displayMode?: ActivityRouteHeatmapDisplayMode;
   tileX: number;
   tileY: number;
   userId: string;
@@ -33,11 +34,24 @@ export type ActivityRouteHeatmapTileCell = {
   tileY: number;
 };
 
+export const activityRouteHeatmapDisplayModes = ["density", "visited"] as const;
+
+export type ActivityRouteHeatmapDisplayMode =
+  (typeof activityRouteHeatmapDisplayModes)[number];
+
 export class ActivityRouteHeatmapTileInputError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "ActivityRouteHeatmapTileInputError";
   }
+}
+
+export function readActivityRouteHeatmapDisplayMode(value: string | undefined) {
+  if (activityRouteHeatmapDisplayModes.includes(value as never)) {
+    return value as ActivityRouteHeatmapDisplayMode;
+  }
+
+  return "density";
 }
 
 export function readActivityRouteHeatmapTileInput({
@@ -111,6 +125,7 @@ export function normalizeActivityRouteHeatmapTileInput({
 }
 
 export async function renderActivityRouteHeatmapTile({
+  displayMode = "density",
   tileX,
   tileY,
   userId,
@@ -134,6 +149,7 @@ export async function renderActivityRouteHeatmapTile({
   return encodePng(
     renderActivityRouteHeatmapTilePixels({
       cells,
+      displayMode,
       maxActivityCount,
       tileX,
       tileY,
@@ -149,11 +165,13 @@ export function renderEmptyActivityRouteHeatmapTile() {
 
 export function renderActivityRouteHeatmapTileImage({
   cells,
+  displayMode = "density",
   maxActivityCount,
   tileX,
   tileY,
 }: {
   cells: ActivityRouteHeatmapTileCell[];
+  displayMode?: ActivityRouteHeatmapDisplayMode;
   maxActivityCount: number;
   tileX: number;
   tileY: number;
@@ -161,6 +179,7 @@ export function renderActivityRouteHeatmapTileImage({
   return encodePng(
     renderActivityRouteHeatmapTilePixels({
       cells,
+      displayMode,
       maxActivityCount,
       tileX,
       tileY,
@@ -172,17 +191,20 @@ export function renderActivityRouteHeatmapTileImage({
 
 export function renderActivityRouteHeatmapTilePixels({
   cells,
+  displayMode = "density",
   maxActivityCount,
   tileX,
   tileY,
 }: {
   cells: ActivityRouteHeatmapTileCell[];
+  displayMode?: ActivityRouteHeatmapDisplayMode;
   maxActivityCount: number;
   tileX: number;
   tileY: number;
 }) {
   return renderTilePixels({
     cells,
+    displayMode,
     maxActivityCount,
     tileX,
     tileY,
@@ -252,6 +274,7 @@ function readTileInteger(
 
 function renderTilePixels({
   cells,
+  displayMode,
   maxActivityCount,
   tileX,
   tileY,
@@ -263,6 +286,7 @@ function renderTilePixels({
     tileX: number;
     tileY: number;
   }>;
+  displayMode: ActivityRouteHeatmapDisplayMode;
   maxActivityCount: number;
   tileX: number;
   tileY: number;
@@ -274,6 +298,7 @@ function renderTilePixels({
   for (const cell of cells) {
     const intensity = getIntensity({
       activityCount: cell.activityCount,
+      displayMode,
       maxActivityCount,
     });
 
@@ -340,11 +365,17 @@ function renderTilePixels({
 
 function getIntensity({
   activityCount,
+  displayMode,
   maxActivityCount,
 }: {
   activityCount: number;
+  displayMode: ActivityRouteHeatmapDisplayMode;
   maxActivityCount: number;
 }) {
+  if (displayMode === "visited") {
+    return activityCount > 0 ? 1 : 0;
+  }
+
   return getActivityRouteHeatmapTileIntensity({
     activityCount,
     maxActivityCount,

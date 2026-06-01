@@ -433,7 +433,7 @@ function ComparisonRow({
   const positive = valueRaw >= 0;
 
   return (
-    <div className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[1fr_1fr_1fr_auto] sm:items-center">
+    <div className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(8rem,1fr)_6rem] sm:items-center">
       <div className="font-medium">{label}</div>
       <div>
         <p className="text-muted-foreground text-xs">This week</p>
@@ -445,7 +445,7 @@ function ComparisonRow({
       </div>
       <div
         className={cn(
-          "inline-flex w-fit items-center gap-1 rounded-md px-2 py-1 font-semibold",
+          "inline-flex w-fit items-center gap-1 justify-self-start rounded-md px-2 py-1 font-semibold sm:justify-self-end",
           positive
             ? "bg-emerald-500/10 text-emerald-600"
             : "bg-destructive/10 text-destructive",

@@ -6,10 +6,15 @@ import {
   routeHeatmapMaxMaterializedZoom,
   routeHeatmapMinMaterializedZoom,
 } from "../constants";
+import type { RouteHeatmapDisplayMode } from "../types";
 import { InitialUserLocationView } from "./initial-user-location-view";
 import { RouteHeatmapLegend } from "./route-heatmap-legend";
 
-function RouteHeatmapMap() {
+function RouteHeatmapMap({
+  displayMode,
+}: {
+  displayMode: RouteHeatmapDisplayMode;
+}) {
   return (
     <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-background">
       <MapContainer
@@ -30,16 +35,17 @@ function RouteHeatmapMap() {
         <TileLayer
           attribution="Route heatmap"
           keepBuffer={8}
+          key={displayMode}
           maxNativeZoom={routeHeatmapMaxMaterializedZoom}
           minNativeZoom={routeHeatmapMinMaterializedZoom}
           opacity={0.92}
           updateInterval={100}
           updateWhenIdle={false}
-          url={`${env.VITE_SERVER_URL}/api/activities/route-heatmap/tiles/{z}/{x}/{y}.png`}
+          url={`${env.VITE_SERVER_URL}/api/activities/route-heatmap/tiles/{z}/{x}/{y}.png?mode=${displayMode}`}
         />
         <InitialUserLocationView />
       </MapContainer>
-      <RouteHeatmapLegend />
+      <RouteHeatmapLegend displayMode={displayMode} />
     </div>
   );
 }
