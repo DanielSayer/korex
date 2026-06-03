@@ -19,6 +19,7 @@ import {
   FlameIcon,
   Home,
   LineChartIcon,
+  SettingsIcon,
   TrophyIcon,
 } from "lucide-react";
 
@@ -92,6 +93,16 @@ function AppLayout() {
                   >
                     <TrophyIcon />
                     <span>Weekly Summaries</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={Boolean(matchRoute({ to: "/settings" }))}
+                    tooltip="Settings"
+                    render={<Link to="/settings" />}
+                  >
+                    <SettingsIcon />
+                    <span>Settings</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

@@ -8,3 +8,18 @@ export type HeartRateZoneSeedInput = {
   name: string;
   range: HeartRateZoneRange;
 };
+
+export type HeartRateZone = {
+  id: number;
+  position: number;
+  name: string;
+  minBpm: number;
+  maxBpm: number | null;
+};
+
+export type HeartRateZoneWriteInput = {
+  position: number;
+  name: string;
+  minBpm: number;
+  maxBpm: number | null;
+};
