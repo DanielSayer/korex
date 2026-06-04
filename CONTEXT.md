@@ -92,6 +92,38 @@ _Avoid_: Calendar week, ISO week, reporting week
 A count of consecutive **Training Weeks** in which a **User** has at least one qualifying **Activity**.
 _Avoid_: Activity streak, weekly streak
 
+**Training Goal**:
+A user-owned training target with a metric, target value, and evaluation period, measured from current **Activities**.
+_Avoid_: Provider goal, activity goal, weekly summary goal
+
+**Training Goal Metric**:
+The kind of training progress a **Training Goal** targets, initially either distance or activity count.
+_Avoid_: Goal type, target type, measurement
+
+**Training Goal Period**:
+The time span over which a **Training Goal** is evaluated, initially either a **Training Week** or a calendar month.
+_Avoid_: Goal window, goal range, reporting period
+
+**Training Goal Sport Scope**:
+The named training discipline whose **Activities** can contribute to a **Training Goal**, initially **Running**.
+_Avoid_: Goal activity type, goal sport type, activity filter
+
+**Running Training Goal Sport Scope**:
+A **Training Goal Sport Scope** that includes run and treadmill **Activities**.
+_Avoid_: Run/treadmill goal, cardio goal, running activity filter
+
+**Recurring Training Goal**:
+A **Training Goal** that applies to each new matching **Training Goal Period** until the user changes or archives it.
+_Avoid_: Goal template, repeated goal, standing target
+
+**Training Goal Version**:
+The effective target value for a **Recurring Training Goal** during a specific span of time.
+_Avoid_: Goal revision, goal history row, previous goal
+
+**Training Goal Target Value**:
+The canonical numeric threshold a **Training Goal** must reach to be achieved.
+_Avoid_: Display target, goal amount, goal value
+
 **Qualifying Activity**:
 An **Activity** that can extend a **Training Streak**, initially limited to run and treadmill **Activities**.
 _Avoid_: Streak activity, counted workout
@@ -232,6 +264,39 @@ _Avoid_: Activity PR, lap best, best split
 - A **Training Streak** maximum can increase during the current in-progress **Training Week** once that week has a **Qualifying Activity**.
 - **Training Streak** boundaries align with **Weekly Training Summary** boundaries.
 - **Training Streak** updates are handled by durable background work, not by provider sync request lifetimes or UI render paths.
+- A **Training Goal** belongs to exactly one **User**.
+- A **Training Goal** has exactly one **Training Goal Metric**.
+- A **Training Goal** has exactly one **Training Goal Period**.
+- A **Training Goal** has a **Training Goal Sport Scope**.
+- A **Training Goal** does not have a custom user-facing name in the initial model.
+- A **Training Goal** is measured from current **Activities**, not from **Weekly Training Summaries**.
+- Initial **Training Goals** are **Recurring Training Goals**.
+- A **Recurring Training Goal** applies to each new matching **Training Goal Period** until the user changes or archives it.
+- A **User** can have at most one active **Recurring Training Goal** for the same **Training Goal Metric**, **Training Goal Period**, and **Training Goal Sport Scope**.
+- A **Recurring Training Goal** has one or more **Training Goal Versions**.
+- A **Training Goal Version** preserves the **Training Goal Target Value** that applies during its effective time span.
+- Changing a **Recurring Training Goal** creates a new **Training Goal Version** rather than rewriting historical target values.
+- Historical **Training Goal Periods** are evaluated against the **Training Goal Version** that applied during that period.
+- A newly created **Recurring Training Goal** applies to the current in-progress **Training Goal Period** when there is no existing active goal for the same **Training Goal Metric**, **Training Goal Period**, and **Training Goal Sport Scope**.
+- A newly created initial **Recurring Training Goal** uses the **Running Training Goal Sport Scope**.
+- A newly created **Recurring Training Goal** cannot be backdated or scheduled for a future **Training Goal Period** in the initial model.
+- Creating a **Recurring Training Goal** records the goal definition and does not calculate live progress.
+- Creating a **Recurring Training Goal** fails when the **User** already has an active **Recurring Training Goal** for the same **Training Goal Metric**, **Training Goal Period**, and **Training Goal Sport Scope**.
+- A changed **Recurring Training Goal** applies from the next matching **Training Goal Period**, not the current in-progress period.
+- Archiving a **Recurring Training Goal** removes it from the current in-progress and future **Training Goal Periods**.
+- Archiving a **Recurring Training Goal** preserves completed historical **Training Goal Period** evaluations.
+- **Training Goal** progress and achievement are live evaluations from current **Activities**, not finalized snapshots.
+- A **Training Goal** is achieved when its measured progress is greater than or equal to its target value.
+- Initial **Training Goal Metrics** are distance and activity count.
+- Initial **Training Goal Periods** are **Training Week** and calendar month.
+- The initial **Training Goal Sport Scope** is **Running Training Goal Sport Scope**.
+- A **Running Training Goal Sport Scope** includes run and treadmill **Activities**.
+- A distance **Training Goal Target Value** is stored in meters.
+- An activity-count **Training Goal Target Value** is stored as a whole number count.
+- A **Training Goal Target Value** must be greater than zero.
+- A distance **Training Goal** measures total distance from current **Activities** inside its **Training Goal Sport Scope**.
+- An activity-count **Training Goal** counts current **Activities** inside its **Training Goal Sport Scope**.
+- An activity-count **Training Goal** does not require matching **Activities** to meet a minimum distance or duration.
 - **Analytics Volume** is calculated from current **Activities**, not from **Weekly Training Summaries**.
 - **Analytics Volume** may be grouped by **Training Week** or by calendar month for chart display.
 - The first **Analytics Volume** chart uses distance as its default volume metric.
@@ -296,3 +361,4 @@ _Avoid_: Activity PR, lap best, best split
 - "last sync time" can mean when a sync started, finished, or last wrote provider connection metadata; resolved: use **Incremental Activity Sync Watermark** for the lower bound of an incremental activity sync window.
 - "volume" can mean either a live analytics aggregate or a replayed weekly snapshot; resolved: use **Analytics Volume** for live chart aggregates calculated from current **Activities**.
 - "best effort" can mean a provider badge, race record, or lap split; resolved: use **Personal Best Effort** for the fastest known contiguous standard-distance effort derived inside Korex.
+- "goal" can mean a provider-owned target, an activity-specific target, or a replayed weekly artifact; resolved: use **Training Goal** for a user-owned target measured from current **Activities**.
