@@ -4,17 +4,6 @@ import type {
 } from "@korex/api/modules/activities/activities.types";
 import { Button } from "@korex/ui/components/button";
 import { FootprintsIcon, NotebookTextIcon } from "lucide-react";
-import { formatDistanceValue } from "@/utils/formatters";
-
-const weeklyTargetBars = [
-  { day: "monday", height: 0.82 },
-  { day: "tuesday", height: 0.38 },
-  { day: "wednesday", height: 0.56 },
-  { day: "thursday", height: 0.18 },
-  { day: "friday", height: 0.28 },
-  { day: "saturday", height: 0.36 },
-  { day: "sunday", height: 0.48 },
-];
 
 function RecoveryCard({ runs }: { runs: RecentActivity[] }) {
   const averageHr = average(
@@ -40,45 +29,6 @@ function RecoveryCard({ runs }: { runs: RecentActivity[] }) {
             <span className="text-muted-foreground">Trend</span>
             <span className="ml-4 font-semibold">+6 pts</span>
             <span className="ml-4 text-muted-foreground">vs yesterday</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function WeeklyTargetCard({
-  weeklyDistance,
-}: {
-  weeklyDistance?: DashboardWeeklyDistance;
-}) {
-  const targetMeters = 50_000;
-  const distanceMeters = weeklyDistance?.thisWeekDistanceMeters ?? 0;
-  const progress = Math.min(
-    100,
-    Math.round((distanceMeters / targetMeters) * 100),
-  );
-
-  return (
-    <section className="rounded-lg border p-5">
-      <h2 className="font-semibold text-lg">Weekly target</h2>
-      <div className="mt-5 flex flex-col gap-5">
-        <RingGauge label="%" value={progress} />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-2xl tabular-nums">
-            {formatDistanceValue(distanceMeters)}
-            <span className="font-normal text-muted-foreground"> / 50 km</span>
-          </p>
-          <p className="text-muted-foreground text-sm">Distance</p>
-          <div className="mt-5 flex h-16 items-end gap-2 border-t pt-3 sm:gap-4">
-            {weeklyTargetBars.map((bar) => (
-              <div className="grid flex-1 place-items-end gap-1" key={bar.day}>
-                <span
-                  className="w-full rounded-t-sm bg-primary"
-                  style={{ height: `${bar.height * 100}%` }}
-                />
-              </div>
-            ))}
           </div>
         </div>
       </div>
@@ -168,4 +118,4 @@ function average(values: number[]) {
   return values.reduce((total, value) => total + value, 0) / values.length;
 }
 
-export { RecoveryCard, ShoeMileageCard, TrainingNotesCard, WeeklyTargetCard };
+export { RecoveryCard, ShoeMileageCard, TrainingNotesCard };

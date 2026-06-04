@@ -8,11 +8,11 @@ import {
   RecoveryCard,
   ShoeMileageCard,
   TrainingNotesCard,
-  WeeklyTargetCard,
 } from "@/features/dashboard/components/dashboard-supplemental-cards";
 import { RecentRunsTable } from "@/features/dashboard/components/recent-runs-table";
 import { TrainingStreakSection } from "@/features/dashboard/components/training-streak-section";
 import { WeeklyDistanceSection } from "@/features/dashboard/components/weekly-distance-section";
+import { TrainingGoalsDashboardCard } from "@/features/training-goals/components/training-goals-dashboard-card";
 import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -27,6 +27,8 @@ function RouteComponent() {
     orpc.activities.trainingStreakCurrentWeek.queryOptions();
   const dashboardThisWeekQuery =
     orpc.activities.dashboardThisWeek.queryOptions();
+  const trainingGoalProgressQuery =
+    orpc.activities.trainingGoalProgress.queryOptions();
   const [recentActivities, dashboardThisWeek] = useQueries({
     queries: [recentActivitiesQuery, dashboardThisWeekQuery],
   });
@@ -42,6 +44,7 @@ function RouteComponent() {
           trainingStreakQuery,
           trainingStreakCurrentWeekQuery,
           dashboardThisWeekQuery,
+          trainingGoalProgressQuery,
         ]) {
           queryClient.invalidateQueries({ queryKey: query.queryKey });
         }
@@ -81,7 +84,7 @@ function RouteComponent() {
           />
           <section className="grid gap-4 lg:grid-cols-2">
             <RecoveryCard runs={recentRuns} />
-            <WeeklyTargetCard weeklyDistance={weeklyDistance} />
+            <TrainingGoalsDashboardCard />
           </section>
         </main>
         <aside className="grid min-w-0 content-start gap-5">

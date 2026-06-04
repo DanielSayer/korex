@@ -20,6 +20,7 @@ import {
   Home,
   LineChartIcon,
   SettingsIcon,
+  TargetIcon,
   TrophyIcon,
 } from "lucide-react";
 
@@ -73,6 +74,16 @@ function AppLayout() {
                   >
                     <LineChartIcon />
                     <span>Analytics</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={Boolean(matchRoute({ to: "/goals" }))}
+                    tooltip="Goals"
+                    render={<Link to="/goals" />}
+                  >
+                    <TargetIcon />
+                    <span>Goals</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
