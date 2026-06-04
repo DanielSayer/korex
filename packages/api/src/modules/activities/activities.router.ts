@@ -1,6 +1,8 @@
+import { ORPCError } from "@orpc/server";
 import { Effect } from "effect";
 import { protectedProcedure } from "../../index";
 import {
+  createTrainingGoalInput,
   getActivityDetailSummaryInput,
   getActivityStreamsInput,
   getAnalyticsBestEffortsInput,
@@ -23,6 +25,15 @@ import {
   getDashboardThisWeek,
   getDashboardWeeklyDistance,
 } from "./dashboard/dashboard-weekly-distance.service";
+import { listTrainingGoals } from "./training-goals/training-goal.repository";
+import {
+  createTrainingGoal,
+  listTrainingGoalProgress,
+} from "./training-goals/training-goal.service";
+import {
+  TrainingGoalAlreadyExistsError,
+  TrainingGoalTargetValueError,
+} from "./training-goals/training-goal.types";
 import {
   getTrainingStreak,
   listCurrentTrainingWeekQualifyingActivities,
@@ -141,6 +152,43 @@ export const activitiesRouter = {
   }),
   trainingStreakCurrentWeek: protectedProcedure.handler(async ({ context }) => {
     return listCurrentTrainingWeekQualifyingActivities({
+      userId: context.session.user.id,
+    });
+  }),
+  createTrainingGoal: protectedProcedure
+    .input(createTrainingGoalInput)
+    .handler(async ({ context, input }) => {
+      try {
+        return await createTrainingGoal({
+          metric: input.metric,
+          period: input.period,
+          targetValue: input.targetValue,
+          userId: context.session.user.id,
+        });
+      } catch (error) {
+        if (error instanceof TrainingGoalAlreadyExistsError) {
+          throw new ORPCError("CONFLICT", {
+            message:
+              "An active Training Goal already exists for this metric, period, and sport scope.",
+          });
+        }
+
+        if (error instanceof TrainingGoalTargetValueError) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "Training Goal target value must be greater than zero.",
+          });
+        }
+
+        throw error;
+      }
+    }),
+  trainingGoalProgress: protectedProcedure.handler(async ({ context }) => {
+    return listTrainingGoalProgress({
+      userId: context.session.user.id,
+    });
+  }),
+  trainingGoals: protectedProcedure.handler(async ({ context }) => {
+    return listTrainingGoals({
       userId: context.session.user.id,
     });
   }),

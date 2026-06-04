@@ -36,3 +36,9 @@ export const getAnalyticsVolumeInput = z.object({
 export const getAnalyticsBestEffortsInput = z.object({
   year: z.coerce.number().int().min(2000).max(currentYear).default(currentYear),
 });
+
+export const createTrainingGoalInput = z.object({
+  metric: z.enum(["distance", "activityCount"]),
+  period: z.enum(["trainingWeek", "calendarMonth"]),
+  targetValue: z.coerce.number().int().positive(),
+});

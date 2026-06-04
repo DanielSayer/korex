@@ -5,39 +5,48 @@ import {
   heartRateZones,
   providerConnections,
   syncRuns,
+  trainingGoals,
+  trainingGoalVersions,
 } from "@korex/db";
 import type { ActivityTestData } from "./activity-builder";
 import type { HeartRateZoneTestData } from "./heart-rate-zone-builder";
 import type { ProviderConnectionTestData } from "./provider-connection-builder";
 import type { SyncRunTestData } from "./sync-run-builder";
+import type { TrainingGoalTestData } from "./training-goal-builder";
 
 type ActivityInsert = typeof activities.$inferInsert;
 type ActivityMapInsert = typeof activityMaps.$inferInsert;
 type HeartRateZoneInsert = typeof heartRateZones.$inferInsert;
 type ProviderConnectionInsert = typeof providerConnections.$inferInsert;
 type SyncRunInsert = typeof syncRuns.$inferInsert;
+type TrainingGoalInsert = typeof trainingGoals.$inferInsert;
+type TrainingGoalVersionInsert = typeof trainingGoalVersions.$inferInsert;
 
 class DataSeedBuilder {
   private readonly activityData: Array<ActivityTestData>;
   private readonly heartRateZoneData: Array<HeartRateZoneTestData>;
   private readonly providerConnectionData: Array<ProviderConnectionTestData>;
   private readonly syncRunData: Array<SyncRunTestData>;
+  private readonly trainingGoalData: Array<TrainingGoalTestData>;
 
   constructor({
     activityData = [],
     heartRateZoneData = [],
     providerConnectionData = [],
     syncRunData = [],
+    trainingGoalData = [],
   }: {
     activityData?: Array<ActivityTestData>;
     heartRateZoneData?: Array<HeartRateZoneTestData>;
     providerConnectionData?: Array<ProviderConnectionTestData>;
     syncRunData?: Array<SyncRunTestData>;
+    trainingGoalData?: Array<TrainingGoalTestData>;
   } = {}) {
     this.activityData = activityData;
     this.heartRateZoneData = heartRateZoneData;
     this.providerConnectionData = providerConnectionData;
     this.syncRunData = syncRunData;
+    this.trainingGoalData = trainingGoalData;
   }
 
   withActivities(...activityData: ActivityTestData[]) {
@@ -46,6 +55,7 @@ class DataSeedBuilder {
       heartRateZoneData: this.heartRateZoneData,
       providerConnectionData: this.providerConnectionData,
       syncRunData: this.syncRunData,
+      trainingGoalData: this.trainingGoalData,
     });
   }
 
@@ -55,6 +65,7 @@ class DataSeedBuilder {
       heartRateZoneData: [...this.heartRateZoneData, ...heartRateZoneData],
       providerConnectionData: this.providerConnectionData,
       syncRunData: this.syncRunData,
+      trainingGoalData: this.trainingGoalData,
     });
   }
 
@@ -69,6 +80,7 @@ class DataSeedBuilder {
         ...providerConnectionData,
       ],
       syncRunData: this.syncRunData,
+      trainingGoalData: this.trainingGoalData,
     });
   }
 
@@ -78,6 +90,17 @@ class DataSeedBuilder {
       heartRateZoneData: this.heartRateZoneData,
       providerConnectionData: this.providerConnectionData,
       syncRunData: [...this.syncRunData, ...syncRunData],
+      trainingGoalData: this.trainingGoalData,
+    });
+  }
+
+  withTrainingGoals(...trainingGoalData: TrainingGoalTestData[]) {
+    return new DataSeedBuilder({
+      activityData: this.activityData,
+      heartRateZoneData: this.heartRateZoneData,
+      providerConnectionData: this.providerConnectionData,
+      syncRunData: this.syncRunData,
+      trainingGoalData: [...this.trainingGoalData, ...trainingGoalData],
     });
   }
 
@@ -108,6 +131,15 @@ class DataSeedBuilder {
 
     if (this.syncRunData.length > 0) {
       await db.insert(syncRuns).values(this.syncRunData.map(toSyncRunInsert));
+    }
+
+    if (this.trainingGoalData.length > 0) {
+      await db
+        .insert(trainingGoals)
+        .values(this.trainingGoalData.map(toTrainingGoalInsert));
+      await db
+        .insert(trainingGoalVersions)
+        .values(this.trainingGoalData.map(toTrainingGoalVersionInsert));
     }
   }
 }
@@ -147,4 +179,26 @@ function toProviderConnectionInsert(
 
 function toSyncRunInsert(testData: SyncRunTestData): SyncRunInsert {
   return testData;
+}
+
+function toTrainingGoalInsert(
+  testData: TrainingGoalTestData,
+): TrainingGoalInsert {
+  const {
+    targetValue: _targetValue,
+    version: _version,
+    ...trainingGoal
+  } = testData;
+
+  return trainingGoal;
+}
+
+function toTrainingGoalVersionInsert(
+  testData: TrainingGoalTestData,
+): TrainingGoalVersionInsert {
+  return {
+    ...testData.version,
+    targetValue: testData.targetValue,
+    trainingGoalId: testData.id,
+  };
 }
