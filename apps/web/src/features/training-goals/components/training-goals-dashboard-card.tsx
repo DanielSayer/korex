@@ -46,8 +46,8 @@ function TrainingGoalsDashboardCard() {
 function TrainingGoalsSkeleton() {
   return (
     <div className="grid gap-3">
-      <Skeleton className="h-[96px]" />
-      <Skeleton className="h-[96px]" />
+      <Skeleton className="h-24" />
+      <Skeleton className="h-24" />
     </div>
   );
 }
