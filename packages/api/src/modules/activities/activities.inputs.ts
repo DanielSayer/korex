@@ -42,3 +42,12 @@ export const createTrainingGoalInput = z.object({
   period: z.enum(["trainingWeek", "calendarMonth"]),
   targetValue: z.coerce.number().int().positive(),
 });
+
+export const updateTrainingGoalInput = z.object({
+  id: z.coerce.number().int().positive(),
+  targetValue: z.coerce.number().int().positive(),
+});
+
+export const archiveTrainingGoalInput = z.object({
+  id: z.coerce.number().int().positive(),
+});

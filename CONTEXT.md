@@ -276,6 +276,8 @@ _Avoid_: Activity PR, lap best, best split
 - A **Recurring Training Goal** has one or more **Training Goal Versions**.
 - A **Training Goal Version** preserves the **Training Goal Target Value** that applies during its effective time span.
 - Changing a **Recurring Training Goal** creates a new **Training Goal Version** rather than rewriting historical target values.
+- Changing a **Recurring Training Goal** only changes its **Training Goal Target Value**; changing metric, period, or sport scope requires archiving the goal and creating a new one.
+- Repeated changes before the next matching **Training Goal Period** replace the pending future **Training Goal Version** rather than preserving unapplied target values.
 - Historical **Training Goal Periods** are evaluated against the **Training Goal Version** that applied during that period.
 - A newly created **Recurring Training Goal** applies to the current in-progress **Training Goal Period** when there is no existing active goal for the same **Training Goal Metric**, **Training Goal Period**, and **Training Goal Sport Scope**.
 - A newly created initial **Recurring Training Goal** uses the **Running Training Goal Sport Scope**.
@@ -285,6 +287,9 @@ _Avoid_: Activity PR, lap best, best split
 - A changed **Recurring Training Goal** applies from the next matching **Training Goal Period**, not the current in-progress period.
 - Archiving a **Recurring Training Goal** removes it from the current in-progress and future **Training Goal Periods**.
 - Archiving a **Recurring Training Goal** preserves completed historical **Training Goal Period** evaluations.
+- Archiving a **Recurring Training Goal** discards pending future **Training Goal Versions** that have not applied to a **Training Goal Period**.
+- Archiving a **Recurring Training Goal** is irreversible in the initial model.
+- An archived **Recurring Training Goal** cannot be changed.
 - **Training Goal** progress and achievement are live evaluations from current **Activities**, not finalized snapshots.
 - A **Training Goal** is achieved when its measured progress is greater than or equal to its target value.
 - Initial **Training Goal Metrics** are distance and activity count.

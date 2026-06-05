@@ -1,5 +1,12 @@
 import type { TrainingGoalProgress } from "@korex/api/modules/activities/training-goals/training-goal.types";
+import { Button } from "@korex/ui/components/button";
+import { Input } from "@korex/ui/components/input";
 import { cn } from "@korex/ui/lib/utils";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArchiveIcon, SaveIcon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { orpc } from "@/utils/orpc";
 import {
   formatGoalPeriod,
   formatGoalProgress,
@@ -72,12 +79,135 @@ function TrainingGoalRow({
         />
       </div>
       {variant === "full" ? (
-        <p className="mt-2 text-muted-foreground text-sm tabular-nums">
-          {formatGoalProgress(goal)}
-        </p>
+        <>
+          <p className="mt-2 text-muted-foreground text-sm tabular-nums">
+            {formatGoalProgress(goal)}
+          </p>
+          <TrainingGoalActions goal={goal} />
+        </>
       ) : null}
     </div>
   );
+}
+
+function TrainingGoalActions({ goal }: { goal: TrainingGoalProgress }) {
+  const queryClient = useQueryClient();
+  const progressQueryOptions =
+    orpc.activities.trainingGoalProgress.queryOptions();
+  const [target, setTarget] = useState(() => toDisplayTarget(goal));
+  const targetValue = toTargetValue({ goal, target });
+  const updateMutation = useMutation(
+    orpc.activities.updateTrainingGoal.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSuccess: async () => {
+        toast.success("Training goal updated");
+        await queryClient.invalidateQueries({
+          queryKey: progressQueryOptions.queryKey,
+        });
+      },
+    }),
+  );
+  const archiveMutation = useMutation(
+    orpc.activities.archiveTrainingGoal.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSuccess: async () => {
+        toast.success("Training goal archived");
+        await queryClient.invalidateQueries({
+          queryKey: progressQueryOptions.queryKey,
+        });
+      },
+    }),
+  );
+
+  return (
+    <form
+      className="mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row"
+      onSubmit={(event) => {
+        event.preventDefault();
+
+        if (targetValue === null) {
+          toast.error("Enter a target greater than zero.");
+          return;
+        }
+
+        updateMutation.mutate({
+          id: goal.id,
+          targetValue,
+        });
+      }}
+    >
+      <div className="min-w-0 flex-1">
+        <label
+          className="mb-1.5 block font-medium text-muted-foreground text-xs"
+          htmlFor={`training-goal-${goal.id}-target`}
+        >
+          Next target {goal.metric === "distance" ? "km" : "runs"}
+        </label>
+        <Input
+          id={`training-goal-${goal.id}-target`}
+          inputMode="decimal"
+          min="0"
+          onChange={(event) => setTarget(event.target.value)}
+          step={goal.metric === "distance" ? "0.1" : "1"}
+          type="number"
+          value={target}
+        />
+      </div>
+      <div className="flex gap-2 self-end">
+        <Button
+          disabled={targetValue === null}
+          loading={updateMutation.isPending}
+          loadingText="Saving"
+          size="sm"
+          type="submit"
+        >
+          <SaveIcon className="size-4" />
+          Save
+        </Button>
+        <Button
+          loading={archiveMutation.isPending}
+          loadingText="Archiving"
+          onClick={() => archiveMutation.mutate({ id: goal.id })}
+          size="sm"
+          type="button"
+          variant="outline"
+        >
+          <ArchiveIcon className="size-4" />
+          Archive
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function toDisplayTarget(goal: TrainingGoalProgress) {
+  if (goal.metric === "activityCount") {
+    return goal.targetValue.toString();
+  }
+
+  return (goal.targetValue / 1000).toString();
+}
+
+function toTargetValue({
+  goal,
+  target,
+}: {
+  goal: TrainingGoalProgress;
+  target: string;
+}) {
+  const value = Number(target);
+
+  if (!Number.isFinite(value) || value <= 0) {
+    return null;
+  }
+
+  return goal.metric === "distance"
+    ? Math.round(value * 1000)
+    : Math.round(value);
 }
 
 export { TrainingGoalList };

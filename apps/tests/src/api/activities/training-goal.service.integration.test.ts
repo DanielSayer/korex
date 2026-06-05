@@ -1,9 +1,14 @@
 import { listTrainingGoals } from "@korex/api/modules/activities/training-goals/training-goal.repository";
 import {
+  archiveTrainingGoal,
   createTrainingGoal,
   listTrainingGoalProgress,
+  updateTrainingGoal,
 } from "@korex/api/modules/activities/training-goals/training-goal.service";
-import { TrainingGoalAlreadyExistsError } from "@korex/api/modules/activities/training-goals/training-goal.types";
+import {
+  TrainingGoalAlreadyExistsError,
+  TrainingGoalNotFoundError,
+} from "@korex/api/modules/activities/training-goals/training-goal.types";
 import { db, user } from "@korex/db";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
@@ -179,5 +184,115 @@ describe("training goal service", () => {
         targetValue: 4,
       },
     ]);
+  });
+
+  it("updates the target from the next matching period", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    await DataSeedAsync.withTrainingGoals(
+      TrainingGoalBuilder.initWithUser(userId)
+        .withId(1531)
+        .withMetric("distance")
+        .withPeriod("trainingWeek")
+        .withTargetValue(40_000)
+        .withEffectiveFromPeriodStartAt(new Date("2026-05-10T14:00:00.000Z"))
+        .build(),
+    ).seedAsync();
+
+    await expect(
+      updateTrainingGoal({
+        id: 1531,
+        now: new Date("2026-05-13T03:00:00.000Z"),
+        targetValue: 55_000,
+        userId,
+      }),
+    ).resolves.toMatchObject({
+      effectiveFromPeriodStartAt: new Date("2026-05-17T14:00:00.000Z"),
+      targetValue: 55_000,
+    });
+
+    await expect(
+      listTrainingGoalProgress({
+        now: new Date("2026-05-13T03:00:00.000Z"),
+        userId,
+      }),
+    ).resolves.toMatchObject([{ targetValue: 40_000 }]);
+    await expect(
+      listTrainingGoalProgress({
+        now: new Date("2026-05-18T03:00:00.000Z"),
+        userId,
+      }),
+    ).resolves.toMatchObject([{ targetValue: 55_000 }]);
+  });
+
+  it("replaces a pending future target when updated again before it applies", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    await DataSeedAsync.withTrainingGoals(
+      TrainingGoalBuilder.initWithUser(userId)
+        .withId(1541)
+        .withMetric("distance")
+        .withPeriod("trainingWeek")
+        .withTargetValue(40_000)
+        .withEffectiveFromPeriodStartAt(new Date("2026-05-10T14:00:00.000Z"))
+        .build(),
+    ).seedAsync();
+
+    await updateTrainingGoal({
+      id: 1541,
+      now: new Date("2026-05-13T03:00:00.000Z"),
+      targetValue: 50_000,
+      userId,
+    });
+    await updateTrainingGoal({
+      id: 1541,
+      now: new Date("2026-05-15T03:00:00.000Z"),
+      targetValue: 55_000,
+      userId,
+    });
+
+    const goals = await listTrainingGoals({ userId });
+
+    expect(goals).toHaveLength(1);
+    expect(goals[0]).toMatchObject({
+      effectiveFromPeriodStartAt: new Date("2026-05-17T14:00:00.000Z"),
+      targetValue: 55_000,
+    });
+  });
+
+  it("archives the goal immediately and rejects later updates", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    await DataSeedAsync.withTrainingGoals(
+      TrainingGoalBuilder.initWithUser(userId)
+        .withId(1551)
+        .withMetric("activityCount")
+        .withPeriod("calendarMonth")
+        .withTargetValue(4)
+        .withEffectiveFromPeriodStartAt(new Date("2026-04-30T14:00:00.000Z"))
+        .build(),
+    ).seedAsync();
+
+    await expect(
+      archiveTrainingGoal({
+        id: 1551,
+        now: new Date("2026-05-13T03:00:00.000Z"),
+        userId,
+      }),
+    ).resolves.toEqual({ archived: true });
+    await expect(
+      listTrainingGoalProgress({
+        now: new Date("2026-05-13T03:00:00.000Z"),
+        userId,
+      }),
+    ).resolves.toEqual([]);
+    await expect(
+      updateTrainingGoal({
+        id: 1551,
+        now: new Date("2026-05-13T03:00:00.000Z"),
+        targetValue: 5,
+        userId,
+      }),
+    ).rejects.toBeInstanceOf(TrainingGoalNotFoundError);
   });
 });

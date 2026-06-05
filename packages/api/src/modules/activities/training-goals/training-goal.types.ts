@@ -26,6 +26,19 @@ export type TrainingGoalCreateInput = {
   userId: string;
 };
 
+export type TrainingGoalUpdateInput = {
+  id: number;
+  now?: Date;
+  targetValue: number;
+  userId: string;
+};
+
+export type TrainingGoalArchiveInput = {
+  id: number;
+  now?: Date;
+  userId: string;
+};
+
 export type TrainingGoalProgress = TrainingGoal & {
   achieved: boolean;
   currentValue: number;
@@ -47,5 +60,12 @@ export class TrainingGoalTargetValueError extends Error {
   constructor() {
     super("Training Goal target value must be greater than zero");
     this.name = "TrainingGoalTargetValueError";
+  }
+}
+
+export class TrainingGoalNotFoundError extends Error {
+  constructor() {
+    super("Active Training Goal was not found");
+    this.name = "TrainingGoalNotFoundError";
   }
 }

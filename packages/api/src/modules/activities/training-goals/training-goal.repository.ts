@@ -10,7 +10,7 @@ import type {
 
 type TrainingGoalDatabase = Pick<
   typeof db,
-  "insert" | "select" | "transaction"
+  "delete" | "insert" | "select" | "transaction" | "update"
 >;
 
 export async function transaction<T>(
@@ -114,6 +114,51 @@ export async function findActiveTrainingGoal({
   return trainingGoal ?? null;
 }
 
+export async function getActiveTrainingGoal({
+  database = db,
+  id,
+  userId,
+}: {
+  database?: TrainingGoalDatabase;
+  id: number;
+  userId: string;
+}): Promise<TrainingGoal | null> {
+  const [goal] = await database
+    .select({
+      archivedAt: trainingGoals.archivedAt,
+      createdAt: trainingGoals.createdAt,
+      effectiveFromPeriodStartAt:
+        trainingGoalVersions.effectiveFromPeriodStartAt,
+      effectiveUntilPeriodStartAt:
+        trainingGoalVersions.effectiveUntilPeriodStartAt,
+      id: trainingGoals.id,
+      metric: trainingGoals.metric,
+      period: trainingGoals.period,
+      sportScope: trainingGoals.sportScope,
+      targetValue: trainingGoalVersions.targetValue,
+      trainingGoalVersionId: trainingGoalVersions.id,
+      updatedAt: trainingGoals.updatedAt,
+    })
+    .from(trainingGoals)
+    .innerJoin(
+      trainingGoalVersions,
+      and(
+        eq(trainingGoalVersions.trainingGoalId, trainingGoals.id),
+        isNull(trainingGoalVersions.effectiveUntilPeriodStartAt),
+      ),
+    )
+    .where(
+      and(
+        eq(trainingGoals.id, id),
+        eq(trainingGoals.userId, userId),
+        isNull(trainingGoals.archivedAt),
+      ),
+    )
+    .limit(1);
+
+  return goal ?? null;
+}
+
 export async function listTrainingGoals({
   userId,
 }: {
@@ -145,6 +190,134 @@ export async function listTrainingGoals({
     )
     .where(eq(trainingGoals.userId, userId))
     .orderBy(trainingGoals.period, trainingGoals.metric);
+}
+
+export async function listActiveTrainingGoalVersions({
+  userId,
+}: {
+  userId: string;
+}): Promise<TrainingGoal[]> {
+  return db
+    .select({
+      archivedAt: trainingGoals.archivedAt,
+      createdAt: trainingGoals.createdAt,
+      effectiveFromPeriodStartAt:
+        trainingGoalVersions.effectiveFromPeriodStartAt,
+      effectiveUntilPeriodStartAt:
+        trainingGoalVersions.effectiveUntilPeriodStartAt,
+      id: trainingGoals.id,
+      metric: trainingGoals.metric,
+      period: trainingGoals.period,
+      sportScope: trainingGoals.sportScope,
+      targetValue: trainingGoalVersions.targetValue,
+      trainingGoalVersionId: trainingGoalVersions.id,
+      updatedAt: trainingGoals.updatedAt,
+    })
+    .from(trainingGoals)
+    .innerJoin(
+      trainingGoalVersions,
+      eq(trainingGoalVersions.trainingGoalId, trainingGoals.id),
+    )
+    .where(
+      and(eq(trainingGoals.userId, userId), isNull(trainingGoals.archivedAt)),
+    )
+    .orderBy(
+      trainingGoals.period,
+      trainingGoals.metric,
+      trainingGoalVersions.effectiveFromPeriodStartAt,
+    );
+}
+
+export async function closeTrainingGoalVersion({
+  database,
+  effectiveUntilPeriodStartAt,
+  trainingGoalVersionId,
+}: {
+  database: TrainingGoalDatabase;
+  effectiveUntilPeriodStartAt: Date;
+  trainingGoalVersionId: number;
+}) {
+  await database
+    .update(trainingGoalVersions)
+    .set({
+      effectiveUntilPeriodStartAt,
+      updatedAt: new Date(),
+    })
+    .where(eq(trainingGoalVersions.id, trainingGoalVersionId));
+}
+
+export async function deletePendingTrainingGoalVersions({
+  database,
+  effectiveFromPeriodStartAt,
+  trainingGoalId,
+}: {
+  database: TrainingGoalDatabase;
+  effectiveFromPeriodStartAt: Date;
+  trainingGoalId: number;
+}) {
+  await database
+    .delete(trainingGoalVersions)
+    .where(
+      and(
+        eq(trainingGoalVersions.trainingGoalId, trainingGoalId),
+        gte(
+          trainingGoalVersions.effectiveFromPeriodStartAt,
+          effectiveFromPeriodStartAt,
+        ),
+      ),
+    );
+}
+
+export async function createTrainingGoalVersion({
+  database,
+  effectiveFromPeriodStartAt,
+  targetValue,
+  trainingGoalId,
+}: {
+  database: TrainingGoalDatabase;
+  effectiveFromPeriodStartAt: Date;
+  targetValue: number;
+  trainingGoalId: number;
+}) {
+  const [version] = await database
+    .insert(trainingGoalVersions)
+    .values({
+      effectiveFromPeriodStartAt,
+      targetValue,
+      trainingGoalId,
+    })
+    .returning({
+      effectiveFromPeriodStartAt:
+        trainingGoalVersions.effectiveFromPeriodStartAt,
+      effectiveUntilPeriodStartAt:
+        trainingGoalVersions.effectiveUntilPeriodStartAt,
+      targetValue: trainingGoalVersions.targetValue,
+      trainingGoalVersionId: trainingGoalVersions.id,
+    });
+
+  if (!version) {
+    throw new Error("Failed to create Training Goal Version");
+  }
+
+  return version;
+}
+
+export async function archiveTrainingGoalRecord({
+  archivedAt,
+  database,
+  trainingGoalId,
+}: {
+  archivedAt: Date;
+  database: TrainingGoalDatabase;
+  trainingGoalId: number;
+}) {
+  await database
+    .update(trainingGoals)
+    .set({
+      archivedAt,
+      updatedAt: new Date(),
+    })
+    .where(eq(trainingGoals.id, trainingGoalId));
 }
 
 export async function calculateTrainingGoalActivityCount({
