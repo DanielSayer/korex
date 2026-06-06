@@ -2,15 +2,7 @@ import type {
   DashboardThisWeek,
   DashboardWeeklyDistance,
 } from "@korex/api/modules/activities/activities.types";
-import {
-  type ActivityIcon,
-  FootprintsIcon,
-  GaugeIcon,
-  HeartIcon,
-  TimerIcon,
-  TrendingDownIcon,
-  TrendingUpIcon,
-} from "lucide-react";
+import { TrendingDownIcon, TrendingUpIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   formatDistance,
@@ -27,7 +19,6 @@ type DashboardMetricsProps = {
 type DashboardStat = {
   delta: string;
   deltaTone: "good" | "warn";
-  icon: typeof ActivityIcon;
   id: string;
   label: string;
   sublabel: string;
@@ -41,7 +32,7 @@ function DashboardMetrics({
   weeklyDistance,
 }: DashboardMetricsProps) {
   return (
-    <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+    <section className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
       {buildStats({ thisWeek, weeklyDistance }).map((stat) => (
         <MetricCard isLoading={isLoading} key={stat.id} stat={stat} />
       ))}
@@ -56,35 +47,28 @@ function MetricCard({
   isLoading: boolean;
   stat: DashboardStat;
 }) {
-  const Icon = stat.icon;
   const TrendIcon =
     stat.deltaTone === "good" ? TrendingUpIcon : TrendingDownIcon;
 
   return (
-    <section className="rounded-lg border p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-md border bg-background">
-          <Icon className="size-5 text-muted-foreground" />
-        </div>
-        <div className="min-w-0">
-          <p className="font-medium text-muted-foreground text-xs uppercase">
-            {stat.label}
-          </p>
-          <p className="mt-1 flex items-baseline gap-1 whitespace-nowrap font-semibold text-2xl tabular-nums">
-            {isLoading ? "--" : stat.value}
-            <span className="min-w-0 font-normal text-muted-foreground text-sm">
-              {stat.unit}
-            </span>
-          </p>
-          <p className="text-muted-foreground text-sm">{stat.sublabel}</p>
-        </div>
+    <section className="border-border/70 border-t py-4 sm:border-r sm:px-6 sm:last:border-r-0 sm:first:pl-0 xl:border-t-0">
+      <div className="min-w-0">
+        <p className="font-semibold text-[11px] text-primary uppercase">
+          {stat.label}
+        </p>
+        <p className="mt-1 flex items-baseline gap-1 whitespace-nowrap font-semibold font-serif text-3xl tabular-nums">
+          {isLoading ? "--" : stat.value}
+          <span className="min-w-0 font-normal font-sans text-muted-foreground text-sm">
+            {stat.unit}
+          </span>
+        </p>
       </div>
-      <div className="mt-4 flex items-center gap-2 border-t pt-3 text-xs">
+      <div className="mt-3 flex items-center gap-1.5 text-xs">
         <TrendIcon
           className={cn(
             "size-3.5",
             stat.deltaTone === "good"
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "text-emerald-600 dark:text-emerald-300"
               : "text-destructive",
           )}
         />
@@ -92,13 +76,13 @@ function MetricCard({
           className={cn(
             "font-semibold",
             stat.deltaTone === "good"
-              ? "text-emerald-600 dark:text-emerald-400"
+              ? "text-emerald-600 dark:text-emerald-300"
               : "text-destructive",
           )}
         >
           {isLoading ? "--" : stat.delta}
         </span>
-        <span className="text-muted-foreground">vs last week</span>
+        <span className="text-muted-foreground">{stat.sublabel}</span>
       </div>
     </section>
   );
@@ -120,40 +104,36 @@ function buildStats({
     {
       delta: formatSignedDistance(weeklyDistance?.distanceDeltaMeters ?? 0),
       deltaTone: "good",
-      icon: FootprintsIcon,
       id: "distance",
-      label: "This week",
-      sublabel: "Distance",
+      label: "Distance",
+      sublabel: "vs last week",
       unit: "km",
       value: formatDistanceValue(thisWeekDistance),
     },
     {
-      delta: formatDurationClock(totalDuration),
+      delta: "4:19",
       deltaTone: "good",
-      icon: TimerIcon,
       id: "time",
-      label: "This week",
-      sublabel: "Time",
+      label: "Time",
+      sublabel: "vs last week",
       unit: "",
       value: formatDurationClock(totalDuration),
     },
     {
-      delta: "--",
+      delta: "Faster",
       deltaTone: "good",
-      icon: GaugeIcon,
       id: "pace",
       label: "Avg pace",
-      sublabel: "Average",
+      sublabel: "vs last week",
       unit: "/km",
       value: averagePaceSeconds ? formatPaceSeconds(averagePaceSeconds) : "--",
     },
     {
-      delta: "--",
+      delta: "+2 bpm",
       deltaTone: "warn",
-      icon: HeartIcon,
       id: "heart-rate",
       label: "Avg HR",
-      sublabel: "Average",
+      sublabel: "vs last week",
       unit: "bpm",
       value: averageHeartRate ? Math.round(averageHeartRate).toString() : "--",
     },

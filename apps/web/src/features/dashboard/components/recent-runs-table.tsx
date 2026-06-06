@@ -10,17 +10,14 @@ type RecentRunsTableProps = {
 
 function RecentRunsTable({ isLoading, runs }: RecentRunsTableProps) {
   return (
-    <section>
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-semibold text-lg">Last 5 Runs</h2>
-        <Link
-          className="inline-flex items-center gap-1 font-medium text-primary text-sm"
-          to="/calendar"
-        >
-          View all runs <ChevronRightIcon className="size-4" />
-        </Link>
+    <section className="relative">
+      <div className="mb-3 flex items-center justify-between gap-4">
+        <h2 className="shrink-0 font-semibold text-primary text-xs uppercase">
+          Last 5 Runs
+        </h2>
       </div>
-      <div className="overflow-hidden rounded-lg border">
+      <div className="relative overflow-hidden pl-8">
+        <div className="absolute top-6 bottom-8 left-2.5 w-px bg-border" />
         {isLoading ? (
           <EmptyPanel label="Loading recent runs..." />
         ) : runs.length === 0 ? (
@@ -29,6 +26,12 @@ function RecentRunsTable({ isLoading, runs }: RecentRunsTableProps) {
           runs.slice(0, 5).map((run) => <RunRow key={run.id} run={run} />)
         )}
       </div>
+      <Link
+        className="mt-5 inline-flex w-full items-center justify-center gap-1 font-medium text-primary text-sm"
+        to="/calendar"
+      >
+        View all runs <ChevronRightIcon className="size-4" />
+      </Link>
     </section>
   );
 }
@@ -38,13 +41,14 @@ function RunRow({ run }: { run: RecentActivity }) {
 
   return (
     <Link
-      className="grid gap-3 border-b p-3 last:border-b-0 hover:bg-muted/40 lg:grid-cols-[72px_minmax(160px,1fr)_repeat(4,minmax(76px,0.48fr))] lg:items-center"
+      className="relative grid gap-3 border-border/70 border-b py-3 transition-colors last:border-b-0 hover:bg-muted/20 lg:grid-cols-[92px_minmax(160px,1fr)_repeat(4,minmax(76px,0.48fr))] lg:items-center"
       params={{ activityId: String(run.id) }}
       to="/activity/$activityId"
     >
+      <span className="absolute top-1/2 -left-[30px] size-3 -translate-y-1/2 rounded-full border border-primary bg-background ring-2 ring-background" />
       <MapPreview run={run} />
       <div className="min-w-0">
-        <h3 className="truncate font-semibold">{run.name}</h3>
+        <h3 className="truncate font-semibold font-serif">{run.name}</h3>
         <p className="text-muted-foreground text-sm">
           {formatRunDate(run.startAt)}
         </p>
@@ -82,7 +86,7 @@ function RunRowMetric({
 
   return (
     <div className="min-w-0 overflow-hidden">
-      <p className="font-semibold text-lg tabular-nums">
+      <p className="font-semibold font-serif text-lg tabular-nums">
         {metricValue}
         <span className="ml-1 font-normal text-muted-foreground text-xs">
           {unit ?? metricUnit}
@@ -97,7 +101,7 @@ function MapPreview({ run }: { run: RecentActivity }) {
   const path = buildMapPath(run);
 
   return (
-    <div className="relative h-16 overflow-hidden rounded-md border bg-muted/20">
+    <div className="relative h-16 overflow-hidden rounded-md border border-border/70 bg-muted/20">
       <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] [background-size:18px_18px]" />
       <svg
         aria-hidden="true"

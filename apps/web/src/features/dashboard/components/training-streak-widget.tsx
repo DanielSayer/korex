@@ -3,7 +3,7 @@ import type {
   TrainingStreak,
 } from "@korex/api/modules/activities/activities.types";
 import { addDays, format, isSameDay } from "date-fns";
-import { FlameIcon, FootprintsIcon } from "lucide-react";
+import { FlameIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type TrainingStreakWidgetProps = {
@@ -32,21 +32,18 @@ function TrainingStreakWidget({
   });
 
   return (
-    <section className="border-y py-5">
-      <h2 className="font-semibold text-lg">Your streak</h2>
-      <div className="mt-4 flex items-end gap-4 sm:gap-6">
-        <div className="flex w-14 shrink-0 flex-col items-center">
-          <div className="relative flex h-16 w-12 items-center justify-center">
-            <FlameIcon
-              aria-hidden="true"
-              className="absolute inset-0 size-full fill-orange-600 text-orange-600"
-              strokeWidth={1.75}
-            />
-            <span className="relative pt-3 font-bold text-sm text-white tabular-nums">
-              {currentStreak}
-            </span>
-          </div>
-          <span className="font-semibold text-orange-600 text-xs">Weeks</span>
+    <section className="rounded-xl border border-border/55 bg-background/20 p-5 shadow-black/15 shadow-xl backdrop-blur-md dark:bg-background/20 dark:shadow-black/25">
+      <div className="flex items-end gap-5 sm:gap-7">
+        <div className="w-24 shrink-0 border-border/70 border-r pr-5">
+          <h2 className="font-semibold text-primary text-xs uppercase">
+            Your streak
+          </h2>
+          <p className="mt-4 font-semibold font-serif text-6xl text-primary tabular-nums leading-none">
+            {currentStreak}
+          </p>
+          <p className="mt-1 font-semibold text-muted-foreground text-xs uppercase">
+            Weeks
+          </p>
         </div>
         <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 sm:gap-3">
           {days.map((day) => (
@@ -59,10 +56,10 @@ function TrainingStreakWidget({
               </span>
               <div
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-full border text-sm tabular-nums",
+                  "flex size-10 items-center justify-center rounded-full border text-sm tabular-nums",
                   day.hasActivity
-                    ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-black"
-                    : "border-border bg-background text-foreground",
+                    ? "border-primary/20 bg-foreground text-background dark:bg-foreground dark:text-background"
+                    : "border-border bg-background/40 text-foreground",
                 )}
                 title={
                   day.hasActivity
@@ -71,7 +68,10 @@ function TrainingStreakWidget({
                 }
               >
                 {day.hasActivity ? (
-                  <FootprintsIcon className="size-5" strokeWidth={2.25} />
+                  <FlameIcon
+                    className="size-5 fill-destructive text-destructive"
+                    strokeWidth={2.25}
+                  />
                 ) : (
                   day.valueLabel
                 )}

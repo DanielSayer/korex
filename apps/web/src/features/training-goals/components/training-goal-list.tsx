@@ -52,13 +52,19 @@ function TrainingGoalRow({
 
   return (
     <div
-      className={cn("rounded-md border", variant === "full" ? "p-4" : "p-3")}
+      className={cn(
+        "rounded-md border border-border/70",
+        variant === "full" ? "p-4" : "bg-background/15 p-3",
+      )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-medium">{formatGoalTitle(goal)}</p>
-          <p className="text-muted-foreground text-sm">
+          <p className="font-medium font-serif">{formatGoalTitle(goal)}</p>
+          <p className="text-primary text-sm">
             {formatGoalPeriod(goal.period)}
+          </p>
+          <p className="text-muted-foreground text-xs tabular-nums">
+            {formatGoalProgress(goal)}
           </p>
         </div>
         <span

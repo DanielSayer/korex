@@ -51,15 +51,21 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
       : "text-destructive";
 
   return (
-    <section className="rounded-lg border p-4 sm:p-5">
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-end">
-        <div className="grid gap-4 lg:w-52 lg:shrink-0">
+    <section className="rounded-xl border border-border/55 bg-card/40 p-5 shadow-black/5 shadow-md backdrop-blur-sm dark:bg-card/35 dark:shadow-black/15">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h2 className="font-semibold text-xs uppercase">This week trend</h2>
+        <p className="text-muted-foreground text-xs">
+          {formatWeekRange(weeklyDistance.weekStartAt)}
+        </p>
+      </div>
+      <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-end">
+        <div className="grid gap-4 2xl:w-52 2xl:shrink-0">
           <div>
             <p className="font-medium text-muted-foreground text-xs uppercase">
               This week
             </p>
             <p className="mt-1 flex items-baseline gap-2">
-              <span className="font-semibold text-4xl tracking-tight">
+              <span className="font-semibold font-serif text-5xl tracking-tight">
                 {formatDistanceValue(weeklyDistance.thisWeekDistanceMeters)}
               </span>
               <span className="text-muted-foreground text-sm">km</span>
@@ -85,11 +91,6 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
           </div>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="mb-2 flex justify-end">
-            <p className="text-muted-foreground text-xs">
-              {formatWeekRange(weeklyDistance.weekStartAt)}
-            </p>
-          </div>
           <ChartContainer
             className="aspect-auto h-44 w-full"
             config={chartConfig}
