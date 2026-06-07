@@ -122,7 +122,7 @@ function RingGauge({ label, value }: { label: string; value: number }) {
         background: `conic-gradient(var(--primary) ${value * 3.6}deg, var(--muted) 0deg)`,
       }}
     >
-      <div className="grid size-[96px] place-items-center rounded-full bg-background">
+      <div className="grid size-24 place-items-center rounded-full bg-background">
         <div className="text-center">
           <p className="font-semibold font-serif text-5xl tabular-nums">
             {Math.round(value)}

@@ -45,7 +45,7 @@ function RunRow({ run }: { run: RecentActivity }) {
       params={{ activityId: String(run.id) }}
       to="/activity/$activityId"
     >
-      <span className="absolute top-1/2 -left-[30px] size-3 -translate-y-1/2 rounded-full border border-primary bg-background ring-2 ring-background" />
+      <span className="absolute top-1/2 -left-7.5 size-3 -translate-y-1/2 rounded-full border border-primary bg-background ring-2 ring-background" />
       <MapPreview run={run} />
       <div className="min-w-0">
         <h3 className="truncate font-semibold font-serif">{run.name}</h3>
@@ -102,7 +102,7 @@ function MapPreview({ run }: { run: RecentActivity }) {
 
   return (
     <div className="relative h-16 overflow-hidden rounded-md border border-border/70 bg-muted/20">
-      <div className="absolute inset-0 opacity-35 [background-image:linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] [background-size:18px_18px]" />
+      <div className="absolute inset-0 bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] bg-size-[18px_18px] opacity-35" />
       <svg
         aria-hidden="true"
         className="absolute inset-0 size-full"

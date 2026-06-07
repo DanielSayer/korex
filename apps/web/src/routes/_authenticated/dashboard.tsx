@@ -60,7 +60,7 @@ function RouteComponent() {
     recentActivities.isPending || dashboardThisWeek.isPending;
 
   return (
-    <div className="grid gap-5 p-0 md:p-6">
+    <div className="grid gap-5 p-0">
       {hasError ? (
         <ErrorMessage
           message="Could not load dashboard data."

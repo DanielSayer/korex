@@ -29,7 +29,7 @@ function AppLayout() {
 
   return (
     <SidebarProvider className="h-svh min-h-0 overflow-hidden">
-      <Sidebar collapsible="icon" variant="inset">
+      <Sidebar collapsible="icon">
         <SidebarHeader className="px-4 pt-5">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -135,11 +135,11 @@ function AppLayout() {
         <SidebarRail />
       </Sidebar>
       <SidebarInset className="min-h-0 overflow-hidden">
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4 md:hidden">
+        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger />
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-8xl p-4 md:p-0">
+          <div className="mx-auto w-full max-w-8xl p-4 md:p-6">
             <Outlet />
           </div>
         </main>
