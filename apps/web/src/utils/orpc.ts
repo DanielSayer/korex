@@ -1,6 +1,6 @@
 import type { AppRouterClient } from "@korex/api/routers/index";
 import { env } from "@korex/env/web";
-import { createORPCClient } from "@orpc/client";
+import { createORPCClient, ORPCError } from "@orpc/client";
 import { RPCLink } from "@orpc/client/fetch";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
 import { QueryCache, QueryClient } from "@tanstack/react-query";
@@ -9,6 +9,11 @@ import { toast } from "sonner";
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
+      if (error instanceof ORPCError && error.code === "UNAUTHORIZED") {
+        window.location.assign("/auth/sign-in");
+        return;
+      }
+
       toast.error(`Error: ${error.message}`, {
         action: {
           label: "retry",
