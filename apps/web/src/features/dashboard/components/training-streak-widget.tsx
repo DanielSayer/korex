@@ -32,20 +32,22 @@ function TrainingStreakWidget({
   });
 
   return (
-    <section className="rounded-xl border border-border/55 bg-background/20 p-5 shadow-black/15 shadow-xl backdrop-blur-md dark:bg-background/20 dark:shadow-black/25">
-      <div className="flex items-end gap-5 sm:gap-7">
-        <div className="w-24 shrink-0 border-border/70 border-r pr-5">
-          <h2 className="font-semibold text-primary text-xs uppercase">
-            Your streak
-          </h2>
-          <p className="mt-4 font-semibold font-serif text-6xl text-primary tabular-nums leading-none">
+    <section className="rounded-xl border border-border/55 bg-background/20 p-4 shadow-black/15 shadow-xl backdrop-blur-md sm:p-5 dark:bg-background/20 dark:shadow-black/25">
+      <div className="grid gap-5">
+        <div className="flex items-end justify-between gap-4 border-border/70 border-b pb-4">
+          <div>
+            <h2 className="font-semibold text-primary text-xs uppercase">
+              Your streak
+            </h2>
+            <p className="mt-1 font-semibold text-muted-foreground text-xs uppercase">
+              Weeks
+            </p>
+          </div>
+          <p className="font-semibold font-serif text-6xl text-primary tabular-nums leading-none">
             {currentStreak}
           </p>
-          <p className="mt-1 font-semibold text-muted-foreground text-xs uppercase">
-            Weeks
-          </p>
         </div>
-        <div className="grid min-w-0 flex-1 grid-cols-7 gap-1 sm:gap-3">
+        <div className="grid min-w-0 grid-cols-7 gap-1.5 sm:gap-3">
           {days.map((day) => (
             <div
               className="flex min-w-0 flex-col items-center gap-2"
@@ -56,7 +58,7 @@ function TrainingStreakWidget({
               </span>
               <div
                 className={cn(
-                  "flex size-10 items-center justify-center rounded-full border text-sm tabular-nums",
+                  "flex size-9 items-center justify-center rounded-full border text-sm tabular-nums sm:size-10",
                   day.hasActivity
                     ? "border-primary/20 bg-foreground text-background dark:bg-foreground dark:text-background"
                     : "border-border bg-background/40 text-foreground",

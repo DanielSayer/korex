@@ -139,7 +139,7 @@ function AppLayout() {
           <SidebarTrigger />
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-8xl p-4 md:p-6">
+          <div className="mx-auto w-full max-w-7xl p-4 md:p-6">
             <Outlet />
           </div>
         </main>

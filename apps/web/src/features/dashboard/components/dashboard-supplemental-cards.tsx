@@ -54,7 +54,7 @@ function ShoeMileageCard({
 
   return (
     <section className="rounded-xl border border-border/55 bg-card/40 p-5 shadow-black/5 shadow-md backdrop-blur-sm dark:bg-card/35 dark:shadow-black/15">
-      <div className="grid gap-5 2xl:grid-cols-[220px_1fr] 2xl:items-center">
+      <div className="grid gap-5">
         <div className="flex items-center gap-4">
           <div className="grid size-16 shrink-0 place-items-center rounded-md border border-border/70 bg-muted/20">
             <FootprintsIcon className="size-9 text-primary" />
@@ -77,7 +77,7 @@ function ShoeMileageCard({
               </p>
               <p className="text-primary text-sm">Mocked shoe total</p>
             </div>
-            <p className="hidden text-right font-medium text-muted-foreground text-xs 2xl:block">
+            <p className="hidden text-right font-medium text-muted-foreground text-xs sm:block">
               138 km to go
             </p>
           </div>

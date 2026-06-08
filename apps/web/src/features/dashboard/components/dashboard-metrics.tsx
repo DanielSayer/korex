@@ -32,7 +32,7 @@ function DashboardMetrics({
   weeklyDistance,
 }: DashboardMetricsProps) {
   return (
-    <section className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid grid-cols-2 gap-0 xl:grid-cols-4">
       {buildStats({ thisWeek, weeklyDistance }).map((stat) => (
         <MetricCard isLoading={isLoading} key={stat.id} stat={stat} />
       ))}
@@ -51,7 +51,7 @@ function MetricCard({
     stat.deltaTone === "good" ? TrendingUpIcon : TrendingDownIcon;
 
   return (
-    <section className="border-border/70 border-t py-4 sm:border-r sm:px-6 sm:last:border-r-0 sm:first:pl-0 xl:border-t-0">
+    <section className="border-border/70 border-t px-4 py-4 odd:border-r sm:px-6 sm:first:pl-0 xl:border-t-0 xl:border-r xl:last:border-r-0">
       <div className="min-w-0">
         <p className="font-semibold text-[11px] text-primary uppercase">
           {stat.label}

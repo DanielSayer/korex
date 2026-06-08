@@ -58,8 +58,8 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
           {formatWeekRange(weeklyDistance.weekStartAt)}
         </p>
       </div>
-      <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-end">
-        <div className="grid gap-4 2xl:w-52 2xl:shrink-0">
+      <div className="grid gap-5">
+        <div className="grid gap-4">
           <div>
             <p className="font-medium text-muted-foreground text-xs uppercase">
               This week

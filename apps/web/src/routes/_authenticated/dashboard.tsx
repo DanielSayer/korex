@@ -67,7 +67,7 @@ function RouteComponent() {
           variant="banner"
         />
       ) : null}
-      <section className="relative min-h-[650px] overflow-hidden border-border/70 border-b px-0 py-8 sm:px-8 lg:min-h-[720px] lg:px-16">
+      <section className="relative overflow-hidden border-border/70 border-b px-0 py-8 sm:px-8 lg:px-10 xl:px-12">
         <div className="absolute top-5 right-5 z-20 sm:top-6 sm:right-6">
           <DashboardHeader
             isSyncing={incrementalSyncMutation.isPending}
@@ -80,13 +80,13 @@ function RouteComponent() {
           src="/dashboard/hero_runner.png"
         />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_54%_34%,color-mix(in_oklch,var(--primary)_12%,transparent)_0,transparent_18rem),linear-gradient(90deg,var(--background)_0%,color-mix(in_oklch,var(--background)_80%,transparent)_32%,color-mix(in_oklch,var(--background)_22%,transparent)_60%,color-mix(in_oklch,var(--background)_54%,transparent)_100%),linear-gradient(180deg,color-mix(in_oklch,var(--background)_70%,transparent)_0%,transparent_30%,var(--background)_100%)]" />
-        <div className="relative min-h-[590px]">
-          <div className="flex min-h-[590px] max-w-4xl flex-col justify-between gap-10 lg:max-w-[54%] xl:max-w-[58%]">
+        <div className="relative grid gap-8 lg:min-h-[590px] lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-end xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)]">
+          <div className="flex max-w-3xl flex-col justify-between gap-10 lg:min-h-[590px]">
             <div>
               <p className="font-semibold text-primary text-xs uppercase">
                 Weekly Briefing
               </p>
-              <h1 className="mt-5 max-w-[560px] font-semibold font-serif text-5xl leading-[0.98] tracking-tight sm:text-6xl">
+              <h1 className="mt-5 max-w-[560px] font-semibold font-serif text-4xl leading-[0.98] tracking-tight sm:text-6xl">
                 Consistent progress, strong foundation.
               </h1>
               <p className="mt-6 max-w-md text-muted-foreground leading-7">
@@ -100,13 +100,13 @@ function RouteComponent() {
               weeklyDistance={weeklyDistance}
             />
           </div>
-          <div className="relative z-10 mt-8 grid gap-5 lg:absolute lg:top-20 lg:right-0 lg:mt-0 lg:w-[320px] xl:w-[420px] 2xl:w-[500px]">
+          <div className="relative z-10 grid gap-5 self-end">
             <TrainingStreakSection />
             <WeeklyDistanceSection weeklyDistance={weeklyDistance} />
           </div>
         </div>
       </section>
-      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.28fr)_minmax(390px,0.82fr)]">
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
         <main className="grid gap-5">
           <RecentRunsTable
             isLoading={recentActivities.isPending}
@@ -118,7 +118,7 @@ function RouteComponent() {
           </section>
         </main>
         <aside className="grid min-w-0 content-start gap-5">
-          <section className="hidden gap-4 xl:grid xl:grid-cols-1 2xl:grid-cols-2">
+          <section className="hidden gap-4 xl:grid">
             <RecoveryCard runs={recentRuns} />
             <TrainingGoalsDashboardCard />
           </section>
