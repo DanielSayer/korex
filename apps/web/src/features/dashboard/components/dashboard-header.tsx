@@ -1,5 +1,10 @@
 import { Button } from "@korex/ui/components/button";
-import { RefreshCwIcon } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@korex/ui/components/tooltip";
+import { Loader2Icon, RefreshCwIcon } from "lucide-react";
 
 type DashboardHeaderProps = {
   isSyncing: boolean;
@@ -8,19 +13,32 @@ type DashboardHeaderProps = {
 
 function DashboardHeader({ isSyncing, onSync }: DashboardHeaderProps) {
   return (
-    <div className="flex justify-end">
-      <Button
-        className="w-full sm:w-auto"
-        loading={isSyncing}
-        loadingText="Syncing"
-        onClick={onSync}
-        type="button"
-        variant="outline"
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            aria-label={isSyncing ? "Syncing activities" : "Sync activities"}
+            disabled={isSyncing}
+            onClick={onSync}
+            size="icon"
+            type="button"
+            variant="outline"
+          />
+        }
       >
-        <RefreshCwIcon className="size-4" />
-        Sync now
-      </Button>
-    </div>
+        {isSyncing ? (
+          <Loader2Icon aria-hidden="true" className="size-4 animate-spin" />
+        ) : (
+          <RefreshCwIcon aria-hidden="true" className="size-4" />
+        )}
+        <span className="sr-only">
+          {isSyncing ? "Syncing activities" : "Sync activities"}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        {isSyncing ? "Syncing activities" : "Sync activities"}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

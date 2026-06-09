@@ -143,8 +143,8 @@ function AppLayout() {
         <main className="min-h-0 flex-1 overflow-y-auto">
           <div
             className={cn(
-              "mx-auto w-full p-4 md:p-6",
-              isDashboard ? "max-w-none" : "max-w-7xl",
+              "mx-auto w-full",
+              isDashboard ? "max-w-none" : "max-w-7xl p-4 md:p-6",
             )}
           >
             <Outlet />

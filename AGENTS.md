@@ -16,4 +16,4 @@ you must push back.
 ## Browser Use
 
 To use the browser, there are credentials in the `.local-access` file.
-Navigate to `https://localhost:3001/auth/sign-in` to sign in
+Navigate to `http://localhost:3001/auth/sign-in` to sign in
