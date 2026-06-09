@@ -23,9 +23,11 @@ import {
   TargetIcon,
   TrophyIcon,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 function AppLayout() {
   const matchRoute = useMatchRoute();
+  const isDashboard = Boolean(matchRoute({ to: "/dashboard" }));
 
   return (
     <SidebarProvider className="h-svh min-h-0 overflow-hidden">
@@ -139,7 +141,12 @@ function AppLayout() {
           <SidebarTrigger />
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-7xl p-4 md:p-6">
+          <div
+            className={cn(
+              "mx-auto w-full p-4 md:p-6",
+              isDashboard ? "max-w-none" : "max-w-7xl",
+            )}
+          >
             <Outlet />
           </div>
         </main>

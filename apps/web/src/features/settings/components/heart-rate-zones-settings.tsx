@@ -69,108 +69,123 @@ function HeartRateZonesEditor({ zones }: { zones: HeartRateZone[] }) {
   );
 
   return (
-    <section className="rounded-lg border">
-      <div className="flex flex-col gap-3 border-b p-5 sm:flex-row sm:items-start sm:justify-between">
+    <section
+      className="scroll-mt-6 border-border/70 border-b pb-10"
+      id="training"
+    >
+      <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
         <div>
-          <h2 className="font-semibold text-lg">Heart Rate Zones</h2>
-          <p className="text-muted-foreground text-sm">
-            Manage your active zone names and BPM ranges.
+          <h2 className="font-semibold text-xl tracking-tight">Training</h2>
+          <p className="mt-2 text-muted-foreground text-sm leading-6">
+            Manage active heart rate zone names and BPM ranges used in activity
+            analysis.
           </p>
         </div>
-        <div className="flex gap-2">
+
+        <div className="min-w-0 space-y-5">
+          <div className="flex flex-col gap-3 border-border/70 border-b pb-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="font-semibold text-base">Heart Rate Zones</h3>
+              <p className="text-muted-foreground text-sm">
+                Ordered zones with non-overlapping minimum and maximum BPM.
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                disabled={!hasChanges || replaceMutation.isPending}
+                onClick={() => setDrafts(toDrafts(zones))}
+                type="button"
+                variant="outline"
+              >
+                Reset
+              </Button>
+              <Button
+                disabled={
+                  !hasChanges ||
+                  validation.errors.length > 0 ||
+                  replaceMutation.isPending
+                }
+                onClick={() =>
+                  replaceMutation.mutate({
+                    zones: drafts.map((draft, index) => ({
+                      maxBpm: draft.maxBpm.trim() ? Number(draft.maxBpm) : null,
+                      minBpm: Number(draft.minBpm),
+                      name: draft.name.trim(),
+                      position: index + 1,
+                    })),
+                  })
+                }
+                type="button"
+              >
+                <SaveIcon className="size-4" />
+                Save zones
+              </Button>
+            </div>
+          </div>
+
+          {validation.errors.length > 0 ? (
+            <ErrorMessage message={validation.errors[0]} variant="banner" />
+          ) : null}
+
+          {drafts.length === 0 ? (
+            <div className="border-border/70 border-y py-6 text-center text-muted-foreground text-sm">
+              No active Heart Rate Zones yet.
+            </div>
+          ) : (
+            <div className="divide-y">
+              {drafts.map((draft, index) => (
+                <HeartRateZoneRow
+                  draft={draft}
+                  isFirst={index === 0}
+                  isLast={index === drafts.length - 1}
+                  key={draft.key}
+                  onChange={(nextDraft) =>
+                    setDrafts((current) =>
+                      current.map((currentDraft) =>
+                        currentDraft.key === draft.key
+                          ? nextDraft
+                          : currentDraft,
+                      ),
+                    )
+                  }
+                  onDelete={() =>
+                    setDrafts((current) =>
+                      current.filter(
+                        (currentDraft) => currentDraft.key !== draft.key,
+                      ),
+                    )
+                  }
+                  onMoveDown={() =>
+                    setDrafts((current) => moveDraft(current, index, index + 1))
+                  }
+                  onMoveUp={() =>
+                    setDrafts((current) => moveDraft(current, index, index - 1))
+                  }
+                />
+              ))}
+            </div>
+          )}
+
           <Button
-            disabled={!hasChanges || replaceMutation.isPending}
-            onClick={() => setDrafts(toDrafts(zones))}
+            onClick={() =>
+              setDrafts((current) => [
+                ...current,
+                {
+                  id: null,
+                  key: crypto.randomUUID(),
+                  maxBpm: "",
+                  minBpm: getNextMinBpm(current),
+                  name: `Zone ${current.length + 1}`,
+                },
+              ])
+            }
             type="button"
             variant="outline"
           >
-            Reset
-          </Button>
-          <Button
-            disabled={
-              !hasChanges ||
-              validation.errors.length > 0 ||
-              replaceMutation.isPending
-            }
-            onClick={() =>
-              replaceMutation.mutate({
-                zones: drafts.map((draft, index) => ({
-                  maxBpm: draft.maxBpm.trim() ? Number(draft.maxBpm) : null,
-                  minBpm: Number(draft.minBpm),
-                  name: draft.name.trim(),
-                  position: index + 1,
-                })),
-              })
-            }
-            type="button"
-          >
-            <SaveIcon className="size-4" />
-            Save zones
+            <PlusIcon className="size-4" />
+            Add zone
           </Button>
         </div>
-      </div>
-
-      <div className="space-y-4 p-5">
-        {validation.errors.length > 0 ? (
-          <ErrorMessage message={validation.errors[0]} variant="banner" />
-        ) : null}
-
-        {drafts.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-6 text-center text-muted-foreground text-sm">
-            No active Heart Rate Zones yet.
-          </div>
-        ) : (
-          <div className="divide-y">
-            {drafts.map((draft, index) => (
-              <HeartRateZoneRow
-                draft={draft}
-                isFirst={index === 0}
-                isLast={index === drafts.length - 1}
-                key={draft.key}
-                onChange={(nextDraft) =>
-                  setDrafts((current) =>
-                    current.map((currentDraft) =>
-                      currentDraft.key === draft.key ? nextDraft : currentDraft,
-                    ),
-                  )
-                }
-                onDelete={() =>
-                  setDrafts((current) =>
-                    current.filter(
-                      (currentDraft) => currentDraft.key !== draft.key,
-                    ),
-                  )
-                }
-                onMoveDown={() =>
-                  setDrafts((current) => moveDraft(current, index, index + 1))
-                }
-                onMoveUp={() =>
-                  setDrafts((current) => moveDraft(current, index, index - 1))
-                }
-              />
-            ))}
-          </div>
-        )}
-
-        <Button
-          onClick={() =>
-            setDrafts((current) => [
-              ...current,
-              {
-                id: null,
-                key: crypto.randomUUID(),
-                maxBpm: "",
-                minBpm: getNextMinBpm(current),
-                name: `Zone ${current.length + 1}`,
-              },
-            ])
-          }
-          type="button"
-          variant="outline"
-        >
-          <PlusIcon className="size-4" />
-          Add zone
-        </Button>
       </div>
     </section>
   );
@@ -263,12 +278,17 @@ function HeartRateZoneRow({
 
 function HeartRateZonesSettingsSkeleton() {
   return (
-    <section className="rounded-lg border p-5">
-      <div className="h-7 w-44 animate-pulse rounded bg-muted" />
-      <div className="mt-6 space-y-3">
-        {[0, 1, 2, 3, 4].map((key) => (
-          <div className="h-24 animate-pulse rounded-lg bg-muted" key={key} />
-        ))}
+    <section className="border-border/70 border-b pb-10">
+      <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
+        <div>
+          <div className="h-7 w-28 animate-pulse bg-muted" />
+          <div className="mt-3 h-16 w-full animate-pulse bg-muted" />
+        </div>
+        <div className="space-y-3">
+          {[0, 1, 2, 3, 4].map((key) => (
+            <div className="h-20 animate-pulse bg-muted" key={key} />
+          ))}
+        </div>
       </div>
     </section>
   );
