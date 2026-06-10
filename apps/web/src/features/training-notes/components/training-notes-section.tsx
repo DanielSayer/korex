@@ -43,16 +43,10 @@ function TrainingNotesSection(props: TrainingNotesSectionProps) {
   const notesQuery = useQuery(queryOptions);
 
   return (
-    <section className={cn("rounded-lg border bg-card", props.className)}>
-      <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <MessageSquareTextIcon className="size-4 text-primary" />
-          <h2 className="font-semibold">{props.title ?? "Training Notes"}</h2>
-        </div>
-      </div>
+    <section className={cn("space-y-3", props.className)}>
       <QueryRenderer
         error={
-          <div className="p-4">
+          <div className="rounded-md border p-3">
             <ErrorMessage
               message="Could not load Training Notes."
               variant="banner"
@@ -71,6 +65,7 @@ function TrainingNotesSection(props: TrainingNotesSectionProps) {
                 ? { activityId: props.activityId }
                 : { weekStartAt: props.weekStartAt }
             }
+            title={props.title ?? "Training Notes"}
           />
         )}
       </QueryRenderer>
@@ -90,10 +85,10 @@ function TrainingWeekActivityNotesSection({
   const notesQuery = useQuery(queryOptions);
 
   return (
-    <section className="rounded-lg border bg-card">
-      <div className="flex items-center gap-2 border-b px-4 py-3">
+    <section className="space-y-3">
+      <div className="flex items-center gap-2 text-muted-foreground text-sm">
         <MessageSquareTextIcon className="size-4 text-primary" />
-        <h2 className="font-semibold">Activity Notes This Week</h2>
+        <h2 className="font-medium">Activity Notes This Week</h2>
       </div>
       <QueryRenderer
         error={null}
@@ -102,11 +97,11 @@ function TrainingWeekActivityNotesSection({
       >
         {(notes) =>
           notes.length === 0 ? (
-            <p className="p-4 text-muted-foreground text-sm">
+            <p className="text-muted-foreground text-sm">
               No Activity notes for this Training Week.
             </p>
           ) : (
-            <div className="divide-y">
+            <div className="relative space-y-3 border-l pl-4">
               {notes.map((note) => (
                 <TrainingNoteItem key={note.id} note={note} readOnly />
               ))}
@@ -168,59 +163,97 @@ function TrainingNotesEditor({
   notes,
   queryKey,
   target,
+  title,
 }: {
   notes: TrainingNote[];
   queryKey: readonly unknown[];
   target: { activityId: number } | { weekStartAt: Date };
+  title: string;
 }) {
   const queryClient = useQueryClient();
+  const [isAdding, setIsAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const createMutation = useMutation(
     orpc.trainingNotes.create.mutationOptions({
       onError: (error) => toast.error(error.message),
       onSuccess: () => {
         setDraft("");
+        setIsAdding(false);
         invalidateTrainingNoteQueries(queryClient, queryKey);
       },
     }),
   );
 
   return (
-    <div>
-      <div className="border-b p-4">
-        <TrainingNoteTextarea
-          onChange={setDraft}
-          placeholder="Add a short note..."
-          value={draft}
-        />
-        <div className="mt-3 flex justify-end">
-          <Button
-            disabled={draft.trim().length === 0 || createMutation.isPending}
-            onClick={() =>
-              createMutation.mutate({
-                ...target,
-                text: draft,
-              })
-            }
-            size="sm"
-            type="button"
-          >
-            <PlusIcon className="size-4" />
-            Add note
-          </Button>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="inline-flex items-center gap-2 text-muted-foreground text-sm">
+          <MessageSquareTextIcon className="size-4 text-primary" />
+          <h2 className="font-medium">{title}</h2>
+          {notes.length > 0 ? <span>{notes.length}</span> : null}
         </div>
+        <Button
+          onClick={() => setIsAdding(true)}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          <PlusIcon className="size-4" />
+          Add
+        </Button>
       </div>
-      {notes.length === 0 ? (
-        <p className="p-4 text-muted-foreground text-sm">
-          No Training Notes yet.
-        </p>
-      ) : (
-        <div className="divide-y">
-          {notes.map((note) => (
-            <TrainingNoteItem key={note.id} note={note} queryKey={queryKey} />
-          ))}
-        </div>
-      )}
+      <div className="relative space-y-3 border-l pl-4">
+        {notes.length === 0 && !isAdding ? (
+          <p className="text-muted-foreground text-sm">
+            No Training Notes yet.
+          </p>
+        ) : null}
+        {isAdding ? (
+          <div className="relative">
+            <span className="absolute top-3 -left-5.25 size-2 rounded-full bg-primary" />
+            <div className="rounded-md border bg-card p-3">
+              <TrainingNoteTextarea
+                onChange={setDraft}
+                placeholder="Add a short note..."
+                value={draft}
+              />
+              <div className="mt-3 flex justify-end gap-2">
+                <Button
+                  onClick={() => {
+                    setDraft("");
+                    setIsAdding(false);
+                  }}
+                  size="sm"
+                  type="button"
+                  variant="ghost"
+                >
+                  <XIcon className="size-4" />
+                  Cancel
+                </Button>
+                <Button
+                  disabled={
+                    draft.trim().length === 0 || createMutation.isPending
+                  }
+                  onClick={() =>
+                    createMutation.mutate({
+                      ...target,
+                      text: draft,
+                    })
+                  }
+                  size="sm"
+                  type="button"
+                >
+                  <SaveIcon className="size-4" />
+                  Save
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+        {notes.map((note) => (
+          <TrainingNoteItem key={note.id} note={note} queryKey={queryKey} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -260,7 +293,8 @@ function TrainingNoteItem({
   );
 
   return (
-    <article className="p-4">
+    <article className="group relative rounded-md bg-muted/30 px-3 py-2 text-sm">
+      <span className="absolute top-3 -left-[21px] size-2 rounded-full bg-primary" />
       {note.targetType === "activity" && note.targetLabel ? (
         <Link
           className="mb-2 inline-flex max-w-full text-muted-foreground text-xs hover:text-primary"
@@ -309,13 +343,13 @@ function TrainingNoteItem({
         </div>
       ) : (
         <>
-          <p className="whitespace-pre-wrap text-sm leading-6">{note.text}</p>
+          <p className="whitespace-pre-wrap leading-6">{note.text}</p>
           <div className="mt-3 flex items-center justify-between gap-3">
             <span className="text-muted-foreground text-xs">
               {formatNoteTimestamp(note.createdAt)}
             </span>
             {readOnly ? null : (
-              <div className="flex gap-1">
+              <div className="flex gap-1 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
                 <Button
                   aria-label="Edit Training Note"
                   onClick={() => setIsEditing(true)}
@@ -386,7 +420,7 @@ function TrainingNoteTextarea({
 }) {
   return (
     <textarea
-      className="min-h-24 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
+      className="min-h-20 w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
       maxLength={2000}
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
@@ -397,7 +431,7 @@ function TrainingNoteTextarea({
 
 function TrainingNotesLoading() {
   return (
-    <div className="space-y-3 p-4">
+    <div className="space-y-3">
       <div className="h-16 animate-pulse rounded-md bg-muted" />
       <div className="h-16 animate-pulse rounded-md bg-muted" />
     </div>
