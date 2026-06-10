@@ -19,6 +19,7 @@ import {
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { ErrorMessage } from "@/components/error-message";
+import { PageHeader, PageLayout } from "@/components/page-layout";
 import {
   formatDistance,
   formatDurationClock,
@@ -55,7 +56,7 @@ function ActivityCalendar({
   const showLoadingOverlay = activitiesQuery.isFetching;
 
   return (
-    <section className="flex min-h-[calc(100svh-8.5rem)] flex-col gap-4">
+    <PageLayout>
       <CalendarHeader
         monthLabel={monthGrid.monthLabel}
         onNextMonth={() => onMonthChange(addMonths(visibleMonth, 1))}
@@ -82,7 +83,7 @@ function ActivityCalendar({
           </div>
         ) : null}
       </div>
-    </section>
+    </PageLayout>
   );
 }
 
@@ -156,40 +157,38 @@ function CalendarHeader({
   onToday: () => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">Calendar</h1>
-        <p className="text-muted-foreground text-sm">
-          Activities by training week.
-        </p>
-      </div>
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          aria-label="Previous month"
-          onClick={onPreviousMonth}
-        >
-          <ChevronLeftIcon />
-        </Button>
-        <div className="min-w-36 text-center font-medium text-sm">
-          {monthLabel}
+    <PageHeader
+      description="Activities by training week."
+      title="Calendar"
+      actions={
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Previous month"
+            onClick={onPreviousMonth}
+          >
+            <ChevronLeftIcon />
+          </Button>
+          <div className="min-w-36 text-center font-medium text-sm">
+            {monthLabel}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            aria-label="Next month"
+            onClick={onNextMonth}
+          >
+            <ChevronRightIcon />
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={onToday}>
+            Today
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          aria-label="Next month"
-          onClick={onNextMonth}
-        >
-          <ChevronRightIcon />
-        </Button>
-        <Button type="button" variant="outline" size="sm" onClick={onToday}>
-          Today
-        </Button>
-      </div>
-    </div>
+      }
+    />
   );
 }
 

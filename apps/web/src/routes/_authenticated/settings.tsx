@@ -7,6 +7,7 @@ import {
   ShieldIcon,
   UserIcon,
 } from "lucide-react";
+import { PageHeader, PageLayout } from "@/components/page-layout";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -15,17 +16,12 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function RouteComponent() {
   return (
-    <div className="grid gap-8">
-      <div className="border-border/70 border-b pb-6">
-        <p className="font-medium text-muted-foreground text-xs uppercase">
-          Workspace
-        </p>
-        <h1 className="mt-2 font-semibold text-3xl tracking-tight">Settings</h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground text-sm">
-          Manage account details, display preferences, training configuration,
-          and connected app behavior.
-        </p>
-      </div>
+    <PageLayout className="gap-8">
+      <PageHeader
+        className="border-border/70 border-b pb-6"
+        description="Manage account details, display preferences, training configuration, and connected app behavior."
+        title="Settings"
+      />
 
       <div className="overflow-x-auto">
         <nav className="flex min-w-max gap-1 border-border/70 border-b pb-2">
@@ -50,7 +46,7 @@ function RouteComponent() {
       </div>
 
       <Outlet />
-    </div>
+    </PageLayout>
   );
 }
 

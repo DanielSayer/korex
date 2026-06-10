@@ -1,6 +1,7 @@
 import { Button } from "@korex/ui/components/button";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { PageHeader, PageLayout } from "@/components/page-layout";
 import { RouteHeatmapMap } from "@/features/route-heatmap/components/route-heatmap-map";
 import type { RouteHeatmapDisplayMode } from "@/features/route-heatmap/types";
 
@@ -17,27 +18,27 @@ function RouteComponent() {
   const displayMode = search.mode ?? "density";
 
   return (
-    <div className="flex min-h-[calc(100svh-8.5rem)] flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="font-semibold text-2xl tracking-tight">Heatmap</h1>
-          <p className="text-muted-foreground text-sm">
-            {displayMode === "density"
-              ? "Run frequency across your saved routes."
-              : "Roads you have visited across your saved routes."}
-          </p>
-        </div>
-        <RouteHeatmapDisplayModeControl
-          displayMode={displayMode}
-          onDisplayModeChange={(mode) =>
-            navigate({
-              search: { mode: mode === "density" ? undefined : mode },
-            })
-          }
-        />
-      </div>
+    <PageLayout>
+      <PageHeader
+        title="Heatmap"
+        description={
+          displayMode === "density"
+            ? "Run frequency across your saved routes."
+            : "Roads you have visited across your saved routes."
+        }
+        actions={
+          <RouteHeatmapDisplayModeControl
+            displayMode={displayMode}
+            onDisplayModeChange={(mode) =>
+              navigate({
+                search: { mode: mode === "density" ? undefined : mode },
+              })
+            }
+          />
+        }
+      />
       <RouteHeatmapMap displayMode={displayMode} />
-    </div>
+    </PageLayout>
   );
 }
 

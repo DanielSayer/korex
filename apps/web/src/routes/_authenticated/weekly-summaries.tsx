@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PageHeader, PageLayout } from "@/components/page-layout";
 import { WeeklyTrainingSummariesSection } from "@/features/weekly-training-summaries/components/weekly-training-summaries-section";
 
 export const Route = createFileRoute("/_authenticated/weekly-summaries")({
@@ -7,16 +8,12 @@ export const Route = createFileRoute("/_authenticated/weekly-summaries")({
 
 function RouteComponent() {
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">
-          Weekly Summaries
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Replay your completed training weeks.
-        </p>
-      </div>
+    <PageLayout>
+      <PageHeader
+        description="Replay your completed training weeks."
+        title="Weekly Summaries"
+      />
       <WeeklyTrainingSummariesSection />
-    </div>
+    </PageLayout>
   );
 }
