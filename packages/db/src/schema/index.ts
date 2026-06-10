@@ -4,4 +4,5 @@ export * from "./auth";
 export * from "./heart-rate-zones";
 export * from "./sync";
 export * from "./training-goals";
+export * from "./training-notes";
 export * from "./weekly-training-summaries";

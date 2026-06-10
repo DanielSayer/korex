@@ -34,6 +34,10 @@ import type React from "react";
 import { toast } from "sonner";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
+import {
+  TrainingNotesSection,
+  TrainingWeekActivityNotesSection,
+} from "@/features/training-notes/components/training-notes-section";
 import { cn } from "@/lib/utils";
 import {
   formatDistance,
@@ -386,6 +390,13 @@ function WeeklyTrainingSummaryDetail({
           </div>
         </div>
       </section>
+
+      <TrainingNotesSection
+        title="Week Notes"
+        type="trainingWeek"
+        weekStartAt={summary.weekStartAt}
+      />
+      <TrainingWeekActivityNotesSection weekStartAt={summary.weekStartAt} />
     </motion.div>
   );
 }

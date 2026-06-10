@@ -1,6 +1,10 @@
 import type { RecentActivity } from "@korex/api/modules/activities/activities.types";
 import { Link } from "@tanstack/react-router";
-import { ChevronRightIcon, RouteIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  MessageSquareTextIcon,
+  RouteIcon,
+} from "lucide-react";
 import { formatDistance, formatDurationClock } from "@/utils/formatters";
 
 type RecentRunsTableProps = {
@@ -48,7 +52,18 @@ function RunRow({ run }: { run: RecentActivity }) {
       <span className="absolute top-1/2 -left-7.5 size-3 -translate-y-1/2 rounded-full border border-primary bg-background ring-2 ring-background" />
       <MapPreview run={run} />
       <div className="min-w-0">
-        <h3 className="truncate font-semibold font-serif">{run.name}</h3>
+        <div className="flex min-w-0 items-center gap-2">
+          <h3 className="truncate font-semibold font-serif">{run.name}</h3>
+          {run.noteCount > 0 ? (
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-muted-foreground text-xs"
+              title={`${run.noteCount} Training Notes`}
+            >
+              <MessageSquareTextIcon className="size-3" />
+              {run.noteCount}
+            </span>
+          ) : null}
+        </div>
         <p className="text-muted-foreground text-sm">
           {formatRunDate(run.startAt)}
         </p>

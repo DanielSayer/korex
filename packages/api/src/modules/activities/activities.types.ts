@@ -94,6 +94,7 @@ export type RecentActivity = {
   id: number;
   map: ActivityMapInput | null;
   name: string;
+  noteCount: number;
   startAt: Date;
 };
 

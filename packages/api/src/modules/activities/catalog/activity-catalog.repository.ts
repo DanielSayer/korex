@@ -1,5 +1,5 @@
-import { activities, activityMaps, db } from "@korex/db";
-import { and, desc, eq, gte, lte } from "drizzle-orm";
+import { activities, activityMaps, db, trainingNotes } from "@korex/db";
+import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
 import type { ActivitySummaryInput, RecentActivity } from "../activities.types";
 
 export async function getRecentActivities({
@@ -17,6 +17,12 @@ export async function getRecentActivities({
       durationSeconds: activities.movingTimeSeconds,
       mapId: activityMaps.id,
       name: activities.name,
+      noteCount: sql<number>`(
+        select count(*)::int
+        from ${trainingNotes}
+        where ${trainingNotes.activityId} = ${activities.id}
+          and ${trainingNotes.userId} = ${activities.userId}
+      )`,
       startAt: activities.startAt,
     })
     .from(activities)
@@ -37,6 +43,7 @@ export async function getRecentActivities({
         }
       : null,
     name: row.name,
+    noteCount: row.noteCount,
     startAt: row.startAt,
   }));
 }

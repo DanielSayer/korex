@@ -106,7 +106,7 @@ function RouteComponent() {
               weeklyDistance={weeklyDistance}
             />
           </div>
-          <div className="relative z-10 grid w-full max-w-110 justify-self-end gap-5 self-end">
+          <div className="relative z-10 grid w-full max-w-110 gap-5 self-end justify-self-end">
             <TrainingStreakSection />
             <WeeklyDistanceSection weeklyDistance={weeklyDistance} />
           </div>

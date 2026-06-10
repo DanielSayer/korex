@@ -88,6 +88,10 @@ _Avoid_: Wrapped, weekly report, generated artifact
 A Monday-start calendar week used to group **Activities** for weekly analysis.
 _Avoid_: Calendar week, ISO week, reporting week
 
+**Training Note**:
+A user-owned plain-text observation about training, optionally attached to an **Activity** or **Training Week**.
+_Avoid_: Journal entry, comment, annotation
+
 **Training Streak**:
 A count of consecutive **Training Weeks** in which a **User** has at least one qualifying **Activity**.
 _Avoid_: Activity streak, weekly streak
@@ -158,6 +162,7 @@ _Avoid_: Activity PR, lap best, best split
 - A **User** has one active set of **Heart Rate Zones**.
 - An **Anti-Corruption Layer** translates **Provider Profile** heart-rate zone data into **Heart Rate Zones**.
 - An **Activity** belongs to exactly one **User**.
+- An **Activity** can have zero or more **Training Notes**.
 - An **Activity** has exactly one **Sport Type**.
 - An **Activity** can have zero or more **Activity Laps**.
 - An **Activity** can have zero or one **Activity Map**.
@@ -256,6 +261,27 @@ _Avoid_: Activity PR, lap best, best split
 - Scheduled **Weekly Training Summary** generation enqueues durable generation jobs; worker processes calculate and store the summaries.
 - A **Weekly Training Summary** can be regenerated for a specific week by user action when the stored snapshot no longer reflects the user's expected imported **Activities**.
 - Scheduled **Weekly Training Summary** generation only creates summaries for users with at least one **Activity** in the completed **Training Week**.
+- A **Training Week** can have zero or more **Training Notes**.
+- A **Training Note** can be attached to a **Training Week** even when no **Weekly Training Summary** exists for that **Training Week**.
+- A **Training Note** can be attached to a **Training Week** even when that **Training Week** has no **Activities**.
+- A **Training Note** cannot be attached to a future **Training Week**.
+- **Training Notes** attached to a **Training Week** remain attached to that **Training Week** when a **Weekly Training Summary** for the same week is regenerated.
+- **Training Notes** attached to a **Training Week** use that **Training Week's** Monday-start date.
+- **Training Notes** can be displayed alongside a **Weekly Training Summary**, but they are not inputs to **Weekly Training Summary** generation.
+- **Training Notes** attached to **Activities** in a **Training Week** can be displayed in that **Training Week** context without becoming **Training Week** notes.
+- A **Training Note** belongs to exactly one **User**.
+- A **Training Note** contains plain text only.
+- A **Training Note** does not have a user-authored title.
+- A **Training Note** must not be empty after trimming surrounding whitespace.
+- A **Training Note** must be attached to exactly one target: either one **Activity** or one **Training Week**.
+- A **Training Note** can be attached to any **Activity** owned by the **User**, regardless of **Sport Type**.
+- A **Training Note** must not be attached to both an **Activity** and a **Training Week**.
+- A **Training Note's** attachment target cannot be changed after creation.
+- A **Training Note** can be deleted by its owning **User**.
+- A **Training Note** can be edited by its owning **User** without preserving prior note text.
+- A **Training Note** attached to an **Activity** is deleted when that **Activity** is deleted.
+- **Training Notes** are core-owned user data and must not be created, changed, or deleted by provider sync.
+- **Training Notes** do not update **Activity** metrics, **Training Week** metrics, derived **Activity** data, or durable calculation jobs.
 - **Training Weeks** currently use the Australia/Brisbane timezone until Korex supports a user-defined timezone setting.
 - A **Training Streak** belongs to exactly one **User**.
 - A completed **Training Week** increases a **Training Streak** when it contains at least one **Qualifying Activity**.

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "lucide-react";
 import { QueryRenderer } from "@/components/query-renderer";
+import { TrainingNotesSection } from "@/features/training-notes/components/training-notes-section";
 import { orpc } from "@/utils/orpc";
 import { ActivityDetailHeader } from "./activity-detail/activity-detail-header";
 import { ActivityDetailSkeleton } from "./activity-detail/activity-detail-skeleton";
@@ -70,6 +71,7 @@ function ActivityDetailView({ summary }: { summary: ActivityDetailSummary }) {
       </div>
 
       <ActivityLapsCard laps={summary.laps} />
+      <TrainingNotesSection activityId={summary.activity.id} type="activity" />
       <HeartRateZonesCard summary={summary} />
       <QueryRenderer
         error={null}

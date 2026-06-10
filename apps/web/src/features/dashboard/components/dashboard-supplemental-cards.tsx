@@ -2,12 +2,8 @@ import type {
   DashboardWeeklyDistance,
   RecentActivity,
 } from "@korex/api/modules/activities/activities.types";
-import { Button } from "@korex/ui/components/button";
-import {
-  FootprintsIcon,
-  NotebookPenIcon,
-  NotebookTextIcon,
-} from "lucide-react";
+import { FootprintsIcon } from "lucide-react";
+import { RecentTrainingNotesCard } from "@/features/training-notes/components/training-notes-section";
 
 function RecoveryCard({ runs }: { runs: RecentActivity[] }) {
   const averageHr = average(
@@ -90,30 +86,6 @@ function ShoeMileageCard({
   );
 }
 
-function TrainingNotesCard() {
-  return (
-    <section className="rounded-xl border border-border/55 bg-card/40 p-5 shadow-black/5 shadow-md backdrop-blur-sm dark:bg-card/35 dark:shadow-black/15">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <NotebookTextIcon className="mt-1 size-5 text-muted-foreground" />
-          <div>
-            <h2 className="font-semibold font-serif text-sm uppercase">
-              Training notes
-            </h2>
-            <p className="mt-4 text-muted-foreground text-sm leading-6">
-              Notes are mocked until a training notes API exists.
-            </p>
-          </div>
-        </div>
-        <Button className="self-start" size="sm" variant="outline">
-          <NotebookPenIcon className="size-4" />
-          Add note
-        </Button>
-      </div>
-    </section>
-  );
-}
-
 function RingGauge({ label, value }: { label: string; value: number }) {
   return (
     <div
@@ -142,4 +114,8 @@ function average(values: number[]) {
   return values.reduce((total, value) => total + value, 0) / values.length;
 }
 
-export { RecoveryCard, ShoeMileageCard, TrainingNotesCard };
+export {
+  RecentTrainingNotesCard as TrainingNotesCard,
+  RecoveryCard,
+  ShoeMileageCard,
+};
