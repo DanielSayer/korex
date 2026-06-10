@@ -69,20 +69,25 @@ function RouteComponent() {
         />
       ) : null}
       <section className="relative overflow-hidden border-border/70 border-b">
-        <img
-          alt=""
-          className="absolute inset-0 size-full origin-center translate-x-[-12%] scale-[1.16] object-cover object-[54%_center] opacity-80 brightness-125 contrast-90 saturate-110 sepia-[0.16] dark:opacity-75"
-          src="/dashboard/hero_runner.png"
-        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-x-0 top-0 h-svh overflow-hidden lg:inset-0 lg:h-auto"
+        >
+          <img
+            alt=""
+            className="size-full object-cover object-center opacity-80 brightness-125 contrast-90 saturate-110 sepia-[0.16] dark:opacity-75"
+            src="/dashboard/hero_runner_wide_v2.png"
+          />
+        </div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_54%_34%,color-mix(in_oklch,var(--primary)_12%,transparent)_0,transparent_18rem),linear-gradient(90deg,var(--background)_0%,color-mix(in_oklch,var(--background)_80%,transparent)_32%,color-mix(in_oklch,var(--background)_22%,transparent)_60%,color-mix(in_oklch,var(--background)_54%,transparent)_100%),linear-gradient(180deg,color-mix(in_oklch,var(--background)_70%,transparent)_0%,transparent_30%,var(--background)_100%)]" />
-        <div className="absolute top-4 right-12 z-20">
+        <div className="absolute top-4 right-4 z-20">
           <DashboardHeader
             isSyncing={incrementalSyncMutation.isPending}
             onSync={() => incrementalSyncMutation.mutate(undefined)}
           />
         </div>
-        <div className="relative grid gap-8 px-6 pt-20 pb-8 sm:px-8 lg:min-h-167.5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,380px)] lg:items-end lg:px-10 lg:pt-20 xl:grid-cols-[minmax(0,1fr)_minmax(360px,440px)] xl:px-12">
-          <div className="flex max-w-3xl flex-col justify-between gap-10 lg:min-h-147.5">
+        <div className="relative grid min-h-[clamp(620px,72svh,820px)] grid-cols-[repeat(auto-fit,minmax(min(100%,26rem),1fr))] items-end gap-8 px-6 pt-20 pb-8 sm:px-8 lg:px-10 xl:px-12">
+          <div className="flex max-w-3xl flex-col justify-between gap-10 self-stretch">
             <div>
               <p className="font-semibold text-primary text-xs uppercase">
                 Weekly Briefing
@@ -101,7 +106,7 @@ function RouteComponent() {
               weeklyDistance={weeklyDistance}
             />
           </div>
-          <div className="relative z-10 grid gap-5 self-end">
+          <div className="relative z-10 grid w-full max-w-110 justify-self-end gap-5 self-end">
             <TrainingStreakSection />
             <WeeklyDistanceSection weeklyDistance={weeklyDistance} />
           </div>
