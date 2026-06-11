@@ -1,4 +1,8 @@
-import type { TrainingNote } from "@korex/api/modules/training-notes/training-notes.types";
+import type {
+  TrainingNote,
+  TrainingNoteTag,
+  TrainingNoteTagColor,
+} from "@korex/api/modules/training-notes/training-notes.types";
 import { Button } from "@korex/ui/components/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
@@ -41,6 +45,7 @@ function TrainingNotesSection(props: TrainingNotesSectionProps) {
           input: { weekStartAt: props.weekStartAt },
         });
   const notesQuery = useQuery(queryOptions);
+  const tagsQuery = useQuery(orpc.trainingNotes.tags.queryOptions());
 
   return (
     <section className={cn("space-y-3", props.className)}>
@@ -58,6 +63,9 @@ function TrainingNotesSection(props: TrainingNotesSectionProps) {
       >
         {(notes) => (
           <TrainingNotesEditor
+            availableTags={(tagsQuery.data ?? []).filter(
+              (tag) => tag.archivedAt === null,
+            )}
             notes={notes}
             queryKey={queryOptions.queryKey}
             target={
@@ -83,6 +91,7 @@ function TrainingWeekActivityNotesSection({
       input: { weekStartAt },
     });
   const notesQuery = useQuery(queryOptions);
+  const [filterTagIds, setFilterTagIds] = useState<number[]>([]);
 
   return (
     <section className="space-y-3">
@@ -101,10 +110,18 @@ function TrainingWeekActivityNotesSection({
               No Activity notes for this Training Week.
             </p>
           ) : (
-            <div className="relative space-y-3 border-l pl-4">
-              {notes.map((note) => (
-                <TrainingNoteItem key={note.id} note={note} readOnly />
-              ))}
+            <div className="space-y-3">
+              <TrainingNoteFilter
+                onChange={setFilterTagIds}
+                selectedTagIds={filterTagIds}
+                tags={getTagsUsedByNotes(notes)}
+              />
+              <div className="relative space-y-3 border-l pl-4">
+                <TrainingNotesTimeline
+                  notes={filterNotesByTags(notes, filterTagIds)}
+                  readOnly
+                />
+              </div>
             </div>
           )
         }
@@ -160,11 +177,13 @@ function RecentTrainingNotesCard() {
 }
 
 function TrainingNotesEditor({
+  availableTags,
   notes,
   queryKey,
   target,
   title,
 }: {
+  availableTags: TrainingNoteTag[];
   notes: TrainingNote[];
   queryKey: readonly unknown[];
   target: { activityId: number } | { weekStartAt: Date };
@@ -173,16 +192,21 @@ function TrainingNotesEditor({
   const queryClient = useQueryClient();
   const [isAdding, setIsAdding] = useState(false);
   const [draft, setDraft] = useState("");
+  const [draftTagIds, setDraftTagIds] = useState<number[]>([]);
+  const [filterTagIds, setFilterTagIds] = useState<number[]>([]);
   const createMutation = useMutation(
     orpc.trainingNotes.create.mutationOptions({
       onError: (error) => toast.error(error.message),
       onSuccess: () => {
         setDraft("");
+        setDraftTagIds([]);
         setIsAdding(false);
         invalidateTrainingNoteQueries(queryClient, queryKey);
       },
     }),
   );
+  const filterTags = getTagsUsedByNotes(notes);
+  const filteredNotes = filterNotesByTags(notes, filterTagIds);
 
   return (
     <div className="space-y-3">
@@ -212,9 +236,14 @@ function TrainingNotesEditor({
           <div className="relative">
             <span className="absolute top-3 -left-5.25 size-2 rounded-full bg-primary" />
             <div className="rounded-md border bg-card p-3">
+              <TrainingNoteTagPicker
+                availableTags={availableTags}
+                onChange={setDraftTagIds}
+                selectedTagIds={draftTagIds}
+              />
               <TrainingNoteTextarea
                 onChange={setDraft}
-                placeholder="Add a short note..."
+                placeholder="Add detail..."
                 value={draft}
               />
               <div className="mt-3 flex justify-end gap-2">
@@ -232,11 +261,13 @@ function TrainingNotesEditor({
                 </Button>
                 <Button
                   disabled={
-                    draft.trim().length === 0 || createMutation.isPending
+                    (draft.trim().length === 0 && draftTagIds.length === 0) ||
+                    createMutation.isPending
                   }
                   onClick={() =>
                     createMutation.mutate({
                       ...target,
+                      tagIds: draftTagIds,
                       text: draft,
                     })
                   }
@@ -250,19 +281,56 @@ function TrainingNotesEditor({
             </div>
           </div>
         ) : null}
-        {notes.map((note) => (
-          <TrainingNoteItem key={note.id} note={note} queryKey={queryKey} />
-        ))}
+        {filterTags.length > 0 ? (
+          <TrainingNoteFilter
+            onChange={setFilterTagIds}
+            selectedTagIds={filterTagIds}
+            tags={filterTags}
+          />
+        ) : null}
+        <TrainingNotesTimeline
+          availableTags={availableTags}
+          notes={filteredNotes}
+          queryKey={queryKey}
+        />
       </div>
     </div>
   );
 }
 
+function TrainingNotesTimeline({
+  availableTags = [],
+  notes,
+  queryKey,
+  readOnly = false,
+}: {
+  availableTags?: TrainingNoteTag[];
+  notes: TrainingNote[];
+  queryKey?: readonly unknown[];
+  readOnly?: boolean;
+}) {
+  return (
+    <>
+      {notes.map((note) => (
+        <TrainingNoteItem
+          availableTags={availableTags}
+          key={note.id}
+          note={note}
+          queryKey={queryKey}
+          readOnly={readOnly}
+        />
+      ))}
+    </>
+  );
+}
+
 function TrainingNoteItem({
+  availableTags = [],
   note,
   queryKey,
   readOnly = false,
 }: {
+  availableTags?: TrainingNoteTag[];
   note: TrainingNote;
   queryKey?: readonly unknown[];
   readOnly?: boolean;
@@ -270,6 +338,9 @@ function TrainingNoteItem({
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState(note.text);
+  const [draftTagIds, setDraftTagIds] = useState(() =>
+    note.tags.map((tag) => tag.id),
+  );
   const updateMutation = useMutation(
     orpc.trainingNotes.update.mutationOptions({
       onError: (error) => toast.error(error.message),
@@ -311,11 +382,18 @@ function TrainingNoteItem({
       ) : null}
       {isEditing ? (
         <div>
+          <TrainingNoteTagPicker
+            availableTags={availableTags}
+            lockedTags={note.tags.filter((tag) => tag.archivedAt !== null)}
+            onChange={setDraftTagIds}
+            selectedTagIds={draftTagIds}
+          />
           <TrainingNoteTextarea onChange={setDraft} value={draft} />
           <div className="mt-3 flex justify-end gap-2">
             <Button
               onClick={() => {
                 setDraft(note.text);
+                setDraftTagIds(note.tags.map((tag) => tag.id));
                 setIsEditing(false);
               }}
               size="sm"
@@ -326,10 +404,14 @@ function TrainingNoteItem({
               Cancel
             </Button>
             <Button
-              disabled={draft.trim().length === 0 || updateMutation.isPending}
+              disabled={
+                (draft.trim().length === 0 && draftTagIds.length === 0) ||
+                updateMutation.isPending
+              }
               onClick={() =>
                 updateMutation.mutate({
                   id: note.id,
+                  tagIds: draftTagIds,
                   text: draft,
                 })
               }
@@ -343,7 +425,14 @@ function TrainingNoteItem({
         </div>
       ) : (
         <>
-          <p className="whitespace-pre-wrap leading-6">{note.text}</p>
+          {note.tags.length > 0 ? (
+            <TrainingNoteTagList tags={note.tags} />
+          ) : null}
+          {note.text ? (
+            <p className="mt-2 whitespace-pre-wrap leading-6 first:mt-0">
+              {note.text}
+            </p>
+          ) : null}
           <div className="mt-3 flex items-center justify-between gap-3">
             <span className="text-muted-foreground text-xs">
               {formatNoteTimestamp(note.createdAt)}
@@ -401,10 +490,147 @@ function RecentTrainingNoteItem({ note }: { note: TrainingNote }) {
   return (
     <div className="rounded-md border border-border/70 bg-muted/20 p-3">
       <div className="mb-1 text-xs">{target}</div>
-      <p className="line-clamp-2 text-sm leading-5">{note.text}</p>
+      {note.tags.length > 0 ? (
+        <TrainingNoteTagList className="mb-2" tags={note.tags} />
+      ) : null}
+      {note.text ? (
+        <p className="line-clamp-2 text-sm leading-5">{note.text}</p>
+      ) : null}
       <p className="mt-2 text-muted-foreground text-xs">
         {formatNoteTimestamp(note.createdAt)}
       </p>
+    </div>
+  );
+}
+
+function TrainingNoteTagPicker({
+  availableTags,
+  lockedTags = [],
+  onChange,
+  selectedTagIds,
+}: {
+  availableTags: TrainingNoteTag[];
+  lockedTags?: TrainingNoteTag[];
+  onChange: (tagIds: number[]) => void;
+  selectedTagIds: number[];
+}) {
+  const selectedTagIdSet = new Set(selectedTagIds);
+  const selectedLockedTags = lockedTags.filter((tag) =>
+    selectedTagIdSet.has(tag.id),
+  );
+
+  if (availableTags.length === 0 && selectedLockedTags.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mb-3 flex flex-wrap gap-2">
+      {[...selectedLockedTags, ...availableTags].map((tag) => {
+        const selected = selectedTagIdSet.has(tag.id);
+        const archived = tag.archivedAt !== null;
+
+        return (
+          <button
+            className={cn(
+              "rounded-full border px-2 py-1 font-medium text-xs transition-colors",
+              selected
+                ? getTrainingNoteTagClassName(tag.color)
+                : "bg-background text-muted-foreground hover:bg-muted",
+              archived && "border-dashed opacity-80",
+            )}
+            key={tag.id}
+            onClick={() => {
+              if (selected) {
+                onChange(selectedTagIds.filter((tagId) => tagId !== tag.id));
+              } else if (!archived) {
+                onChange([...selectedTagIds, tag.id]);
+              }
+            }}
+            type="button"
+          >
+            {tag.name}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function TrainingNoteFilter({
+  onChange,
+  selectedTagIds,
+  tags,
+}: {
+  onChange: (tagIds: number[]) => void;
+  selectedTagIds: number[];
+  tags: TrainingNoteTag[];
+}) {
+  if (tags.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 border-b pb-3">
+      <span className="text-muted-foreground text-xs">Filter</span>
+      {tags.map((tag) => {
+        const selected = selectedTagIds.includes(tag.id);
+
+        return (
+          <button
+            className={cn(
+              "rounded-full border px-2 py-1 font-medium text-xs",
+              selected
+                ? getTrainingNoteTagClassName(tag.color)
+                : "bg-background text-muted-foreground hover:bg-muted",
+            )}
+            key={tag.id}
+            onClick={() =>
+              selected
+                ? onChange(selectedTagIds.filter((tagId) => tagId !== tag.id))
+                : onChange([...selectedTagIds, tag.id])
+            }
+            type="button"
+          >
+            {tag.name}
+          </button>
+        );
+      })}
+      {selectedTagIds.length > 0 ? (
+        <Button
+          className="h-7 px-2"
+          onClick={() => onChange([])}
+          size="sm"
+          type="button"
+          variant="ghost"
+        >
+          Clear
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+function TrainingNoteTagList({
+  className,
+  tags,
+}: {
+  className?: string;
+  tags: TrainingNoteTag[];
+}) {
+  return (
+    <div className={cn("flex flex-wrap gap-1.5", className)}>
+      {tags.map((tag) => (
+        <span
+          className={cn(
+            "rounded-full border px-2 py-0.5 font-medium text-xs",
+            getTrainingNoteTagClassName(tag.color),
+            tag.archivedAt && "border-dashed opacity-80",
+          )}
+          key={tag.id}
+        >
+          {tag.name}
+        </span>
+      ))}
     </div>
   );
 }
@@ -470,6 +696,51 @@ function formatCompactDate(value: Date | string | null) {
     month: "short",
   }).format(new Date(value));
 }
+
+function getTagsUsedByNotes(notes: TrainingNote[]) {
+  const tagsById = new Map<number, TrainingNoteTag>();
+
+  for (const note of notes) {
+    for (const tag of note.tags) {
+      tagsById.set(tag.id, tag);
+    }
+  }
+
+  return [...tagsById.values()].sort((left, right) =>
+    left.name.localeCompare(right.name),
+  );
+}
+
+function filterNotesByTags(notes: TrainingNote[], tagIds: number[]) {
+  if (tagIds.length === 0) {
+    return notes;
+  }
+
+  const tagIdSet = new Set(tagIds);
+  return notes.filter((note) => note.tags.some((tag) => tagIdSet.has(tag.id)));
+}
+
+function getTrainingNoteTagClassName(color: TrainingNoteTagColor) {
+  return trainingNoteTagClassNames[color];
+}
+
+const trainingNoteTagClassNames: Record<TrainingNoteTagColor, string> = {
+  amber:
+    "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  blue: "border-blue-500/35 bg-blue-500/10 text-blue-700 dark:text-blue-300",
+  green:
+    "border-green-500/35 bg-green-500/10 text-green-700 dark:text-green-300",
+  orange:
+    "border-orange-500/35 bg-orange-500/10 text-orange-700 dark:text-orange-300",
+  pink: "border-pink-500/35 bg-pink-500/10 text-pink-700 dark:text-pink-300",
+  red: "border-red-500/35 bg-red-500/10 text-red-700 dark:text-red-300",
+  sky: "border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300",
+  slate:
+    "border-slate-500/35 bg-slate-500/10 text-slate-700 dark:text-slate-300",
+  teal: "border-teal-500/35 bg-teal-500/10 text-teal-700 dark:text-teal-300",
+  violet:
+    "border-violet-500/35 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+};
 
 export {
   RecentTrainingNotesCard,

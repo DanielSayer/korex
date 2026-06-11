@@ -1,8 +1,14 @@
-import { activities, db, trainingNotes } from "@korex/db";
-import { and, desc, eq, gte, lt } from "drizzle-orm";
-import type { TrainingNote } from "./training-notes.types";
+import {
+  activities,
+  db,
+  trainingNotes,
+  trainingNoteTagAssignments,
+  trainingNoteTags,
+} from "@korex/db";
+import { and, asc, desc, eq, gte, inArray, isNull, lt } from "drizzle-orm";
+import type { TrainingNote, TrainingNoteTag } from "./training-notes.types";
 
-type TrainingNoteDatabase = Pick<
+export type TrainingNoteDatabase = Pick<
   typeof db,
   "delete" | "insert" | "select" | "update"
 >;
@@ -18,6 +24,22 @@ const trainingNoteSelect = {
   userId: trainingNotes.userId,
   weekStartAt: trainingNotes.weekStartAt,
 };
+
+const trainingNoteTagSelect = {
+  archivedAt: trainingNoteTags.archivedAt,
+  color: trainingNoteTags.color,
+  createdAt: trainingNoteTags.createdAt,
+  id: trainingNoteTags.id,
+  name: trainingNoteTags.name,
+  updatedAt: trainingNoteTags.updatedAt,
+  userId: trainingNoteTags.userId,
+};
+
+export async function transaction<T>(
+  callback: (database: TrainingNoteDatabase) => Promise<T>,
+) {
+  return db.transaction(callback);
+}
 
 export async function activityBelongsToUser({
   activityId,
@@ -70,7 +92,12 @@ export async function createTrainingNoteRecord({
     throw new Error("Failed to create Training Note");
   }
 
-  return toTrainingNote({ ...note, targetLabel: null, targetStartAt: null });
+  return toTrainingNote({
+    ...note,
+    tags: [],
+    targetLabel: null,
+    targetStartAt: null,
+  });
 }
 
 export async function listTrainingNotesForActivity({
@@ -92,7 +119,7 @@ export async function listTrainingNotesForActivity({
     )
     .orderBy(desc(trainingNotes.createdAt), desc(trainingNotes.id));
 
-  return notes.map(toTrainingNote);
+  return hydrateTrainingNotes(notes);
 }
 
 export async function listTrainingNotesForTrainingWeek({
@@ -114,7 +141,7 @@ export async function listTrainingNotesForTrainingWeek({
     )
     .orderBy(desc(trainingNotes.createdAt), desc(trainingNotes.id));
 
-  return notes.map(toTrainingNote);
+  return hydrateTrainingNotes(notes);
 }
 
 export async function listActivityTrainingNotesForTrainingWeek({
@@ -144,7 +171,7 @@ export async function listActivityTrainingNotesForTrainingWeek({
       desc(trainingNotes.id),
     );
 
-  return notes.map(toTrainingNote);
+  return hydrateTrainingNotes(notes);
 }
 
 export async function listRecentTrainingNotes({
@@ -162,19 +189,42 @@ export async function listRecentTrainingNotes({
     .orderBy(desc(trainingNotes.createdAt), desc(trainingNotes.id))
     .limit(limit);
 
-  return notes.map(toTrainingNote);
+  return hydrateTrainingNotes(notes);
+}
+
+export async function getTrainingNoteForUser({
+  database = db,
+  id,
+  userId,
+}: {
+  database?: TrainingNoteDatabase;
+  id: number;
+  userId: string;
+}) {
+  const [note] = await database
+    .select({
+      id: trainingNotes.id,
+      text: trainingNotes.text,
+    })
+    .from(trainingNotes)
+    .where(and(eq(trainingNotes.id, id), eq(trainingNotes.userId, userId)))
+    .limit(1);
+
+  return note ?? null;
 }
 
 export async function updateTrainingNoteRecord({
+  database = db,
   id,
   text,
   userId,
 }: {
+  database?: TrainingNoteDatabase;
   id: number;
   text: string;
   userId: string;
 }): Promise<TrainingNote | null> {
-  const [note] = await db
+  const [note] = await database
     .update(trainingNotes)
     .set({ text, updatedAt: new Date() })
     .where(and(eq(trainingNotes.id, id), eq(trainingNotes.userId, userId)))
@@ -189,7 +239,12 @@ export async function updateTrainingNoteRecord({
     });
 
   return note
-    ? toTrainingNote({ ...note, targetLabel: null, targetStartAt: null })
+    ? toTrainingNote({
+        ...note,
+        tags: [],
+        targetLabel: null,
+        targetStartAt: null,
+      })
     : null;
 }
 
@@ -208,10 +263,194 @@ export async function deleteTrainingNoteRecord({
   return Boolean(deleted);
 }
 
+export async function listTrainingNoteTags({
+  includeArchived = false,
+  userId,
+}: {
+  includeArchived?: boolean;
+  userId: string;
+}): Promise<TrainingNoteTag[]> {
+  const rows = await db
+    .select(trainingNoteTagSelect)
+    .from(trainingNoteTags)
+    .where(
+      includeArchived
+        ? eq(trainingNoteTags.userId, userId)
+        : and(
+            eq(trainingNoteTags.userId, userId),
+            isNull(trainingNoteTags.archivedAt),
+          ),
+    )
+    .orderBy(asc(trainingNoteTags.name), asc(trainingNoteTags.id));
+
+  return rows.map(toTrainingNoteTag);
+}
+
+export async function listTrainingNoteTagsByIds({
+  database = db,
+  tagIds,
+  userId,
+}: {
+  database?: TrainingNoteDatabase;
+  tagIds: number[];
+  userId: string;
+}): Promise<TrainingNoteTag[]> {
+  if (tagIds.length === 0) {
+    return [];
+  }
+
+  const rows = await database
+    .select(trainingNoteTagSelect)
+    .from(trainingNoteTags)
+    .where(
+      and(
+        eq(trainingNoteTags.userId, userId),
+        inArray(trainingNoteTags.id, tagIds),
+      ),
+    );
+
+  return rows.map(toTrainingNoteTag);
+}
+
+export async function listTrainingNoteTagIdsForNote({
+  database = db,
+  noteId,
+}: {
+  database?: TrainingNoteDatabase;
+  noteId: number;
+}) {
+  const rows = await database
+    .select({ tagId: trainingNoteTagAssignments.trainingNoteTagId })
+    .from(trainingNoteTagAssignments)
+    .where(eq(trainingNoteTagAssignments.trainingNoteId, noteId));
+
+  return rows.map((row) => row.tagId);
+}
+
+export async function replaceTrainingNoteTagAssignments({
+  database,
+  noteId,
+  tagIds,
+}: {
+  database: TrainingNoteDatabase;
+  noteId: number;
+  tagIds: number[];
+}) {
+  await database
+    .delete(trainingNoteTagAssignments)
+    .where(eq(trainingNoteTagAssignments.trainingNoteId, noteId));
+
+  if (tagIds.length === 0) {
+    return;
+  }
+
+  await database.insert(trainingNoteTagAssignments).values(
+    tagIds.map((tagId) => ({
+      trainingNoteId: noteId,
+      trainingNoteTagId: tagId,
+    })),
+  );
+}
+
+export async function touchTrainingNoteRecord({
+  database,
+  id,
+}: {
+  database: TrainingNoteDatabase;
+  id: number;
+}) {
+  await database
+    .update(trainingNotes)
+    .set({ updatedAt: new Date() })
+    .where(eq(trainingNotes.id, id));
+}
+
+export async function createTrainingNoteTagRecord({
+  color,
+  name,
+  userId,
+}: {
+  color: string;
+  name: string;
+  userId: string;
+}): Promise<TrainingNoteTag> {
+  const [tag] = await db
+    .insert(trainingNoteTags)
+    .values({ color, name, userId })
+    .returning(trainingNoteTagSelect);
+
+  if (!tag) {
+    throw new Error("Failed to create Training Note Tag");
+  }
+
+  return toTrainingNoteTag(tag);
+}
+
+export async function updateTrainingNoteTagRecord({
+  color,
+  id,
+  name,
+  userId,
+}: {
+  color: string;
+  id: number;
+  name: string;
+  userId: string;
+}): Promise<TrainingNoteTag | null> {
+  const [tag] = await db
+    .update(trainingNoteTags)
+    .set({ color, name, updatedAt: new Date() })
+    .where(
+      and(eq(trainingNoteTags.id, id), eq(trainingNoteTags.userId, userId)),
+    )
+    .returning(trainingNoteTagSelect);
+
+  return tag ? toTrainingNoteTag(tag) : null;
+}
+
+export async function archiveTrainingNoteTagRecord({
+  archivedAt,
+  id,
+  userId,
+}: {
+  archivedAt: Date;
+  id: number;
+  userId: string;
+}) {
+  const [tag] = await db
+    .update(trainingNoteTags)
+    .set({ archivedAt, updatedAt: new Date() })
+    .where(
+      and(eq(trainingNoteTags.id, id), eq(trainingNoteTags.userId, userId)),
+    )
+    .returning({ id: trainingNoteTags.id });
+
+  return Boolean(tag);
+}
+
+export async function restoreTrainingNoteTagRecord({
+  id,
+  userId,
+}: {
+  id: number;
+  userId: string;
+}) {
+  const [tag] = await db
+    .update(trainingNoteTags)
+    .set({ archivedAt: null, updatedAt: new Date() })
+    .where(
+      and(eq(trainingNoteTags.id, id), eq(trainingNoteTags.userId, userId)),
+    )
+    .returning({ id: trainingNoteTags.id });
+
+  return Boolean(tag);
+}
+
 function toTrainingNote(note: {
   activityId: number | null;
   createdAt: Date;
   id: number;
+  tags: TrainingNoteTag[];
   targetLabel: string | null;
   targetStartAt: Date | null;
   text: string;
@@ -222,5 +461,56 @@ function toTrainingNote(note: {
   return {
     ...note,
     targetType: note.activityId === null ? "trainingWeek" : "activity",
+  };
+}
+
+async function hydrateTrainingNotes(
+  notes: Array<Omit<Parameters<typeof toTrainingNote>[0], "tags">>,
+): Promise<TrainingNote[]> {
+  if (notes.length === 0) {
+    return [];
+  }
+
+  const noteIds = notes.map((note) => note.id);
+  const tagRows = await db
+    .select({
+      ...trainingNoteTagSelect,
+      noteId: trainingNoteTagAssignments.trainingNoteId,
+    })
+    .from(trainingNoteTagAssignments)
+    .innerJoin(
+      trainingNoteTags,
+      eq(trainingNoteTagAssignments.trainingNoteTagId, trainingNoteTags.id),
+    )
+    .where(inArray(trainingNoteTagAssignments.trainingNoteId, noteIds))
+    .orderBy(asc(trainingNoteTags.name), asc(trainingNoteTags.id));
+  const tagsByNoteId = new Map<number, TrainingNoteTag[]>();
+
+  for (const row of tagRows) {
+    const noteTags = tagsByNoteId.get(row.noteId) ?? [];
+    noteTags.push(toTrainingNoteTag(row));
+    tagsByNoteId.set(row.noteId, noteTags);
+  }
+
+  return notes.map((note) =>
+    toTrainingNote({
+      ...note,
+      tags: tagsByNoteId.get(note.id) ?? [],
+    }),
+  );
+}
+
+function toTrainingNoteTag(tag: {
+  archivedAt: Date | null;
+  color: string;
+  createdAt: Date;
+  id: number;
+  name: string;
+  updatedAt: Date;
+  userId: string;
+}): TrainingNoteTag {
+  return {
+    ...tag,
+    color: tag.color as TrainingNoteTag["color"],
   };
 }

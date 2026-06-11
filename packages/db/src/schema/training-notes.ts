@@ -7,6 +7,7 @@ import {
   serial,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { activities } from "./activities";
@@ -47,13 +48,90 @@ export const trainingNotes = pgTable(
   ],
 );
 
-export const trainingNotesRelations = relations(trainingNotes, ({ one }) => ({
-  activity: one(activities, {
-    fields: [trainingNotes.activityId],
-    references: [activities.id],
+export const trainingNoteTags = pgTable(
+  "training_note_tags",
+  {
+    id: serial("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    color: text("color").notNull(),
+    archivedAt: timestamp("archived_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("training_note_tags_user_name_lower_idx").on(
+      table.userId,
+      sql`lower(${table.name})`,
+    ),
+    index("training_note_tags_user_archived_idx").on(
+      table.userId,
+      table.archivedAt,
+    ),
+  ],
+);
+
+export const trainingNoteTagAssignments = pgTable(
+  "training_note_tag_assignments",
+  {
+    trainingNoteId: integer("training_note_id")
+      .notNull()
+      .references(() => trainingNotes.id, { onDelete: "cascade" }),
+    trainingNoteTagId: integer("training_note_tag_id")
+      .notNull()
+      .references(() => trainingNoteTags.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("training_note_tag_assignments_note_tag_idx").on(
+      table.trainingNoteId,
+      table.trainingNoteTagId,
+    ),
+    index("training_note_tag_assignments_tag_idx").on(table.trainingNoteTagId),
+  ],
+);
+
+export const trainingNotesRelations = relations(
+  trainingNotes,
+  ({ many, one }) => ({
+    activity: one(activities, {
+      fields: [trainingNotes.activityId],
+      references: [activities.id],
+    }),
+    tagAssignments: many(trainingNoteTagAssignments),
+    user: one(user, {
+      fields: [trainingNotes.userId],
+      references: [user.id],
+    }),
   }),
-  user: one(user, {
-    fields: [trainingNotes.userId],
-    references: [user.id],
+);
+
+export const trainingNoteTagsRelations = relations(
+  trainingNoteTags,
+  ({ many, one }) => ({
+    assignments: many(trainingNoteTagAssignments),
+    user: one(user, {
+      fields: [trainingNoteTags.userId],
+      references: [user.id],
+    }),
   }),
-}));
+);
+
+export const trainingNoteTagAssignmentsRelations = relations(
+  trainingNoteTagAssignments,
+  ({ one }) => ({
+    note: one(trainingNotes, {
+      fields: [trainingNoteTagAssignments.trainingNoteId],
+      references: [trainingNotes.id],
+    }),
+    tag: one(trainingNoteTags, {
+      fields: [trainingNoteTagAssignments.trainingNoteTagId],
+      references: [trainingNoteTags.id],
+    }),
+  }),
+);

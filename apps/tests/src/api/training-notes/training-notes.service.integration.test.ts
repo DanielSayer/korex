@@ -2,14 +2,20 @@ import {
   listRecentTrainingNotes,
   listTrainingNotesForActivity,
   listTrainingNotesForTrainingWeek,
+  listTrainingNoteTags,
 } from "@korex/api/modules/training-notes/training-notes.repository";
 import {
+  archiveTrainingNoteTag,
   createTrainingNote,
+  createTrainingNoteTag,
   deleteTrainingNote,
+  restoreTrainingNoteTag,
   updateTrainingNote,
+  updateTrainingNoteTag,
 } from "@korex/api/modules/training-notes/training-notes.service";
 import {
   TrainingNoteNotFoundError,
+  TrainingNoteTagError,
   TrainingNoteTargetError,
   TrainingNoteTextError,
 } from "@korex/api/modules/training-notes/training-notes.types";
@@ -99,6 +105,135 @@ describe("training notes service", () => {
         userId,
       }),
     ).rejects.toBeInstanceOf(TrainingNoteTextError);
+  });
+
+  it("creates tag-only notes and returns tags with note reads", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    await DataSeedAsync.withActivities(
+      ActivityBuilder.initWithUser(userId).withId(3151).build(),
+    ).seedAsync();
+    const fatigue = await createTrainingNoteTag({
+      color: "orange",
+      name: "Fatigue",
+      userId,
+    });
+
+    await expect(
+      createTrainingNote({
+        activityId: 3151,
+        tagIds: [fatigue.id],
+        text: "   ",
+        userId,
+      }),
+    ).resolves.toMatchObject({
+      tags: [{ color: "orange", name: "Fatigue" }],
+      text: "",
+    });
+    await expect(
+      listTrainingNotesForActivity({ activityId: 3151, userId }),
+    ).resolves.toMatchObject([
+      {
+        tags: [{ name: "Fatigue" }],
+        text: "",
+      },
+    ]);
+  });
+
+  it("manages Training Note Tags with unique names, archive, and restore", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    const tag = await createTrainingNoteTag({
+      color: "red",
+      name: "  poor   sleep ",
+      userId,
+    });
+
+    expect(tag).toMatchObject({
+      archivedAt: null,
+      color: "red",
+      name: "poor sleep",
+    });
+    await expect(
+      createTrainingNoteTag({
+        color: "blue",
+        name: "Poor Sleep",
+        userId,
+      }),
+    ).rejects.toBeInstanceOf(TrainingNoteTagError);
+    await expect(
+      updateTrainingNoteTag({
+        color: "sky",
+        id: tag.id,
+        name: "Sleep",
+        userId,
+      }),
+    ).resolves.toMatchObject({ color: "sky", name: "Sleep" });
+    await expect(
+      archiveTrainingNoteTag({ id: tag.id, userId }),
+    ).resolves.toEqual({ archived: true });
+    await expect(
+      listTrainingNoteTags({ includeArchived: true, userId }),
+    ).resolves.toMatchObject([{ archivedAt: expect.any(Date), name: "Sleep" }]);
+    await expect(
+      restoreTrainingNoteTag({ id: tag.id, userId }),
+    ).resolves.toEqual({ restored: true });
+  });
+
+  it("prevents new archived tag assignments while preserving existing archived assignments", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    await DataSeedAsync.withActivities(
+      ActivityBuilder.initWithUser(userId).withId(3161).build(),
+    ).seedAsync();
+    const injury = await createTrainingNoteTag({
+      color: "red",
+      name: "Injury",
+      userId,
+    });
+    const note = await createTrainingNote({
+      activityId: 3161,
+      tagIds: [injury.id],
+      text: "",
+      userId,
+    });
+
+    await archiveTrainingNoteTag({ id: injury.id, userId });
+    await expect(
+      createTrainingNote({
+        activityId: 3161,
+        tagIds: [injury.id],
+        text: "",
+        userId,
+      }),
+    ).rejects.toBeInstanceOf(TrainingNoteTagError);
+    await expect(
+      updateTrainingNote({
+        id: note.id,
+        tagIds: [injury.id],
+        text: "Still carrying the tag",
+        userId,
+      }),
+    ).resolves.toMatchObject({
+      tags: [{ archivedAt: expect.any(Date), name: "Injury" }],
+      text: "Still carrying the tag",
+    });
+    await expect(
+      updateTrainingNote({
+        id: note.id,
+        tagIds: [],
+        text: "Removed archived tag",
+        userId,
+      }),
+    ).resolves.toMatchObject({ tags: [] });
+    await expect(
+      updateTrainingNote({
+        id: note.id,
+        tagIds: [injury.id],
+        text: "Cannot re-add",
+        userId,
+      }),
+    ).rejects.toBeInstanceOf(TrainingNoteTagError);
   });
 
   it("rejects Activity targets owned by another User", async () => {

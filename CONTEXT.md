@@ -92,6 +92,10 @@ _Avoid_: Calendar week, ISO week, reporting week
 A user-owned plain-text observation about training, optionally attached to an **Activity** or **Training Week**.
 _Avoid_: Journal entry, comment, annotation
 
+**Training Note Tag**:
+A user-owned colored label used to classify **Training Notes**.
+_Avoid_: Category, label, hashtag
+
 **Training Streak**:
 A count of consecutive **Training Weeks** in which a **User** has at least one qualifying **Activity**.
 _Avoid_: Activity streak, weekly streak
@@ -270,18 +274,46 @@ _Avoid_: Activity PR, lap best, best split
 - **Training Notes** can be displayed alongside a **Weekly Training Summary**, but they are not inputs to **Weekly Training Summary** generation.
 - **Training Notes** attached to **Activities** in a **Training Week** can be displayed in that **Training Week** context without becoming **Training Week** notes.
 - A **Training Note** belongs to exactly one **User**.
+- A **Training Note** can have zero or more **Training Note Tags**.
+- A **Training Note** can be saved without **Training Note Tags**.
 - A **Training Note** contains plain text only.
 - A **Training Note** does not have a user-authored title.
-- A **Training Note** must not be empty after trimming surrounding whitespace.
+- A **Training Note** must have plain text, one or more **Training Note Tags**, or both.
 - A **Training Note** must be attached to exactly one target: either one **Activity** or one **Training Week**.
 - A **Training Note** can be attached to any **Activity** owned by the **User**, regardless of **Sport Type**.
 - A **Training Note** must not be attached to both an **Activity** and a **Training Week**.
 - A **Training Note's** attachment target cannot be changed after creation.
 - A **Training Note** can be deleted by its owning **User**.
 - A **Training Note** can be edited by its owning **User** without preserving prior note text.
+- A **Training Note's** tag assignments can be changed by its owning **User**.
+- Changing a **Training Note's** tag assignments updates the **Training Note** updated timestamp.
 - A **Training Note** attached to an **Activity** is deleted when that **Activity** is deleted.
 - **Training Notes** are core-owned user data and must not be created, changed, or deleted by provider sync.
 - **Training Notes** do not update **Activity** metrics, **Training Week** metrics, derived **Activity** data, or durable calculation jobs.
+- A **Training Note Tag** belongs to exactly one **User**.
+- A **Training Note Tag** classifies **Training Notes** only.
+- A **Training Note Tag** can classify zero or more **Training Notes**.
+- A **Training Note Tag** name must be short, non-empty text intended for display as a compact label.
+- Active **Training Note Tags** are displayed alphabetically by name.
+- **Training Notes** can be filtered by **Training Note Tags** within their current **Activity** or **Training Week** context.
+- When multiple **Training Note Tags** are selected as filters, a **Training Note** appears if it has any selected tag.
+- Archived **Training Note Tags** can appear as filter options only when visible **Training Notes** in the current context already use them.
+- **Training Note Tag** filtering does not create a global **Training Notes** page.
+- **Training Note Tags** do not update **Activity** metrics, **Training Week** metrics, generated summaries, or durable calculation jobs.
+- A **User** cannot have two **Training Note Tags** with the same name ignoring case.
+- Archived **Training Note Tags** still count when enforcing name uniqueness for a **User**.
+- A **Training Note Tag** preserves the display casing chosen by the **User**.
+- A **Training Note Tag** name can be changed by its owning **User**.
+- Changing a **Training Note Tag's** name changes how that tag appears on all **Training Notes** using it.
+- A **Training Note Tag** has a user-managed display color.
+- Changing a **Training Note Tag's** display color changes how that tag appears on all **Training Notes** using it.
+- A **Training Note Tag** can be archived by its owning **User**.
+- An archived **Training Note Tag** can be restored by its owning **User**.
+- Archived **Training Note Tags** are hidden from active tag assignment lists.
+- An archived **Training Note Tag** remains visible on **Training Notes** that already use it.
+- An archived **Training Note Tag** cannot be assigned to new **Training Notes**.
+- An archived **Training Note Tag** can be removed from a **Training Note** that already uses it.
+- An archived **Training Note Tag** cannot be re-assigned after it is removed from a **Training Note**.
 - **Training Weeks** currently use the Australia/Brisbane timezone until Korex supports a user-defined timezone setting.
 - A **Training Streak** belongs to exactly one **User**.
 - A completed **Training Week** increases a **Training Streak** when it contains at least one **Qualifying Activity**.
