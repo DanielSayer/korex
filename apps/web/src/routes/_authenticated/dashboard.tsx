@@ -5,7 +5,6 @@ import { ErrorMessage } from "@/components/error-message";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { DashboardMetrics } from "@/features/dashboard/components/dashboard-metrics";
 import {
-  RecoveryCard,
   ShoeMileageCard,
   TrainingNotesCard,
 } from "@/features/dashboard/components/dashboard-supplemental-cards";
@@ -118,14 +117,12 @@ function RouteComponent() {
             isLoading={recentActivities.isPending}
             runs={recentRuns}
           />
-          <section className="grid gap-4 lg:grid-cols-2 xl:hidden">
-            <RecoveryCard runs={recentRuns} />
+          <section className="grid gap-4 xl:hidden">
             <TrainingGoalsDashboardCard />
           </section>
         </main>
         <aside className="grid min-w-0 content-start gap-5">
           <section className="hidden gap-4 xl:grid">
-            <RecoveryCard runs={recentRuns} />
             <TrainingGoalsDashboardCard />
           </section>
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">

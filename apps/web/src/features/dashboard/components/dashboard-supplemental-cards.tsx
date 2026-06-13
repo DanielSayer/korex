@@ -1,42 +1,8 @@
 import type {
   DashboardWeeklyDistance,
-  RecentActivity,
 } from "@korex/api/modules/activities/activities.types";
 import { FootprintsIcon } from "lucide-react";
 import { RecentTrainingNotesCard } from "@/features/training-notes/components/training-notes-section";
-
-function RecoveryCard({ runs }: { runs: RecentActivity[] }) {
-  const averageHr = average(
-    runs
-      .map((run) => run.averageHeartRateBeatsPerMinute)
-      .filter((value): value is number => value !== null),
-  );
-  const score = averageHr
-    ? Math.max(52, Math.min(92, 112 - averageHr / 3))
-    : 78;
-
-  return (
-    <section className="rounded-xl border border-border/55 bg-card/40 p-5 shadow-black/5 shadow-md backdrop-blur-sm dark:bg-card/35 dark:shadow-black/15">
-      <h2 className="font-semibold font-serif text-sm uppercase">Recovery</h2>
-      <div className="mt-5 flex flex-col gap-5 sm:flex-row sm:items-center">
-        <RingGauge label="/100" value={score} />
-        <div className="min-w-0">
-          <p className="font-semibold font-serif text-lg">Good</p>
-          <p className="mt-2 text-muted-foreground text-sm leading-6">
-            Mocked until recovery signals are exported by the API.
-          </p>
-          <div className="mt-4 border-t pt-3 text-sm">
-            <span className="text-muted-foreground">Trend</span>
-            <span className="ml-4 font-semibold text-emerald-600 dark:text-emerald-300">
-              +6 pts
-            </span>
-            <span className="ml-4 text-muted-foreground">vs yesterday</span>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function ShoeMileageCard({
   weeklyDistance,
@@ -86,36 +52,7 @@ function ShoeMileageCard({
   );
 }
 
-function RingGauge({ label, value }: { label: string; value: number }) {
-  return (
-    <div
-      className="grid size-32 shrink-0 place-items-center rounded-full"
-      style={{
-        background: `conic-gradient(var(--primary) ${value * 3.6}deg, var(--muted) 0deg)`,
-      }}
-    >
-      <div className="grid size-24 place-items-center rounded-full bg-background">
-        <div className="text-center">
-          <p className="font-semibold font-serif text-5xl tabular-nums">
-            {Math.round(value)}
-          </p>
-          <p className="text-muted-foreground text-sm">{label}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function average(values: number[]) {
-  if (values.length === 0) {
-    return null;
-  }
-
-  return values.reduce((total, value) => total + value, 0) / values.length;
-}
-
 export {
   RecentTrainingNotesCard as TrainingNotesCard,
-  RecoveryCard,
   ShoeMileageCard,
 };
