@@ -40,7 +40,7 @@ function ActivityDetailPage({ activityId }: ActivityDetailPageProps) {
     >
       {(summary) =>
         summary ? (
-          <ActivityDetailView summary={summary} />
+          <ActivityDetailView activityId={activityId} summary={summary} />
         ) : (
           <ActivityDetailMessage message="This activity could not be found." />
         )
@@ -49,7 +49,13 @@ function ActivityDetailPage({ activityId }: ActivityDetailPageProps) {
   );
 }
 
-function ActivityDetailView({ summary }: { summary: ActivityDetailSummary }) {
+function ActivityDetailView({
+  activityId,
+  summary,
+}: {
+  activityId: string;
+  summary: ActivityDetailSummary;
+}) {
   const streamsQuery = useQuery(
     orpc.activities.streams.queryOptions({
       input: { activityId: summary.activity.id },
@@ -68,11 +74,12 @@ function ActivityDetailView({ summary }: { summary: ActivityDetailSummary }) {
           <ActivityStats summary={summary} />
           <Separator className="my-6" />
           <BestEffortsCard efforts={summary.bestEfforts} />
+          <Separator className="my-6" />
+          <ActivityEquipmentCard activityId={activityId} summary={summary} />
         </div>
       </div>
 
       <ActivityLapsCard laps={summary.laps} />
-      <ActivityEquipmentCard summary={summary} />
       <TrainingNotesSection activityId={summary.activity.id} type="activity" />
       <HeartRateZonesCard summary={summary} />
       <QueryRenderer
