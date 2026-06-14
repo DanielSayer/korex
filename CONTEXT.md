@@ -156,6 +156,34 @@ _Avoid_: PR, record, best split
 The fastest known contiguous distance effort within one **Activity** over a standard distance.
 _Avoid_: Activity PR, lap best, best split
 
+**Equipment**:
+A user-owned physical item used during **Activities** and tracked for usage over time.
+_Avoid_: Gear, shoe, provider gear
+
+**Equipment Type**:
+A Korex-owned classification for **Equipment**, initially shoes.
+_Avoid_: Gear type, equipment category
+
+**Activity Equipment Use**:
+A user-owned association showing that one **Equipment** item was used during one **Activity**.
+_Avoid_: Gear assignment, activity gear, equipment link
+
+**Default Equipment**:
+The **Equipment** item Korex automatically uses for newly imported matching **Activities**.
+_Avoid_: Auto gear, favorite shoe, default assignment
+
+**Equipment Starting Distance**:
+The user-entered distance already accumulated by an **Equipment** item before Korex-tracked **Activity Equipment Uses**.
+_Avoid_: Existing miles, initial mileage, manual distance
+
+**Retired Equipment**:
+**Equipment** the **User** no longer actively uses but keeps for historical **Activity** usage.
+_Avoid_: Deleted gear, inactive shoe, archived equipment
+
+**Equipment Retirement Distance**:
+The optional usage distance at which a **User** intends to stop actively using an **Equipment** item.
+_Avoid_: Shoe lifespan, mileage limit, max miles
+
 ## Relationships
 
 - A **Heart Rate Zone** belongs to exactly one **User**
@@ -166,11 +194,35 @@ _Avoid_: Activity PR, lap best, best split
 - A **User** has one active set of **Heart Rate Zones**.
 - An **Anti-Corruption Layer** translates **Provider Profile** heart-rate zone data into **Heart Rate Zones**.
 - An **Activity** belongs to exactly one **User**.
+- An **Activity** can have zero or more **Activity Equipment Uses**.
+- An **Activity** can use more than one **Equipment** item.
+- An **Activity** can have at most one **Activity Equipment Use** for a given **Equipment Type** in the initial model.
 - An **Activity** can have zero or more **Training Notes**.
 - An **Activity** has exactly one **Sport Type**.
 - An **Activity** can have zero or more **Activity Laps**.
 - An **Activity** can have zero or one **Activity Map**.
 - An **Activity** can have zero or more **Activity Streams**.
+- An **Equipment** item belongs to exactly one **User**.
+- An **Equipment** item has exactly one **Equipment Type**.
+- An **Equipment** item can have zero or more **Activity Equipment Uses**.
+- Initial **Equipment Types** are limited to shoes.
+- An **Activity Equipment Use** belongs to exactly one **Activity** and exactly one **Equipment** item.
+- A **User** can have at most one active **Default Equipment** per **Equipment Type** and **Sport Type**.
+- **Default Equipment** creates **Activity Equipment Uses** for newly imported matching **Activities**.
+- **Default Equipment** assignment is core-owned import behavior, not provider **Anti-Corruption Layer** behavior.
+- **Default Equipment** assignment only creates an **Activity Equipment Use** when the **Activity** has no existing use for that **Equipment Type**.
+- Changing **Default Equipment** does not rewrite existing **Activity Equipment Uses**.
+- Existing **Activities** can receive **Activity Equipment Uses** through an explicit user action filtered by date range, **Sport Type**, and whether they already have matching **Equipment**.
+- **Equipment** usage distance is the sum of its **Equipment Starting Distance** and current **Activity** distances from **Activity Equipment Uses** for that **Equipment** item.
+- **Equipment Starting Distance** is user-entered and does not create **Activity Equipment Uses**.
+- **Equipment Starting Distance** is stored in meters.
+- Changing an **Activity's** distance changes current **Equipment** usage distance.
+- **Activity Equipment Uses** do not preserve historical **Activity** distance snapshots in the initial model.
+- **Retired Equipment** remains visible in historical **Activity Equipment Uses**.
+- **Retired Equipment** cannot be selected as **Default Equipment**.
+- **Retired Equipment** is not automatically assigned to future **Activities**.
+- **Equipment Retirement Distance** is stored in meters.
+- **Equipment Retirement Distance** does not automatically retire **Equipment**.
 - An **Activity Lap** belongs to exactly one **Activity**.
 - An **Activity Map** belongs to exactly one **Activity**.
 - An **Activity Stream** belongs to exactly one **Activity**.

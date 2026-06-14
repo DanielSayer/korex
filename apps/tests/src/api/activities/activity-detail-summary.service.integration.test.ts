@@ -1,10 +1,12 @@
 import { getActivityDetailSummary } from "@korex/api/modules/activities/catalog/activity-detail-summary.service";
 import {
   activityBestEfforts,
+  activityEquipmentUses,
   activityHeartRateZoneSnapshots,
   activityHeartRateZoneTimes,
   activityLaps,
   db,
+  equipment,
   user,
 } from "@korex/db";
 import { describe, expect, it } from "vitest";
@@ -87,6 +89,23 @@ describe("activity detail summary service", () => {
       startElapsedTimeSeconds: 540,
       userId,
     });
+    const [shoes] = await db
+      .insert(equipment)
+      .values({
+        equipmentType: "shoes",
+        name: "Tempo Shoes",
+        userId,
+      })
+      .returning();
+    if (!shoes) {
+      throw new Error("Failed to create Equipment test data");
+    }
+    await db.insert(activityEquipmentUses).values({
+      activityId: activity.id,
+      equipmentId: shoes.id,
+      equipmentType: "shoes",
+      userId,
+    });
 
     const result = await getActivityDetailSummary({
       activityId: activity.id,
@@ -102,6 +121,14 @@ describe("activity detail summary service", () => {
         name: "Tempo Detail",
         sportType: "run",
       },
+      activityEquipmentUses: [
+        {
+          activityId: activity.id,
+          equipmentId: shoes.id,
+          equipmentName: "Tempo Shoes",
+          equipmentType: "shoes",
+        },
+      ],
       bestEfforts: [
         {
           distanceMeters: 1000,

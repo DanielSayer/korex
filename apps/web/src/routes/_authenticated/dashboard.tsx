@@ -28,6 +28,7 @@ function RouteComponent() {
     orpc.activities.dashboardThisWeek.queryOptions();
   const trainingGoalProgressQuery =
     orpc.activities.trainingGoalProgress.queryOptions();
+  const equipmentQuery = orpc.equipment.list.queryOptions();
   const [recentActivities, dashboardThisWeek] = useQueries({
     queries: [recentActivitiesQuery, dashboardThisWeekQuery],
   });
@@ -43,6 +44,7 @@ function RouteComponent() {
           trainingStreakQuery,
           trainingStreakCurrentWeekQuery,
           dashboardThisWeekQuery,
+          equipmentQuery,
           trainingGoalProgressQuery,
         ]) {
           queryClient.invalidateQueries({ queryKey: query.queryKey });
@@ -126,7 +128,7 @@ function RouteComponent() {
             <TrainingGoalsDashboardCard />
           </section>
           <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
-            <ShoeMileageCard weeklyDistance={weeklyDistance} />
+            <ShoeMileageCard />
             <TrainingNotesCard />
           </section>
         </aside>

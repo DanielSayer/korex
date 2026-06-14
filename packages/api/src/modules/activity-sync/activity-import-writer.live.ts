@@ -8,6 +8,7 @@ import {
 import { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
 import { enqueueCurrentTrainingStreakUpdateForActivity } from "../activities/training-streaks/training-streak.repository";
 import { isTrainingStreakQualifyingSportType } from "../activities/training-streaks/training-streaks";
+import { assignDefaultEquipmentForActivity } from "../equipment/equipment.repository";
 import {
   type ActivityImportDatabase,
   ActivityImportRepository,
@@ -76,6 +77,13 @@ export const ActivityImportWriterLayer = Layer.effect(
             activityId: upsertedActivity.activityId,
             database,
             externalActivityId,
+          });
+
+          await assignDefaultEquipmentForActivity({
+            activityId: upsertedActivity.activityId,
+            database,
+            sportType: activity.sportType,
+            userId: activity.userId,
           });
 
           await routeHeatmapJobRepository.enqueueActivityRouteHeatmapCalculation(

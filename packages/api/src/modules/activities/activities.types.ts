@@ -255,6 +255,13 @@ export type ActivityBestEffortSummary = {
 
 export type ActivityDetailSummary = {
   activity: ActivityDetailSummaryActivity;
+  activityEquipmentUses: Array<{
+    activityId: number;
+    equipmentId: number;
+    equipmentName: string;
+    equipmentType: "shoes";
+    id: number;
+  }>;
   bestEfforts: ActivityBestEffortSummary[];
   heartRateZoneSnapshots: ActivityHeartRateZoneSnapshotInput[];
   heartRateZoneTimes: ActivityHeartRateZoneTimeInput[];

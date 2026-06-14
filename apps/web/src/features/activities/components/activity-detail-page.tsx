@@ -10,6 +10,7 @@ import { TrainingNotesSection } from "@/features/training-notes/components/train
 import { orpc } from "@/utils/orpc";
 import { ActivityDetailHeader } from "./activity-detail/activity-detail-header";
 import { ActivityDetailSkeleton } from "./activity-detail/activity-detail-skeleton";
+import { ActivityEquipmentCard } from "./activity-detail/activity-equipment-card";
 import { ActivityLapsCard } from "./activity-detail/activity-laps-card";
 import { ActivityRouteMap } from "./activity-detail/activity-route-map";
 import { ActivityStats } from "./activity-detail/activity-stats";
@@ -71,6 +72,7 @@ function ActivityDetailView({ summary }: { summary: ActivityDetailSummary }) {
       </div>
 
       <ActivityLapsCard laps={summary.laps} />
+      <ActivityEquipmentCard summary={summary} />
       <TrainingNotesSection activityId={summary.activity.id} type="activity" />
       <HeartRateZonesCard summary={summary} />
       <QueryRenderer

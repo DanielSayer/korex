@@ -1,11 +1,13 @@
 import {
   activities,
   activityBestEfforts,
+  activityEquipmentUses,
   activityHeartRateZoneSnapshots,
   activityHeartRateZoneTimes,
   activityLaps,
   activityMaps,
   db,
+  equipment,
 } from "@korex/db";
 import { and, asc, eq } from "drizzle-orm";
 import type {
@@ -55,23 +57,48 @@ export async function getActivityDetailSummaryRecord({
     return null;
   }
 
-  const [map, laps, heartRateZoneSnapshots, heartRateZoneTimes, bestEfforts] =
-    await Promise.all([
-      getActivityMapRecord(activity.id),
-      listActivityLapRecords(activity.id),
-      listActivityHeartRateZoneSnapshotRecords(activity.id),
-      listActivityHeartRateZoneTimeRecords(activity.id),
-      listActivityBestEffortRecords(activity.id),
-    ]);
+  const [
+    map,
+    laps,
+    heartRateZoneSnapshots,
+    heartRateZoneTimes,
+    bestEfforts,
+    equipmentUses,
+  ] = await Promise.all([
+    getActivityMapRecord(activity.id),
+    listActivityLapRecords(activity.id),
+    listActivityHeartRateZoneSnapshotRecords(activity.id),
+    listActivityHeartRateZoneTimeRecords(activity.id),
+    listActivityBestEffortRecords(activity.id),
+    listActivityEquipmentUseRecords(activity.id),
+  ]);
 
   return {
     activity,
+    activityEquipmentUses: equipmentUses,
     bestEfforts,
     heartRateZoneSnapshots,
     heartRateZoneTimes,
     laps,
     map,
   };
+}
+
+function listActivityEquipmentUseRecords(
+  activityId: ActivityDetailSummaryActivity["id"],
+): Promise<ActivityDetailSummary["activityEquipmentUses"]> {
+  return db
+    .select({
+      activityId: activityEquipmentUses.activityId,
+      equipmentId: activityEquipmentUses.equipmentId,
+      equipmentName: equipment.name,
+      equipmentType: activityEquipmentUses.equipmentType,
+      id: activityEquipmentUses.id,
+    })
+    .from(activityEquipmentUses)
+    .innerJoin(equipment, eq(equipment.id, activityEquipmentUses.equipmentId))
+    .where(eq(activityEquipmentUses.activityId, activityId))
+    .orderBy(activityEquipmentUses.equipmentType);
 }
 
 async function getActivityMapRecord(
