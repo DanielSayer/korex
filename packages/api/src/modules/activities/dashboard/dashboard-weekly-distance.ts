@@ -2,6 +2,7 @@ import type {
   DashboardThisWeek,
   DashboardWeeklyDistance,
   DashboardWeeklyDistanceBucket,
+  DashboardWeeklyFocus,
 } from "../activities.types";
 import {
   getPreviousTrainingWeekStartAt,
@@ -116,9 +117,11 @@ export function getLastWeekSamePointRange(now = new Date()) {
 
 export function buildDashboardThisWeek({
   row,
+  weeklyFocus,
   weeklyDistance,
 }: {
   row: DashboardThisWeekRow | null;
+  weeklyFocus: DashboardWeeklyFocus;
   weeklyDistance: DashboardWeeklyDistance;
 }): DashboardThisWeek {
   const distanceMeters = row?.distanceMeters ?? 0;
@@ -134,6 +137,7 @@ export function buildDashboardThisWeek({
     distanceMeters,
     durationSeconds,
     energyKilocalories: row?.energyKilocalories ?? null,
+    weeklyFocus,
     weeklyDistance,
     weekEndAt: weeklyDistance.weekEndAt,
     weekStartAt: weeklyDistance.weekStartAt,

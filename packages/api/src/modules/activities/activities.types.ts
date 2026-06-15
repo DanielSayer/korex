@@ -162,6 +162,37 @@ export type DashboardWeeklyDistance = {
   weeklyDistanceBuckets: DashboardWeeklyDistanceBucket[];
 };
 
+export type DashboardWeeklyFocusReasonKind =
+  | "activity"
+  | "equipment"
+  | "goal"
+  | "time"
+  | "volume";
+
+export type DashboardWeeklyFocusTone = "default" | "good" | "warn";
+
+export type DashboardWeeklyFocusStatus =
+  | "build"
+  | "complete"
+  | "recover"
+  | "restart"
+  | "steady";
+
+export type DashboardWeeklyFocusReason = {
+  kind: DashboardWeeklyFocusReasonKind;
+  label: string;
+  tone?: DashboardWeeklyFocusTone;
+};
+
+export type DashboardWeeklyFocus = {
+  action: string;
+  body: string;
+  reasons: DashboardWeeklyFocusReason[];
+  status: DashboardWeeklyFocusStatus;
+  title: string;
+  tone: DashboardWeeklyFocusTone;
+};
+
 export type DashboardThisWeek = {
   activityCount: number;
   averageHeartRateBeatsPerMinute: number | null;
@@ -169,6 +200,7 @@ export type DashboardThisWeek = {
   distanceMeters: number;
   durationSeconds: number;
   energyKilocalories: number | null;
+  weeklyFocus: DashboardWeeklyFocus;
   weeklyDistance: DashboardWeeklyDistance;
   weekEndAt: Date;
   weekStartAt: Date;

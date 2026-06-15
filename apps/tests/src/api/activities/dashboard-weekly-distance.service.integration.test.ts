@@ -148,6 +148,11 @@ describe("dashboard weekly distance service", () => {
       weekEndAt: new Date("2026-03-08T14:00:00.000Z"),
       weekStartAt: new Date("2026-03-01T14:00:00.000Z"),
     });
+    expect(result.weeklyFocus).toMatchObject({
+      action: "One consistent run",
+      status: "build",
+      title: "Build the week.",
+    });
     expect(result.weeklyDistance).toMatchObject({
       thisWeekDistanceMeters: 15_000,
       weekStartAt: new Date("2026-03-01T14:00:00.000Z"),

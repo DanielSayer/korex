@@ -81,6 +81,14 @@ describe("dashboard weekly distance", () => {
         durationSeconds: 4500,
         energyKilocalories: 1040,
       },
+      weeklyFocus: {
+        action: "Easy-to-steady run",
+        body: "Hold steady.",
+        reasons: [],
+        status: "steady",
+        title: "Hold steady.",
+        tone: "good",
+      },
       weeklyDistance,
     });
 
@@ -91,6 +99,9 @@ describe("dashboard weekly distance", () => {
       distanceMeters: 15_000,
       durationSeconds: 4500,
       energyKilocalories: 1040,
+      weeklyFocus: {
+        status: "steady",
+      },
       weekEndAt: new Date("2026-03-08T14:00:00.000Z"),
       weekStartAt: new Date("2026-03-01T14:00:00.000Z"),
     });

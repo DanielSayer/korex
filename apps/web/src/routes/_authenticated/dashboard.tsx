@@ -11,6 +11,7 @@ import {
 import { RecentRunsTable } from "@/features/dashboard/components/recent-runs-table";
 import { TrainingStreakSection } from "@/features/dashboard/components/training-streak-section";
 import { WeeklyDistanceSection } from "@/features/dashboard/components/weekly-distance-section";
+import { WeeklyFocusCard } from "@/features/dashboard/components/weekly-focus-card";
 import { TrainingGoalsDashboardCard } from "@/features/training-goals/components/training-goals-dashboard-card";
 import { orpc } from "@/utils/orpc";
 
@@ -90,16 +91,10 @@ function RouteComponent() {
         <div className="relative grid min-h-[clamp(620px,72svh,820px)] grid-cols-[repeat(auto-fit,minmax(min(100%,26rem),1fr))] items-end gap-8 px-6 pt-20 pb-8 sm:px-8 lg:px-10 xl:px-12">
           <div className="flex max-w-3xl flex-col justify-between gap-10 self-stretch">
             <div>
-              <p className="font-semibold text-primary text-xs uppercase">
-                Weekly Briefing
-              </p>
-              <h1 className="mt-5 max-w-140 font-semibold font-serif text-4xl leading-[0.98] tracking-tight sm:text-6xl">
-                Consistent progress, strong foundation.
-              </h1>
-              <p className="mt-6 max-w-md text-muted-foreground leading-7">
-                You put in the work this week. Keep building aerobic base and
-                managing fatigue.
-              </p>
+              <WeeklyFocusCard
+                focus={thisWeek?.weeklyFocus}
+                isLoading={dashboardThisWeek.isPending}
+              />
             </div>
             <DashboardMetrics
               isLoading={isSummaryLoading}

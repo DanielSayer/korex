@@ -1,8 +1,10 @@
 import { Effect, Layer } from "effect";
+import { listEquipment } from "../../equipment/equipment.repository";
 import {
   TimeProvider,
   TimeProviderLive,
 } from "../../time-provider.dependencies";
+import { listTrainingGoalProgress } from "../training-goals/training-goal.service";
 import {
   buildDashboardThisWeek,
   buildDashboardWeeklyDistance,
@@ -18,6 +20,7 @@ import {
   listDashboardWeeklyDistanceRows,
   sumDashboardDistance,
 } from "./dashboard-weekly-distance.repository";
+import { buildDashboardWeeklyFocus } from "./dashboard-weekly-focus";
 
 export const DashboardWeeklyDistanceRepositoryLive = Layer.succeed(
   DashboardWeeklyDistanceRepository,
@@ -83,13 +86,29 @@ export const DashboardWeeklyDistanceQueryLayer = Layer.effect(
         getDashboardWeeklyDistance({ now, userId }).pipe(
           Effect.flatMap((weeklyDistance) =>
             Effect.promise(async () => {
-              const row = await repository.getDashboardThisWeekRow({
-                endAt: now,
-                startAt: weeklyDistance.weekStartAt,
-                userId,
+              const [row, goals, equipment] = await Promise.all([
+                repository.getDashboardThisWeekRow({
+                  endAt: now,
+                  startAt: weeklyDistance.weekStartAt,
+                  userId,
+                }),
+                listTrainingGoalProgress({ now, userId }),
+                listEquipment({ userId }),
+              ]);
+              const weeklyFocus = buildDashboardWeeklyFocus({
+                activityCount: row?.activityCount ?? 0,
+                distanceMeters: row?.distanceMeters ?? 0,
+                equipment,
+                goals,
+                now,
+                weeklyDistance,
               });
 
-              return buildDashboardThisWeek({ row, weeklyDistance });
+              return buildDashboardThisWeek({
+                row,
+                weeklyFocus,
+                weeklyDistance,
+              });
             }),
           ),
         ),
