@@ -28,18 +28,16 @@ import {
   TargetIcon,
   TrophyIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   getActiveMobileTab,
   mobileTabs,
   shouldHideMobileBottomNav,
 } from "./mobile-navigation";
-
-const mobileShellMediaQuery = "(max-width: 767px)";
+import { useIsMobileViewport } from "./responsive";
 
 function AppLayout() {
-  const isMobileShell = useMobileShell();
+  const isMobileShell = useIsMobileViewport();
 
   return isMobileShell ? <MobileAppLayout /> : <DesktopAppLayout />;
 }
@@ -172,23 +170,6 @@ function DesktopAppLayout() {
       </SidebarInset>
     </SidebarProvider>
   );
-}
-
-function useMobileShell() {
-  const [isMobileShell, setIsMobileShell] = useState(
-    () => window.matchMedia(mobileShellMediaQuery).matches,
-  );
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(mobileShellMediaQuery);
-    const handleChange = () => setIsMobileShell(mediaQuery.matches);
-
-    handleChange();
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, []);
-
-  return isMobileShell;
 }
 
 function MobileAppLayout() {

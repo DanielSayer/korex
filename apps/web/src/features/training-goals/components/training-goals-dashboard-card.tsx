@@ -2,7 +2,7 @@ import { Button } from "@korex/ui/components/button";
 import { Skeleton } from "@korex/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { TargetIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import { ErrorMessage } from "@/components/error-message";
 import { orpc } from "@/utils/orpc";
 import { TrainingGoalList } from "./training-goal-list";
@@ -13,19 +13,17 @@ function TrainingGoalsDashboardCard() {
   );
 
   return (
-    <section className="rounded-xl border border-border/55 bg-card/40 p-5 shadow-black/5 shadow-md backdrop-blur-sm dark:bg-card/35 dark:shadow-black/15">
+    <section className="rounded-xl border border-border/70 bg-card p-3 md:p-5">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <TargetIcon className="hidden size-5 text-muted-foreground" />
-          <h2 className="font-semibold font-serif text-sm uppercase">
-            Training goals
-          </h2>
-        </div>
-        <Button size="sm" variant="outline" render={<Link to="/goals" />}>
+        <h2 className="font-semibold text-primary text-xs uppercase">
+          Training goals
+        </h2>
+        <Button size="sm" variant="ghost" render={<Link to="/goals" />}>
           Manage
+          <ChevronRightIcon className="size-3.5" />
         </Button>
       </div>
-      <div className="mt-5">
+      <div className="mt-3">
         {progressQuery.isPending ? <TrainingGoalsSkeleton /> : null}
         {progressQuery.isError ? (
           <ErrorMessage
@@ -47,9 +45,9 @@ function TrainingGoalsDashboardCard() {
 
 function TrainingGoalsSkeleton() {
   return (
-    <div className="grid gap-3">
-      <Skeleton className="h-24" />
-      <Skeleton className="h-24" />
+    <div className="grid gap-2">
+      <Skeleton className="h-16" />
+      <Skeleton className="h-16" />
     </div>
   );
 }

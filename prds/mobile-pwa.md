@@ -27,10 +27,10 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 9. [x] As a mobile Korex user, I want focused detail and edit flows to hide bottom tabs when appropriate, so that the task has enough vertical space.
 10. [x] As a mobile Korex user, I want main tab pages to keep bottom tabs visible, so that I can move between primary workflows predictably.
 11. As a mobile Korex user, I want page-specific top chrome, so that each screen can expose the actions that matter for that workflow.
-12. As a mobile Korex user, I want Dashboard to show the most important current training information first, so that I can quickly understand my week.
-13. As a mobile Korex user, I want Dashboard sync/status actions to remain available, so that I can refresh imported training data.
-14. As a mobile Korex user, I want recent Activities to be easy to scan, so that I can jump into recent runs without using a table layout.
-15. As a mobile Korex user, I want Dashboard cards to be ordered for a narrow viewport, so that weekly focus, Training Streak, Training Goals, recent Activities, Equipment, and Training Notes make sense in sequence.
+12. [x] As a mobile Korex user, I want Dashboard to show the most important current training information first, so that I can quickly understand my week.
+13. [x] As a mobile Korex user, I want Dashboard sync/status actions to remain available, so that I can refresh imported training data.
+14. [x] As a mobile Korex user, I want recent Activities to be easy to scan, so that I can jump into recent runs without using a table layout.
+15. [x] As a mobile Korex user, I want Dashboard cards to be ordered for a narrow viewport, so that weekly focus, Training Streak, Training Goals, recent Activities, Equipment, and Training Notes make sense in sequence.
 16. As a mobile Korex user, I want Calendar to avoid horizontal scrolling, so that I can browse training history naturally on a phone.
 17. As a mobile Korex user, I want Calendar to provide month navigation, so that I can move through training periods without desktop controls.
 18. As a mobile Korex user, I want Calendar to expose daily Activity lists, so that I can inspect what happened on a specific date.

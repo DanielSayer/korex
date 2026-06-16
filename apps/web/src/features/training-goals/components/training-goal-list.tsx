@@ -26,14 +26,24 @@ function TrainingGoalList({
 }: TrainingGoalListProps) {
   if (goals.length === 0) {
     return (
-      <div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
+      <div
+        className={cn(
+          "text-muted-foreground text-sm",
+          variant === "full" ? "rounded-md border border-dashed p-4" : "py-3",
+        )}
+      >
         {empty}
       </div>
     );
   }
 
   return (
-    <div className="grid gap-3">
+    <div
+      className={cn(
+        "grid",
+        variant === "full" ? "gap-3" : "divide-y divide-border/70",
+      )}
+    >
       {goals.map((goal) => (
         <TrainingGoalRow goal={goal} key={goal.id} variant={variant} />
       ))}
@@ -53,14 +63,15 @@ function TrainingGoalRow({
   return (
     <div
       className={cn(
-        "rounded-md border border-border/70",
-        variant === "full" ? "p-4" : "bg-background/15 p-3",
+        variant === "full"
+          ? "rounded-md border border-border/70 p-4"
+          : "py-3 first:pt-0 last:pb-0",
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-medium font-serif">{formatGoalTitle(goal)}</p>
-          <p className="text-primary text-sm">
+          <p className="font-medium text-sm">{formatGoalTitle(goal)}</p>
+          <p className="text-muted-foreground text-xs">
             {formatGoalPeriod(goal.period)}
           </p>
           <p className="text-muted-foreground text-xs tabular-nums">
@@ -78,7 +89,12 @@ function TrainingGoalRow({
           {goal.achieved ? "Achieved" : `${Math.round(progress)}%`}
         </span>
       </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-muted">
+      <div
+        className={cn(
+          "overflow-hidden rounded-full bg-muted",
+          variant === "full" ? "mt-4 h-2" : "mt-3 h-1.5",
+        )}
+      >
         <div
           className="h-full rounded-full bg-primary"
           style={{ width: `${progress}%` }}
