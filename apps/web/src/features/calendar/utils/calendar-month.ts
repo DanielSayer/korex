@@ -1,3 +1,7 @@
+import type {
+  ActivityListItem,
+  ActivitySummary,
+} from "@korex/api/modules/activities/activities.types";
 import {
   addDays,
   endOfMonth,
@@ -47,6 +51,14 @@ export function getActivityDayKey(date: Date | string) {
   return format(new Date(date), "yyyy-MM-dd");
 }
 
+export function getActivityWeekKey(date: Date | string) {
+  return getActivityDayKey(
+    startOfWeek(new Date(date), {
+      weekStartsOn,
+    }),
+  );
+}
+
 export function getMonthSearchValue(date: Date) {
   return format(startOfMonth(date), "yyyy-MM");
 }
@@ -56,7 +68,9 @@ export function getMonthFromSearch(month: string | undefined) {
     return startOfMonth(new Date());
   }
 
-  const [year, monthIndex] = month.split("-").map(Number);
+  const [yearText, monthText] = month.split("-");
+  const year = Number(yearText);
+  const monthIndex = Number(monthText);
   const date = new Date(year, monthIndex - 1, 1);
 
   if (Number.isNaN(date.getTime())) {
@@ -67,3 +81,89 @@ export function getMonthFromSearch(month: string | undefined) {
 }
 
 export const weekDayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+export type CalendarAgendaItem =
+  | {
+      date: Date;
+      id: string;
+      summary: ActivitySummary;
+      type: "summary";
+    }
+  | {
+      activities: ActivityListItem[];
+      date: Date;
+      id: string;
+      type: "activityDay";
+    };
+
+export function getCalendarAgendaItems({
+  activities,
+  summaries,
+  visibleMonth,
+}: {
+  activities: ActivityListItem[];
+  summaries: ActivitySummary[];
+  visibleMonth: Date;
+}) {
+  const activitiesByDay = new Map<string, ActivityListItem[]>();
+  const datesByDay = new Map<string, Date>();
+  const activeWeekKeys = new Set<string>();
+
+  for (const activity of activities) {
+    const activityDate = new Date(activity.startAt);
+
+    if (!isSameMonth(activityDate, visibleMonth)) {
+      continue;
+    }
+
+    const dayKey = getActivityDayKey(activityDate);
+    const dayActivities = activitiesByDay.get(dayKey) ?? [];
+    const dayDate = new Date(activityDate);
+    dayDate.setHours(0, 0, 0, 0);
+    dayActivities.push(activity);
+    activitiesByDay.set(dayKey, dayActivities);
+    datesByDay.set(dayKey, dayDate);
+    activeWeekKeys.add(getActivityWeekKey(activityDate));
+  }
+
+  const items: CalendarAgendaItem[] = [];
+
+  for (const summary of summaries) {
+    const weekKey = getActivityWeekKey(summary.weekStartDate);
+
+    if (activeWeekKeys.has(weekKey)) {
+      const summaryDate = new Date(summary.weekStartDate);
+      summaryDate.setHours(0, 0, 0, 0);
+
+      items.push({
+        date: summaryDate,
+        id: `summary-${weekKey}`,
+        summary,
+        type: "summary",
+      });
+    }
+  }
+
+  for (const [dayKey, dayActivities] of activitiesByDay) {
+    items.push({
+      activities: [...dayActivities].sort(
+        (first, second) =>
+          new Date(first.startAt).getTime() -
+          new Date(second.startAt).getTime(),
+      ),
+      date: datesByDay.get(dayKey) ?? new Date(dayKey),
+      id: `activities-${dayKey}`,
+      type: "activityDay",
+    });
+  }
+
+  return items.sort((first, second) => {
+    const dateDifference = first.date.getTime() - second.date.getTime();
+
+    if (dateDifference !== 0) {
+      return dateDifference;
+    }
+
+    return first.type === "summary" ? -1 : 1;
+  });
+}

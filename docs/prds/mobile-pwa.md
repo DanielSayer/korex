@@ -31,11 +31,11 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 13. [x] As a mobile Korex user, I want Dashboard sync/status actions to remain available, so that I can refresh imported training data.
 14. [x] As a mobile Korex user, I want recent Activities to be easy to scan, so that I can jump into recent runs without using a table layout.
 15. [x] As a mobile Korex user, I want Dashboard cards to be ordered for a narrow viewport, so that weekly focus, Training Streak, Training Goals, recent Activities, Equipment, and Training Notes make sense in sequence.
-16. As a mobile Korex user, I want Calendar to avoid horizontal scrolling, so that I can browse training history naturally on a phone.
-17. As a mobile Korex user, I want Calendar to provide month navigation, so that I can move through training periods without desktop controls.
-18. As a mobile Korex user, I want Calendar to expose daily Activity lists, so that I can inspect what happened on a specific date.
-19. As a mobile Korex user, I want Calendar to expose Training Week summaries, so that weekly context remains available even if the desktop grid is split apart.
-20. As a mobile Korex user, I want Calendar day and week destinations to have semantic routes when needed, so that I can deep-link and use browser back behavior.
+16. [x] As a mobile Korex user, I want Calendar to avoid horizontal scrolling, so that I can browse training history naturally on a phone.
+17. [x] As a mobile Korex user, I want Calendar to provide month navigation, so that I can move through training periods without desktop controls.
+18. [x] As a mobile Korex user, I want Calendar to expose daily Activity lists, so that I can inspect what happened on a specific date.
+19. [x] As a mobile Korex user, I want Calendar to expose Training Week summaries, so that weekly context remains available even if the desktop grid is split apart.
+20. [x] As a mobile Korex user, I want Calendar day and week destinations to have semantic routes when needed, so that I can deep-link and use browser back behavior.
 21. As a mobile Korex user, I want Activity Detail to prioritize the Activity summary, map, key metrics, and Training Notes, so that I can understand a run quickly.
 22. As a mobile Korex user, I want Activity Detail to hide bottom tabs when it is a focused drill-in, so that the Activity has enough screen space.
 23. As a mobile Korex user, I want Activity Detail charts to be usable on a phone, so that I can inspect streams without fighting desktop chart layouts.
