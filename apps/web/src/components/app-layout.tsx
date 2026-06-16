@@ -12,7 +12,12 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@korex/ui/components/sidebar";
-import { Link, Outlet, useMatchRoute } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  useLocation,
+  useMatchRoute,
+} from "@tanstack/react-router";
 import {
   Activity,
   CalendarDaysIcon,
@@ -23,9 +28,23 @@ import {
   TargetIcon,
   TrophyIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  getActiveMobileTab,
+  mobileTabs,
+  shouldHideMobileBottomNav,
+} from "./mobile-navigation";
+
+const mobileShellMediaQuery = "(max-width: 767px)";
 
 function AppLayout() {
+  const isMobileShell = useMobileShell();
+
+  return isMobileShell ? <MobileAppLayout /> : <DesktopAppLayout />;
+}
+
+function DesktopAppLayout() {
   const matchRoute = useMatchRoute();
   const isDashboard = Boolean(matchRoute({ to: "/dashboard" }));
 
@@ -152,6 +171,75 @@ function AppLayout() {
         </main>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+function useMobileShell() {
+  const [isMobileShell, setIsMobileShell] = useState(
+    () => window.matchMedia(mobileShellMediaQuery).matches,
+  );
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(mobileShellMediaQuery);
+    const handleChange = () => setIsMobileShell(mediaQuery.matches);
+
+    handleChange();
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  return isMobileShell;
+}
+
+function MobileAppLayout() {
+  const location = useLocation();
+  const activeTab = getActiveMobileTab(location.pathname);
+  const hideBottomNav = shouldHideMobileBottomNav(location.pathname);
+  const isDashboard = location.pathname === "/dashboard";
+
+  return (
+    <div className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
+      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div
+          className={cn(
+            "mx-auto w-full",
+            isDashboard ? "max-w-none" : "max-w-7xl p-4",
+          )}
+        >
+          <Outlet />
+        </div>
+      </main>
+      {hideBottomNav ? null : (
+        <nav
+          aria-label="Primary"
+          className="shrink-0 border-border/70 border-t bg-background/95 px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-10px_30px_color-mix(in_oklch,var(--background)_70%,transparent)] backdrop-blur"
+        >
+          <div className="grid grid-cols-5 gap-1">
+            {mobileTabs.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+
+              return (
+                <Link
+                  aria-current={isActive ? "page" : undefined}
+                  className={cn(
+                    "flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-2 text-muted-foreground text-xs transition-colors hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                    isActive && "bg-muted text-foreground",
+                  )}
+                  key={item.id}
+                  to={item.to}
+                >
+                  <Icon className="size-5" />
+                  <span className="w-full truncate text-center font-medium leading-tight">
+                    {item.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </nav>
+      )}
+    </div>
   );
 }
 
