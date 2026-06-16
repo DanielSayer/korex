@@ -16,16 +16,16 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 
 ## User Stories
 
-1. As a mobile Korex user, I want the app to open into a mobile-appropriate shell, so that I can navigate without using a desktop sidebar.
-2. As a mobile Korex user, I want primary navigation in bottom tabs, so that common destinations are reachable with one hand.
-3. As a mobile Korex user, I want Dashboard, Calendar, Analytics, Goals, and More as primary tabs, so that the app reflects my most common workflows.
-4. As a mobile Korex user, I want More to be a real page, so that lower-frequency destinations are discoverable and reloadable.
-5. As a mobile Korex user, I want More to include Heatmap, Weekly Summaries, and Settings, so that secondary product areas are not incorrectly grouped under Settings.
-6. As a desktop Korex user, I want the current desktop sidebar experience to remain intact, so that the mobile PWA work does not regress the desktop app.
-7. As a Korex user opening a shared link, I want the same URL to work on desktop and mobile, so that deep links remain stable.
+1. [x] As a mobile Korex user, I want the app to open into a mobile-appropriate shell, so that I can navigate without using a desktop sidebar.
+2. [x] As a mobile Korex user, I want primary navigation in bottom tabs, so that common destinations are reachable with one hand.
+3. [x] As a mobile Korex user, I want Dashboard, Calendar, Analytics, Goals, and More as primary tabs, so that the app reflects my most common workflows.
+4. [x] As a mobile Korex user, I want More to be a real page, so that lower-frequency destinations are discoverable and reloadable.
+5. [x] As a mobile Korex user, I want More to include Heatmap, Weekly Summaries, and Settings, so that secondary product areas are not incorrectly grouped under Settings.
+6. [x] As a desktop Korex user, I want the current desktop sidebar experience to remain intact, so that the mobile PWA work does not regress the desktop app.
+7. [x] As a Korex user opening a shared link, I want the same URL to work on desktop and mobile, so that deep links remain stable.
 8. As a mobile Korex user, I want detail screens to use mobile-friendly progressive disclosure, so that dense desktop pages do not become cramped.
-9. As a mobile Korex user, I want focused detail and edit flows to hide bottom tabs when appropriate, so that the task has enough vertical space.
-10. As a mobile Korex user, I want main tab pages to keep bottom tabs visible, so that I can move between primary workflows predictably.
+9. [x] As a mobile Korex user, I want focused detail and edit flows to hide bottom tabs when appropriate, so that the task has enough vertical space.
+10. [x] As a mobile Korex user, I want main tab pages to keep bottom tabs visible, so that I can move between primary workflows predictably.
 11. As a mobile Korex user, I want page-specific top chrome, so that each screen can expose the actions that matter for that workflow.
 12. As a mobile Korex user, I want Dashboard to show the most important current training information first, so that I can quickly understand my week.
 13. As a mobile Korex user, I want Dashboard sync/status actions to remain available, so that I can refresh imported training data.
