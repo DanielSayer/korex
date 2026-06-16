@@ -1,0 +1,7 @@
+# Mobile PWA Uses Canonical Routes With Mobile-Specific Shell And Route-Level Compositions
+
+Korex will prepare the mobile PWA around the same canonical routes as desktop, not a duplicated `/m` route tree. The authenticated shell may branch by breakpoint into a desktop sidebar shell or mobile bottom-tab shell, and individual routes may use separate mobile and desktop page compositions when the workflow materially differs.
+
+Mobile navigation uses five bottom tabs: Dashboard, Calendar, Analytics, Goals, and More. `/more` is a real route, visible in mobile navigation and available on desktop if opened directly; it links to lower-frequency product areas such as Heatmap, Weekly Summaries, and Settings without pretending those destinations are settings. Mobile-only route splits are allowed when they represent semantic user destinations, such as an activity detail, day detail, week detail, settings section, or focused edit flow.
+
+This keeps deep links stable while allowing mobile to use progressive disclosure where desktop can show multiple panes at once. Route and layout boundaries should own mobile/desktop branching as high in the tree as practical, shared hooks and utilities should hold common data logic, and leaf components should avoid accumulating ad hoc `isMobile` behavior. True offline data and offline writes are out of scope for the first PWA phase; v1 focuses on installability, mobile UX, and graceful online-only behavior.
