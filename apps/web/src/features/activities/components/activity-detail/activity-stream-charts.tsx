@@ -38,13 +38,13 @@ function ActivityStreamCharts({ streams, summary }: ActivityStreamChartsProps) {
     <section className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="flex items-center gap-2 font-bold text-3xl">
-            <ActivityIcon className="size-6" />
+          <h2 className="flex items-center gap-2 font-bold text-2xl md:text-3xl">
+            <ActivityIcon className="size-5 md:size-6" />
             Activity Streams
           </h2>
         </div>
         {hasDistanceAxis ? (
-          <div className="flex items-center gap-1 rounded-md border p-1">
+          <div className="flex items-center gap-1 md:rounded-md md:border md:p-1">
             <Button
               onClick={() => setXAxisMode("time")}
               size="sm"

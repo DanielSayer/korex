@@ -18,7 +18,7 @@ function ActivityStats({ summary }: ActivityStatsProps) {
     activity.movingTimeSeconds ?? activity.elapsedTimeSeconds;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
         <p className="mb-1 font-medium text-muted-foreground text-xs uppercase">
           Distance
@@ -26,7 +26,7 @@ function ActivityStats({ summary }: ActivityStatsProps) {
         <MetricValue
           unit="km"
           value={formatDistanceValue(activity.distanceMeters)}
-          valueClassName="font-black text-6xl leading-none"
+          valueClassName="font-black text-5xl leading-none md:text-6xl"
         />
       </div>
 

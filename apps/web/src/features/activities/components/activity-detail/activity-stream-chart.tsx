@@ -64,26 +64,27 @@ function ActivityStreamChart({
   const gradientId = `${metric}StreamFill`;
 
   return (
-    <div className="rounded-lg border p-3 sm:p-5">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <h3 className="flex items-center gap-2 font-medium text-base">
-            <Icon className="size-4 text-muted-foreground" />
-            {spec.label}
-          </h3>
-          {averageValue ? (
-            <p className="text-muted-foreground text-sm">
-              {referenceLabel}: {spec.formatTooltipValue(averageValue)}
-            </p>
-          ) : null}
-        </div>
+    <div className="border-border border-t pt-4 first:border-t-0 first:pt-0 md:rounded-lg md:border md:p-5">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h3 className="flex min-w-0 items-center gap-2 font-medium text-base">
+          <Icon className="size-4 shrink-0 text-muted-foreground" />
+          <span className="truncate">{spec.label}</span>
+        </h3>
+        {averageValue ? (
+          <p className="shrink-0 text-muted-foreground text-sm">
+            {referenceLabel}: {spec.formatTooltipValue(averageValue)}
+          </p>
+        ) : null}
       </div>
 
-      <ChartContainer className="aspect-auto h-72 w-full" config={chartConfig}>
+      <ChartContainer
+        className="aspect-auto h-64 w-full md:h-72"
+        config={chartConfig}
+      >
         <AreaChart
           accessibilityLayer
           data={chartData}
-          margin={{ bottom: 8, left: 4, right: 4, top: 12 }}
+          margin={{ bottom: 8, left: -12, right: 0, top: 12 }}
         >
           <defs>
             <linearGradient id={gradientId} x1="0" x2="0" y1="0" y2="1">
@@ -116,7 +117,7 @@ function ActivityStreamChart({
             tickFormatter={(value) => spec.formatAxisValue(Number(value))}
             tickLine={false}
             tickMargin={8}
-            width={metric === "velocity" ? 64 : 48}
+            width={metric === "velocity" ? 48 : 36}
           />
           <ChartTooltip
             content={

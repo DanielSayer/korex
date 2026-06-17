@@ -1,14 +1,21 @@
 import type { ActivityMapInput } from "@korex/api/modules/activities/activities.types";
 import { useEffect, useMemo } from "react";
 import { MapContainer, Polyline, TileLayer, useMap } from "react-leaflet";
+import { cn } from "@/lib/utils";
 
 type ActivityRouteMapProps = {
+  className?: string;
+  compactAttribution?: boolean;
   map: ActivityMapInput | null;
 };
 
 const emptyCoordinates: ActivityMapInput["coordinates"] = [];
 
-function ActivityRouteMap({ map }: ActivityRouteMapProps) {
+function ActivityRouteMap({
+  className,
+  compactAttribution = false,
+  map,
+}: ActivityRouteMapProps) {
   const coordinates = map?.coordinates ?? emptyCoordinates;
   const positions = useMemo(
     () =>
@@ -21,7 +28,12 @@ function ActivityRouteMap({ map }: ActivityRouteMapProps) {
 
   if (!map || positions.length === 0) {
     return (
-      <div className="flex h-96 items-center justify-center rounded-lg border bg-muted text-muted-foreground text-sm">
+      <div
+        className={cn(
+          "flex h-96 items-center justify-center rounded-lg border bg-muted text-muted-foreground text-sm",
+          className,
+        )}
+      >
         Route unavailable
       </div>
     );
@@ -29,13 +41,20 @@ function ActivityRouteMap({ map }: ActivityRouteMapProps) {
   const center = positions[Math.floor(positions.length / 2)] ?? positions[0];
 
   return (
-    <div className="h-full overflow-hidden rounded-lg border">
+    <div
+      className={cn(
+        "relative h-full min-h-64 overflow-hidden rounded-lg border",
+        className,
+      )}
+    >
       <MapContainer
+        attributionControl={!compactAttribution}
         center={center}
         className="h-full w-full"
         maxZoom={18}
         preferCanvas
         scrollWheelZoom
+        zoomControl={!compactAttribution}
         zoom={10}
       >
         <TileLayer
@@ -48,7 +67,46 @@ function ActivityRouteMap({ map }: ActivityRouteMapProps) {
         />
         <FitActivityBounds bounds={map.bounds} positions={positions} />
       </MapContainer>
+      {compactAttribution ? <CompactMapAttribution /> : null}
     </div>
+  );
+}
+
+function CompactMapAttribution() {
+  return (
+    <details className="absolute right-2 bottom-2 z-[500] max-w-[calc(100%-1rem)] rounded-md bg-background/85 text-foreground text-xs shadow-sm backdrop-blur">
+      <summary className="cursor-pointer list-none px-2 py-1 text-muted-foreground">
+        Map data
+      </summary>
+      <div className="flex flex-wrap gap-x-1 px-2 pb-1">
+        <a
+          className="underline underline-offset-2"
+          href="https://www.stadiamaps.com/"
+          rel="noreferrer"
+          target="_blank"
+        >
+          Stadia Maps
+        </a>
+        <span>/</span>
+        <a
+          className="underline underline-offset-2"
+          href="https://openmaptiles.org/"
+          rel="noreferrer"
+          target="_blank"
+        >
+          OpenMapTiles
+        </a>
+        <span>/</span>
+        <a
+          className="underline underline-offset-2"
+          href="https://www.openstreetmap.org/copyright"
+          rel="noreferrer"
+          target="_blank"
+        >
+          OpenStreetMap
+        </a>
+      </div>
+    </details>
   );
 }
 

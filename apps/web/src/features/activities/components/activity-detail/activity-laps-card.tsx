@@ -1,30 +1,37 @@
 import type { ActivityLapSummary } from "@korex/api/modules/activities/activities.types";
 import { RouteIcon } from "lucide-react";
-import { formatDurationClock } from "@/utils/formatters";
+import { cn } from "@/lib/utils";
+import { formatDurationClock, formatPaceFromSpeed } from "@/utils/formatters";
 import { MetricValue } from "./metric-value";
 
 type ActivityLapsCardProps = {
+  compactMobile?: boolean;
   laps: ActivityLapSummary[];
 };
 
-function ActivityLapsCard({ laps }: ActivityLapsCardProps) {
+function ActivityLapsCard({
+  compactMobile = false,
+  laps,
+}: ActivityLapsCardProps) {
   if (laps.length === 0) {
     return null;
   }
 
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="flex items-center gap-2 font-bold text-3xl">
+      <div className={cn(compactMobile && "hidden md:block")}>
+        <h2 className="flex items-center gap-2 font-bold text-2xl md:text-3xl">
           <RouteIcon className="size-6" />
           Laps
         </h2>
-        <p className="text-muted-foreground text-sm">
+        <p className="hidden text-muted-foreground text-sm md:block">
           Detailed lap data for your activity.
         </p>
       </div>
 
-      <div className="overflow-x-auto border-y">
+      <MobileLapsTable laps={laps} />
+
+      <div className="hidden overflow-x-auto border-y md:block">
         <table className="w-full min-w-280 text-sm">
           <thead>
             <tr className="border-b text-muted-foreground">
@@ -123,6 +130,84 @@ function ActivityLapsCard({ laps }: ActivityLapsCardProps) {
         </table>
       </div>
     </section>
+  );
+}
+
+function MobileLapsTable({ laps }: { laps: ActivityLapSummary[] }) {
+  const totals = laps.reduce(
+    (total, lap) => ({
+      distanceMeters: total.distanceMeters + (lap.distanceMeters ?? 0),
+      movingTimeSeconds: total.movingTimeSeconds + (lap.movingTimeSeconds ?? 0),
+      heartRateTotal:
+        total.heartRateTotal + (lap.averageHeartRateBeatsPerMinute ?? 0),
+      heartRateCount:
+        total.heartRateCount +
+        (lap.averageHeartRateBeatsPerMinute === null ? 0 : 1),
+    }),
+    {
+      distanceMeters: 0,
+      heartRateCount: 0,
+      heartRateTotal: 0,
+      movingTimeSeconds: 0,
+    },
+  );
+  const averageSpeed =
+    totals.movingTimeSeconds > 0
+      ? totals.distanceMeters / totals.movingTimeSeconds
+      : null;
+  const averageHeartRate =
+    totals.heartRateCount > 0
+      ? totals.heartRateTotal / totals.heartRateCount
+      : null;
+
+  return (
+    <div className="md:hidden">
+      <table className="w-full table-fixed text-sm">
+        <thead className="text-muted-foreground">
+          <tr>
+            <th className="w-10 py-2 text-left font-medium">1 km</th>
+            <th className="py-2 text-right font-medium">Distance</th>
+            <th className="py-2 text-right font-medium">Time</th>
+            <th className="py-2 text-right font-medium">Avg. Pace</th>
+            <th className="py-2 text-right font-medium">Avg. HR</th>
+          </tr>
+        </thead>
+        <tbody className="font-medium tabular-nums">
+          {laps.map((lap) => (
+            <tr key={lap.id} className="border-border border-t">
+              <td className="py-3 text-muted-foreground">{lap.index + 1}</td>
+              <td className="py-3 text-right">
+                {formatDistanceValue(lap.distanceMeters)}
+              </td>
+              <td className="py-3 text-right">
+                {formatDurationClock(lap.movingTimeSeconds)}
+              </td>
+              <td className="py-3 text-right">
+                {formatPaceFromSpeed(lap.averageSpeedMetersPerSecond)}
+              </td>
+              <td className="py-3 text-right">
+                {formatRoundedValue(lap.averageHeartRateBeatsPerMinute)}
+              </td>
+            </tr>
+          ))}
+          <tr className="border-border border-t font-semibold">
+            <td className="py-3 text-foreground">Total</td>
+            <td className="py-3 text-right">
+              {formatDistanceValue(totals.distanceMeters)}
+            </td>
+            <td className="py-3 text-right">
+              {formatDurationClock(totals.movingTimeSeconds)}
+            </td>
+            <td className="py-3 text-right">
+              {formatPaceFromSpeed(averageSpeed)}
+            </td>
+            <td className="py-3 text-right">
+              {formatRoundedValue(averageHeartRate)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
 

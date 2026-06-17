@@ -22,8 +22,8 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="flex items-center gap-2 font-bold text-3xl">
-          <HeartPulseIcon className="size-6" />
+        <h2 className="flex items-center gap-2 font-bold text-2xl md:text-3xl">
+          <HeartPulseIcon className="size-5 md:size-6" />
           Heart Rate Zones
         </h2>
       </div>

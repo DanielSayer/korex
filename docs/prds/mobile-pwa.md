@@ -23,10 +23,10 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 5. [x] As a mobile Korex user, I want More to include Heatmap, Weekly Summaries, and Settings, so that secondary product areas are not incorrectly grouped under Settings.
 6. [x] As a desktop Korex user, I want the current desktop sidebar experience to remain intact, so that the mobile PWA work does not regress the desktop app.
 7. [x] As a Korex user opening a shared link, I want the same URL to work on desktop and mobile, so that deep links remain stable.
-8. As a mobile Korex user, I want detail screens to use mobile-friendly progressive disclosure, so that dense desktop pages do not become cramped.
+8. [x] As a mobile Korex user, I want detail screens to use mobile-friendly progressive disclosure, so that dense desktop pages do not become cramped.
 9. [x] As a mobile Korex user, I want focused detail and edit flows to hide bottom tabs when appropriate, so that the task has enough vertical space.
 10. [x] As a mobile Korex user, I want main tab pages to keep bottom tabs visible, so that I can move between primary workflows predictably.
-11. As a mobile Korex user, I want page-specific top chrome, so that each screen can expose the actions that matter for that workflow.
+11. [x] As a mobile Korex user, I want page-specific top chrome, so that each screen can expose the actions that matter for that workflow.
 12. [x] As a mobile Korex user, I want Dashboard to show the most important current training information first, so that I can quickly understand my week.
 13. [x] As a mobile Korex user, I want Dashboard sync/status actions to remain available, so that I can refresh imported training data.
 14. [x] As a mobile Korex user, I want recent Activities to be easy to scan, so that I can jump into recent runs without using a table layout.
@@ -36,10 +36,10 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 18. [x] As a mobile Korex user, I want Calendar to expose daily Activity lists, so that I can inspect what happened on a specific date.
 19. [x] As a mobile Korex user, I want Calendar to expose Training Week summaries, so that weekly context remains available even if the desktop grid is split apart.
 20. [x] As a mobile Korex user, I want Calendar day and week destinations to have semantic routes when needed, so that I can deep-link and use browser back behavior.
-21. As a mobile Korex user, I want Activity Detail to prioritize the Activity summary, map, key metrics, and Training Notes, so that I can understand a run quickly.
-22. As a mobile Korex user, I want Activity Detail to hide bottom tabs when it is a focused drill-in, so that the Activity has enough screen space.
-23. As a mobile Korex user, I want Activity Detail charts to be usable on a phone, so that I can inspect streams without fighting desktop chart layouts.
-24. As a mobile Korex user, I want Activity Detail to keep Best Efforts, Heart Rate Zone Time, laps, and Equipment available in a sensible order, so that advanced details are not lost.
+21. [x] As a mobile Korex user, I want Activity Detail to prioritize the Activity summary, map, key metrics, and Training Notes, so that I can understand a run quickly.
+22. [x] As a mobile Korex user, I want Activity Detail to hide bottom tabs when it is a focused drill-in, so that the Activity has enough screen space.
+23. [x] As a mobile Korex user, I want Activity Detail charts to be usable on a phone, so that I can inspect streams without fighting desktop chart layouts.
+24. [x] As a mobile Korex user, I want Activity Detail to keep Best Efforts, Heart Rate Zone Time, laps, and Equipment available in a sensible order, so that advanced details are not lost.
 25. As a mobile Korex user, I want Analytics to present yearly volume and best efforts in mobile-friendly sections, so that I can inspect trends without a desktop layout.
 26. As a mobile Korex user, I want Analytics controls to fit a narrow viewport, so that switching year and bucket mode remains easy.
 27. As a mobile Korex user, I want Goals to support viewing Training Goal progress, so that I can track current targets from my phone.

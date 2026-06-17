@@ -71,8 +71,8 @@ function ActivityStreamCompareChart({
   }
 
   return (
-    <div className="rounded-lg border p-3 sm:p-5">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="md:rounded-lg md:border md:p-5">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <h3 className="font-medium text-base">Compare Streams</h3>
           <p className="text-muted-foreground text-sm">
@@ -96,11 +96,14 @@ function ActivityStreamCompareChart({
         </div>
       </div>
 
-      <ChartContainer className="aspect-auto h-80 w-full" config={chartConfig}>
+      <ChartContainer
+        className="aspect-auto h-72 w-full md:h-80"
+        config={chartConfig}
+      >
         <LineChart
           accessibilityLayer
           data={chartData}
-          margin={{ bottom: 8, left: 4, right: 4, top: 12 }}
+          margin={{ bottom: 8, left: -12, right: 0, top: 12 }}
         >
           <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" />
           <XAxis
@@ -113,7 +116,7 @@ function ActivityStreamCompareChart({
             tickLine={false}
             tickMargin={8}
           />
-          <YAxis axisLine={false} tickLine={false} tickMargin={8} width={56} />
+          <YAxis axisLine={false} tickLine={false} tickMargin={8} width={40} />
           <ChartTooltip
             content={
               <ActivityStreamCompareTooltip
