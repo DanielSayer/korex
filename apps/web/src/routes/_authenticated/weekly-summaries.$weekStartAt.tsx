@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ErrorMessage } from "@/components/error-message";
-import { WeeklyTrainingSummaryDetailPage } from "@/features/weekly-training-summaries/components/weekly-training-summary-detail-panel";
+import { WeeklyTrainingSummaryDetailPage } from "@/features/weekly-training-summaries/components/weekly-training-summary-detail-page";
 
 export const Route = createFileRoute(
   "/_authenticated/weekly-summaries/$weekStartAt",

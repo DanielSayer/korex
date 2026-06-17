@@ -1,0 +1,362 @@
+import type { WeeklyTrainingSummaryDetail as WeeklyTrainingSummaryDetailType } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary.types";
+import {
+  ActivityIcon,
+  ClockIcon,
+  GaugeIcon,
+  MedalIcon,
+  RouteIcon,
+  TrendingDownIcon,
+  TrendingUpIcon,
+} from "lucide-react";
+import { motion } from "motion/react";
+import type React from "react";
+import {
+  TrainingNotesSection,
+  TrainingWeekActivityNotesSection,
+} from "@/features/training-notes/components/training-notes-section";
+import { cn } from "@/lib/utils";
+import {
+  formatDistance,
+  formatDurationCompact,
+  formatSignedNumber,
+  formatSpeed,
+} from "@/utils/formatters";
+import {
+  formatActivityDate,
+  formatDistanceDelta,
+  formatDurationDelta,
+  formatSpeedDelta,
+  formatTrainingWeek,
+} from "./weekly-training-summary-formatters";
+
+function WeeklyTrainingSummaryDetailLoading() {
+  return (
+    <AnimatedPanelState>
+      <div className="space-y-3">
+        <div className="h-44 animate-pulse rounded-lg bg-muted" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="h-24 animate-pulse rounded-lg bg-muted" />
+          <div className="h-24 animate-pulse rounded-lg bg-muted" />
+        </div>
+      </div>
+    </AnimatedPanelState>
+  );
+}
+
+function AnimatedPanelState({ children }: { children: React.ReactNode }) {
+  return (
+    <motion.div
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: 8 }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function WeeklyTrainingSummaryDetail({
+  summary,
+}: {
+  summary: WeeklyTrainingSummaryDetailType;
+}) {
+  const longestActivity = summary.payload.highlights.longestActivity;
+  const previousWeek = summary.payload.previousWeek;
+
+  return (
+    <motion.div
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6"
+      exit={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: 8 }}
+      key={summary.id}
+      transition={{ duration: 0.22 }}
+    >
+      <section className="relative overflow-hidden rounded-md border bg-background p-4 sm:rounded-lg sm:p-5">
+        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-emerald-500 to-sky-500" />
+        <motion.div
+          animate={{ x: [0, 8, 0], y: [0, -5, 0] }}
+          className="absolute top-5 right-6 hidden h-24 w-36 sm:block"
+          transition={{
+            duration: 7,
+            ease: "easeInOut",
+            repeat: Number.POSITIVE_INFINITY,
+          }}
+        >
+          <div className="absolute top-2 left-7 size-1.5 rounded-full bg-primary/70" />
+          <div className="absolute top-8 left-24 size-1 rounded-full bg-emerald-500/70" />
+          <div className="absolute top-16 left-14 size-1 rounded-full bg-sky-500/70" />
+          <div className="absolute top-5 left-8 h-px w-20 rotate-12 bg-primary/20" />
+          <div className="absolute top-12 left-16 h-px w-16 -rotate-35 bg-emerald-500/20" />
+        </motion.div>
+
+        <div className="relative">
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="font-medium text-muted-foreground text-xs uppercase">
+                Weekly shape
+              </p>
+              <h3 className="mt-1 font-semibold text-lg sm:text-xl">
+                {summary.activityCount} activities,{" "}
+                {formatDurationCompact(summary.totalMovingTimeSeconds)} moving
+              </h3>
+            </div>
+            <div className="w-fit rounded-md border bg-muted/30 px-3 py-1.5 font-medium text-sm">
+              {formatDistanceDelta(summary.previousWeekDistanceDeltaMeters)}
+            </div>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
+            <div>
+              <div className="flex items-center gap-2 text-muted-foreground text-xs">
+                <RouteIcon className="size-4 text-primary" />
+                Total distance
+              </div>
+              <div className="mt-2 whitespace-nowrap font-semibold text-4xl tracking-tight sm:text-6xl">
+                {formatDistance(summary.totalDistanceMeters)}
+              </div>
+              <DeltaLine value={summary.previousWeekDistanceDeltaMeters}>
+                {formatDistanceDelta(summary.previousWeekDistanceDeltaMeters)}{" "}
+                vs previous week
+              </DeltaLine>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+              <HeroMetric
+                icon={<ClockIcon className="size-4" />}
+                label="Moving time"
+                secondary={formatDurationDelta(
+                  summary.previousWeekMovingTimeDeltaSeconds,
+                )}
+                value={formatDurationCompact(summary.totalMovingTimeSeconds)}
+              />
+              <HeroMetric
+                icon={<GaugeIcon className="size-4" />}
+                label="Average speed"
+                secondary={formatSpeedDelta(
+                  summary.previousWeekAverageSpeedDeltaMetersPerSecond,
+                )}
+                value={formatSpeed(summary.averageSpeedMetersPerSecond)}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-md border sm:rounded-lg">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <h3 className="font-semibold">Week-over-week</h3>
+          <span className="text-muted-foreground text-xs">
+            Compared with{" "}
+            {formatTrainingWeek(
+              new Date(previousWeek.weekStartAt),
+              summary.weekStartAt,
+            )}
+          </span>
+        </div>
+        <div className="divide-y">
+          <ComparisonRow
+            current={formatDistance(summary.totalDistanceMeters)}
+            label="Distance"
+            previous={formatDistance(previousWeek.totalDistanceMeters)}
+            value={formatDistanceDelta(summary.previousWeekDistanceDeltaMeters)}
+            valueRaw={summary.previousWeekDistanceDeltaMeters}
+          />
+          <ComparisonRow
+            current={formatDurationCompact(summary.totalMovingTimeSeconds)}
+            label="Moving time"
+            previous={formatDurationCompact(
+              previousWeek.totalMovingTimeSeconds,
+            )}
+            value={formatDurationDelta(
+              summary.previousWeekMovingTimeDeltaSeconds,
+            )}
+            valueRaw={summary.previousWeekMovingTimeDeltaSeconds}
+          />
+          <ComparisonRow
+            current={formatSpeed(summary.averageSpeedMetersPerSecond)}
+            label="Average speed"
+            previous={formatSpeed(previousWeek.averageSpeedMetersPerSecond)}
+            value={formatSpeedDelta(
+              summary.previousWeekAverageSpeedDeltaMetersPerSecond,
+            )}
+            valueRaw={summary.previousWeekAverageSpeedDeltaMetersPerSecond ?? 0}
+          />
+          <ComparisonRow
+            current={summary.activityCount.toString()}
+            label="Activities"
+            previous={previousWeek.activityCount.toString()}
+            value={formatSignedNumber(summary.previousWeekActivityCountDelta)}
+            valueRaw={summary.previousWeekActivityCountDelta}
+          />
+        </div>
+      </section>
+
+      <section className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-md border p-4 sm:rounded-lg sm:p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <MedalIcon className="size-4 text-primary" />
+            <h3 className="font-semibold">Longest effort</h3>
+          </div>
+          {longestActivity ? (
+            <div>
+              <p className="font-medium">{longestActivity.name}</p>
+              <p className="mt-1 text-muted-foreground text-sm">
+                {formatActivityDate(longestActivity.startAt)}
+              </p>
+              <p className="mt-4 whitespace-nowrap font-semibold text-2xl sm:text-3xl">
+                {formatDistance(longestActivity.distanceMeters)}
+              </p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">
+              No longest activity was captured for this summary.
+            </p>
+          )}
+        </div>
+        <div className="rounded-md border p-4 sm:rounded-lg sm:p-5">
+          <div className="mb-3 flex items-center gap-2">
+            <ActivityIcon className="size-4 text-primary" />
+            <h3 className="font-semibold">Previous baseline</h3>
+          </div>
+          <div className="space-y-2 text-sm">
+            <PanelRow
+              label="Distance"
+              value={formatDistance(
+                summary.payload.previousWeek.totalDistanceMeters,
+              )}
+            />
+            <PanelRow
+              label="Moving time"
+              value={formatDurationCompact(
+                summary.payload.previousWeek.totalMovingTimeSeconds,
+              )}
+            />
+            <PanelRow
+              label="Activities"
+              value={summary.payload.previousWeek.activityCount.toString()}
+            />
+          </div>
+        </div>
+      </section>
+
+      <TrainingNotesSection
+        title="Week Notes"
+        type="trainingWeek"
+        weekStartAt={summary.weekStartAt}
+      />
+      <TrainingWeekActivityNotesSection weekStartAt={summary.weekStartAt} />
+    </motion.div>
+  );
+}
+
+function HeroMetric({
+  icon,
+  label,
+  secondary,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  secondary: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-md border bg-muted/20 p-3 sm:rounded-lg sm:p-4">
+      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+        {icon}
+        {label}
+      </div>
+      <div className="mt-2 whitespace-nowrap font-semibold text-xl sm:text-2xl">
+        {value}
+      </div>
+      <div className="mt-1 text-muted-foreground text-xs">
+        {secondary} vs previous
+      </div>
+    </div>
+  );
+}
+
+function ComparisonRow({
+  current,
+  label,
+  previous,
+  value,
+  valueRaw,
+}: {
+  current: string;
+  label: string;
+  previous: string;
+  value: string;
+  valueRaw: number;
+}) {
+  const positive = valueRaw >= 0;
+
+  return (
+    <div className="grid gap-3 px-4 py-3 text-sm sm:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(8rem,1fr)_6rem] sm:items-center">
+      <div className="font-medium">{label}</div>
+      <div>
+        <p className="text-muted-foreground text-xs">This week</p>
+        <p className="whitespace-nowrap font-semibold">{current}</p>
+      </div>
+      <div>
+        <p className="text-muted-foreground text-xs">Previous</p>
+        <p className="whitespace-nowrap text-muted-foreground">{previous}</p>
+      </div>
+      <div
+        className={cn(
+          "inline-flex w-fit items-center gap-1 justify-self-start rounded-md px-2 py-1 font-semibold sm:justify-self-end",
+          positive
+            ? "bg-emerald-500/10 text-emerald-600"
+            : "bg-destructive/10 text-destructive",
+        )}
+      >
+        {positive ? (
+          <TrendingUpIcon className="size-3.5" />
+        ) : (
+          <TrendingDownIcon className="size-3.5" />
+        )}
+        <span className="whitespace-nowrap">{value}</span>
+      </div>
+    </div>
+  );
+}
+
+function DeltaLine({
+  children,
+  value,
+}: {
+  children: React.ReactNode;
+  value: number;
+}) {
+  return (
+    <div
+      className={cn(
+        "mt-3 flex items-center gap-1.5 font-medium text-sm",
+        value >= 0 ? "text-emerald-600" : "text-destructive",
+      )}
+    >
+      {value >= 0 ? (
+        <TrendingUpIcon className="size-4" />
+      ) : (
+        <TrendingDownIcon className="size-4" />
+      )}
+      {children}
+    </div>
+  );
+}
+
+function PanelRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b py-2 last:border-b-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+export {
+  AnimatedPanelState,
+  WeeklyTrainingSummaryDetail,
+  WeeklyTrainingSummaryDetailLoading,
+};
