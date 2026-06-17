@@ -1,13 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
-});
+  beforeLoad: async () => {
+    const { data: session } = await authClient.getSession();
 
-function HomeComponent() {
-  return (
-    <div className="container mx-auto px-4 py-6">
-      <h1 className="font-semibold text-2xl">Home</h1>
-    </div>
-  );
-}
+    throw redirect({
+      replace: true,
+      to: session ? "/dashboard" : "/auth/sign-in",
+    });
+  },
+});

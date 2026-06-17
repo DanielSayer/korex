@@ -1,6 +1,6 @@
-import { env } from "@korex/env/web";
 import { MapContainer, TileLayer } from "react-leaflet";
 import { cn } from "@/lib/utils";
+import { getServerUrl } from "@/utils/server-url";
 import {
   routeHeatmapFallbackCenter,
   routeHeatmapInitialLocationZoom,
@@ -44,7 +44,7 @@ function RouteHeatmapMap({
           opacity={0.92}
           updateInterval={100}
           updateWhenIdle={false}
-          url={`${env.VITE_SERVER_URL}/api/activities/route-heatmap/tiles/{z}/{x}/{y}.png?mode=${displayMode}`}
+          url={`${getServerUrl()}/api/activities/route-heatmap/tiles/{z}/{x}/{y}.png?mode=${displayMode}`}
         />
         <InitialUserLocationView />
       </MapContainer>

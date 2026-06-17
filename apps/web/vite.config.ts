@@ -7,6 +7,16 @@ import { VitePWA } from "vite-plugin-pwa";
 export default defineConfig({
   server: {
     port: 3001,
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+      "/rpc": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+      },
+    },
   },
   resolve: {
     tsconfigPaths: true,

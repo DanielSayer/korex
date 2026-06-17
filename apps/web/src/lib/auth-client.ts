@@ -1,6 +1,6 @@
-import { env } from "@korex/env/web";
 import { createAuthClient } from "better-auth/react";
+import { getServerUrl } from "@/utils/server-url";
 
 export const authClient = createAuthClient({
-  baseURL: env.VITE_SERVER_URL,
+  baseURL: getServerUrl(),
 });
