@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Korex">
+  <rect width="512" height="512" fill="#0f1513" rx="112" />
+  <path d="M91 359 346 104" fill="none" stroke="#f3f5ed" stroke-linecap="round" stroke-width="34" />
+  <path d="M170 408 421 157" fill="none" stroke="#f3f5ed" stroke-linecap="round" stroke-width="34" />
+  <path d="M95 362 350 107" fill="none" stroke="#2fbf85" stroke-linecap="round" stroke-width="14" />
+  <path d="M174 411 425 160" fill="none" stroke="#2fbf85" stroke-linecap="round" stroke-width="14" />
+  <circle cx="347" cy="106" r="16" fill="#ffcf5a" />
+  <circle cx="171" cy="408" r="16" fill="#ffcf5a" />
+</svg>

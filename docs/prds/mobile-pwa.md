@@ -56,9 +56,9 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 38. [x] As a mobile Korex user, I want scroll behavior to feel app-like, so that bottom navigation remains stable while page content scrolls.
 39. [x] As a mobile Korex user, I want loading and error states to fit mobile screens, so that unavailable data does not produce broken layouts.
 40. [x] As a mobile Korex user, I want offline states to clearly explain that a connection is required, so that online-only behavior is honest.
-41. As a mobile Korex user, I want the app to be installable, so that I can launch Korex like a native app.
-42. As a mobile Korex user, I want installed-app colors, icons, and launch behavior to feel intentional, so that Korex does not look like a generic generated PWA.
-43. As a mobile Korex user, I want service worker updates to be handled gracefully, so that app updates do not leave me in a confusing stale state.
+41. [x] As a mobile Korex user, I want the app to be installable, so that I can launch Korex like a native app.
+42. [x] As a mobile Korex user, I want installed-app colors, icons, and launch behavior to feel intentional, so that Korex does not look like a generic generated PWA.
+43. [x] As a mobile Korex user, I want service worker updates to be handled gracefully, so that app updates do not leave me in a confusing stale state.
 44. As an engineer, I want mobile navigation metadata centralized, so that tab selection, More links, and hidden-bottom-nav routes do not drift across components.
 45. As an engineer, I want mobile/desktop branching near route and layout boundaries, so that leaf components do not accumulate ad hoc device conditionals.
 46. As an engineer, I want shared hooks for data and search-param orchestration, so that desktop and mobile pages do not duplicate query logic.

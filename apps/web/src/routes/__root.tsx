@@ -13,6 +13,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { useState } from "react";
 
+import { PwaUpdatePrompt } from "@/components/pwa-update-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { link, type orpc } from "@/utils/orpc";
 
@@ -28,17 +29,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
       {
-        title: "korex",
+        title: "Korex",
       },
       {
         name: "description",
-        content: "korex is a web application",
-      },
-    ],
-    links: [
-      {
-        rel: "icon",
-        href: "/favicon.ico",
+        content: "Training analysis and planning for Korex athletes.",
       },
     ],
   }),
@@ -63,6 +58,7 @@ function RootComponent() {
           </div>
         </TooltipProvider>
         <Toaster richColors />
+        <PwaUpdatePrompt />
       </ThemeProvider>
       <TanStackRouterDevtools position="bottom-left" />
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
