@@ -35,6 +35,7 @@ import {
   shouldHideMobileBottomNav,
 } from "./mobile-navigation";
 import { useIsMobileViewport } from "./responsive";
+import { useOnlineStatus } from "./use-online-status";
 
 function AppLayout() {
   const isMobileShell = useIsMobileViewport();
@@ -176,11 +177,18 @@ function MobileAppLayout() {
   const location = useLocation();
   const activeTab = getActiveMobileTab(location.pathname);
   const hideBottomNav = shouldHideMobileBottomNav(location.pathname);
+  const isOnline = useOnlineStatus();
 
   return (
-    <div className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
-      <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+    <div className="flex h-dvh min-h-svh flex-col overflow-hidden bg-background">
+      <main
+        className={cn(
+          "min-h-0 flex-1 overflow-y-auto overscroll-contain pt-[env(safe-area-inset-top)] [-webkit-overflow-scrolling:touch]",
+          hideBottomNav && "pb-[env(safe-area-inset-bottom)]",
+        )}
+      >
         <div className="mx-auto w-full max-w-7xl">
+          {isOnline ? null : <MobileOfflineRequiredBanner />}
           <Outlet />
         </div>
       </main>
@@ -214,6 +222,18 @@ function MobileAppLayout() {
           </div>
         </nav>
       )}
+    </div>
+  );
+}
+
+function MobileOfflineRequiredBanner() {
+  return (
+    <div className="mx-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-sm">
+      <p className="font-medium">Connection required</p>
+      <p className="mt-0.5 text-destructive/80 text-xs">
+        Korex is online-only for this phase. Reconnect to load or update your
+        training data.
+      </p>
     </div>
   );
 }

@@ -52,10 +52,10 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 34. [x] As a mobile Korex user, I want Settings to be reachable from More, so that account, display, training, notification, and security configuration remains available.
 35. [x] As a mobile Korex user, I want Settings sections to use route-level progressive disclosure, so that each section is manageable on a phone.
 36. [x] As a mobile Korex user, I want form-heavy settings to use mobile-appropriate controls, so that edits are possible without desktop table layouts.
-37. As a mobile Korex user, I want app chrome to respect device safe areas, so that bottom tabs and page content are not obscured by the OS.
-38. As a mobile Korex user, I want scroll behavior to feel app-like, so that bottom navigation remains stable while page content scrolls.
-39. As a mobile Korex user, I want loading and error states to fit mobile screens, so that unavailable data does not produce broken layouts.
-40. As a mobile Korex user, I want offline states to clearly explain that a connection is required, so that online-only behavior is honest.
+37. [x] As a mobile Korex user, I want app chrome to respect device safe areas, so that bottom tabs and page content are not obscured by the OS.
+38. [x] As a mobile Korex user, I want scroll behavior to feel app-like, so that bottom navigation remains stable while page content scrolls.
+39. [x] As a mobile Korex user, I want loading and error states to fit mobile screens, so that unavailable data does not produce broken layouts.
+40. [x] As a mobile Korex user, I want offline states to clearly explain that a connection is required, so that online-only behavior is honest.
 41. As a mobile Korex user, I want the app to be installable, so that I can launch Korex like a native app.
 42. As a mobile Korex user, I want installed-app colors, icons, and launch behavior to feel intentional, so that Korex does not look like a generic generated PWA.
 43. As a mobile Korex user, I want service worker updates to be handled gracefully, so that app updates do not leave me in a confusing stale state.

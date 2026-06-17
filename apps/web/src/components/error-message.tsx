@@ -15,14 +15,14 @@ function ErrorMessage({
   return (
     <p
       className={cn(
-        "flex items-center gap-2",
+        "flex min-w-0 items-start gap-2",
         variant === "banner" &&
           "rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive",
         className,
       )}
     >
-      <TriangleAlertIcon className="size-4 shrink-0 text-destructive" />
-      <span className="text-sm">{message}</span>
+      <TriangleAlertIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
+      <span className="wrap-break-word min-w-0 text-sm">{message}</span>
     </p>
   );
 }
