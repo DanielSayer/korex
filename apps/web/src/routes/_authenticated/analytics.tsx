@@ -1,12 +1,7 @@
 import type { AnalyticsVolumeBucketMode } from "@korex/api/modules/activities/activities.types";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
-import { PageHeader, PageLayout } from "@/components/page-layout";
-import { AnalyticsBestEffortsSection } from "@/features/analytics/components/analytics-best-efforts-section";
-import {
-  AnalyticsVolumeControls,
-  AnalyticsVolumeSection,
-} from "@/features/analytics/components/analytics-volume-section";
+import { AnalyticsPage } from "@/features/analytics/components/analytics-page";
 
 const currentYear = new Date().getFullYear();
 
@@ -31,35 +26,25 @@ function RouteComponent() {
   const year = search.year ?? currentYear;
 
   return (
-    <PageLayout>
-      <PageHeader
-        title="Analytics"
-        description="Yearly training volume from current activities."
-        actions={
-          <AnalyticsVolumeControls
-            bucketMode={bucketMode}
-            onBucketModeChange={(view: AnalyticsVolumeBucketMode) =>
-              navigate({
-                search: {
-                  view,
-                  year,
-                },
-              })
-            }
-            onYearChange={(nextYear) =>
-              navigate({
-                search: {
-                  view: bucketMode,
-                  year: nextYear,
-                },
-              })
-            }
-            year={year}
-          />
-        }
-      />
-      <AnalyticsVolumeSection bucketMode={bucketMode} year={year} />
-      <AnalyticsBestEffortsSection year={year} />
-    </PageLayout>
+    <AnalyticsPage
+      bucketMode={bucketMode}
+      onBucketModeChange={(view: AnalyticsVolumeBucketMode) =>
+        navigate({
+          search: {
+            view,
+            year,
+          },
+        })
+      }
+      onYearChange={(nextYear) =>
+        navigate({
+          search: {
+            view: bucketMode,
+            year: nextYear,
+          },
+        })
+      }
+      year={year}
+    />
   );
 }

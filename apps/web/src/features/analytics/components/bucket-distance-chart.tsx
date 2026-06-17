@@ -33,7 +33,10 @@ function BucketDistanceChart({ analytics }: { analytics: AnalyticsVolume }) {
       <div className="mb-4 flex flex-col gap-1">
         <h3 className="font-medium text-base">{title}</h3>
       </div>
-      <ChartContainer className="aspect-auto h-80 w-full" config={chartConfig}>
+      <ChartContainer
+        className="aspect-auto h-64 w-full sm:h-80"
+        config={chartConfig}
+      >
         <BarChart
           accessibilityLayer
           data={chartData}

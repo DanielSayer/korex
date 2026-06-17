@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, ChevronDownIcon } from "lucide-react";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
+import { cn } from "@/lib/utils";
 import { formatDistance, formatDurationCompact } from "@/utils/formatters";
 import { orpc } from "@/utils/orpc";
 import { BucketDistanceChart } from "./bucket-distance-chart";
@@ -50,21 +51,23 @@ function AnalyticsVolumeSection({
 
 function AnalyticsVolumeControls({
   bucketMode,
+  className,
   onBucketModeChange,
   onYearChange,
   year,
 }: {
   bucketMode: AnalyticsVolumeBucketMode;
+  className?: string;
   onBucketModeChange: (bucketMode: AnalyticsVolumeBucketMode) => void;
   onYearChange: (year: number) => void;
   year: number;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
-      <div className="inline-grid h-9 grid-cols-2 rounded-md border bg-muted/30 p-0.5">
+    <div className={cn("flex flex-wrap gap-2", className)}>
+      <div className="grid h-9 min-w-0 flex-1 grid-cols-2 rounded-md border bg-muted/30 p-0.5 sm:inline-grid sm:flex-none">
         {(["monthly", "weekly"] as const).map((mode) => (
           <Button
-            className="h-7 min-w-20"
+            className="h-7 min-w-0 px-2 sm:min-w-20"
             key={mode}
             onClick={() => onBucketModeChange(mode)}
             size="sm"
@@ -75,15 +78,21 @@ function AnalyticsVolumeControls({
           </Button>
         ))}
       </div>
-      <YearPicker onYearChange={onYearChange} year={year} />
+      <YearPicker
+        className="shrink-0"
+        onYearChange={onYearChange}
+        year={year}
+      />
     </div>
   );
 }
 
 function YearPicker({
+  className,
   onYearChange,
   year,
 }: {
+  className?: string;
   onYearChange: (year: number) => void;
   year: number;
 }) {
@@ -95,7 +104,9 @@ function YearPicker({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button size="sm" variant="outline" />}>
+      <DropdownMenuTrigger
+        render={<Button className={className} size="sm" variant="outline" />}
+      >
         <CalendarIcon className="size-4" />
         {year}
         <ChevronDownIcon className="size-4" />
@@ -121,7 +132,7 @@ function AnalyticsVolumePanel({ analytics }: { analytics: AnalyticsVolume }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-3">
         <MetricCard
           detail={formatDurationCompact(analytics.totalDurationSeconds)}
           label="This year"
@@ -153,7 +164,7 @@ function AnalyticsVolumePanel({ analytics }: { analytics: AnalyticsVolume }) {
           value={formatDistance(summary.averageWeeklyDistanceMeters)}
         />
       </div>
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
         <BucketDistanceChart analytics={analytics} />
         <CumulativeDistanceChart analytics={analytics} />
       </div>
@@ -171,10 +182,14 @@ function MetricCard({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border p-4">
-      <div className="text-muted-foreground text-sm">{label}</div>
-      <div className="mt-1 font-semibold text-2xl tracking-tight">{value}</div>
-      <div className="mt-1 text-muted-foreground text-sm">{detail}</div>
+    <div className="min-w-0 rounded-lg border p-3 sm:p-4">
+      <div className="truncate text-muted-foreground text-sm">{label}</div>
+      <div className="mt-1 truncate font-semibold text-xl tracking-tight sm:text-2xl">
+        {value}
+      </div>
+      <div className="mt-1 truncate text-muted-foreground text-xs sm:text-sm">
+        {detail}
+      </div>
     </div>
   );
 }
@@ -240,7 +255,7 @@ function toDate(value: Date | string) {
 function AnalyticsVolumeSkeleton() {
   return (
     <div className="rounded-lg border p-4">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
         <Skeleton className="h-16" />
         <Skeleton className="h-16" />
         <Skeleton className="h-16" />

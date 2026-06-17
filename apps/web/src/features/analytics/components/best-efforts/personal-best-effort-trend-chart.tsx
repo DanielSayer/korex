@@ -73,7 +73,10 @@ function PersonalBestEffortTrendChart({
           selectedDistanceCode={selectedDistanceCode}
         />
       </div>
-      <ChartContainer className="aspect-auto h-80 w-full" config={chartConfig}>
+      <ChartContainer
+        className="aspect-auto h-64 w-full sm:h-80"
+        config={chartConfig}
+      >
         <LineChart
           accessibilityLayer
           data={chartData}

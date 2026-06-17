@@ -40,8 +40,8 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 22. [x] As a mobile Korex user, I want Activity Detail to hide bottom tabs when it is a focused drill-in, so that the Activity has enough screen space.
 23. [x] As a mobile Korex user, I want Activity Detail charts to be usable on a phone, so that I can inspect streams without fighting desktop chart layouts.
 24. [x] As a mobile Korex user, I want Activity Detail to keep Best Efforts, Heart Rate Zone Time, laps, and Equipment available in a sensible order, so that advanced details are not lost.
-25. As a mobile Korex user, I want Analytics to present yearly volume and best efforts in mobile-friendly sections, so that I can inspect trends without a desktop layout.
-26. As a mobile Korex user, I want Analytics controls to fit a narrow viewport, so that switching year and bucket mode remains easy.
+25. [x] As a mobile Korex user, I want Analytics to present yearly volume and best efforts in mobile-friendly sections, so that I can inspect trends without a desktop layout.
+26. [x] As a mobile Korex user, I want Analytics controls to fit a narrow viewport, so that switching year and bucket mode remains easy.
 27. As a mobile Korex user, I want Goals to support viewing Training Goal progress, so that I can track current targets from my phone.
 28. As a mobile Korex user, I want Goals to support creating and managing Training Goals when feasible, so that mobile is useful beyond read-only monitoring.
 29. As a mobile Korex user, I want More to provide clear secondary navigation, so that Heatmap, Weekly Summaries, and Settings are easy to find.
