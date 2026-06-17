@@ -59,13 +59,13 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 41. [x] As a mobile Korex user, I want the app to be installable, so that I can launch Korex like a native app.
 42. [x] As a mobile Korex user, I want installed-app colors, icons, and launch behavior to feel intentional, so that Korex does not look like a generic generated PWA.
 43. [x] As a mobile Korex user, I want service worker updates to be handled gracefully, so that app updates do not leave me in a confusing stale state.
-44. As an engineer, I want mobile navigation metadata centralized, so that tab selection, More links, and hidden-bottom-nav routes do not drift across components.
-45. As an engineer, I want mobile/desktop branching near route and layout boundaries, so that leaf components do not accumulate ad hoc device conditionals.
-46. As an engineer, I want shared hooks for data and search-param orchestration, so that desktop and mobile pages do not duplicate query logic.
-47. As an engineer, I want feature-local mobile and desktop compositions, so that each feature owns its mobile workflow without creating a global component junk drawer.
-48. As an engineer, I want screen-by-screen delivery, so that the architecture can be validated early and shipped progressively.
-49. As an engineer, I want desktop behavior covered while mobile work lands, so that existing desktop workflows do not regress.
-50. As an engineer, I want mobile viewport QA built into the work, so that text, navigation, maps, and charts are verified at phone sizes before each story is considered done.
+44. [x] As an engineer, I want mobile navigation metadata centralized, so that tab selection, More links, and hidden-bottom-nav routes do not drift across components.
+45. [x] As an engineer, I want mobile/desktop branching near route and layout boundaries, so that leaf components do not accumulate ad hoc device conditionals.
+46. [x] As an engineer, I want shared hooks for data and search-param orchestration, so that desktop and mobile pages do not duplicate query logic.
+47. [x] As an engineer, I want feature-local mobile and desktop compositions, so that each feature owns its mobile workflow without creating a global component junk drawer.
+48. [x] As an engineer, I want screen-by-screen delivery, so that the architecture can be validated early and shipped progressively.
+49. [x] As an engineer, I want desktop behavior covered while mobile work lands, so that existing desktop workflows do not regress.
+50. [x] As an engineer, I want mobile viewport QA built into the work, so that text, navigation, maps, and charts are verified at phone sizes before each story is considered done.
 
 ## Implementation Decisions
 

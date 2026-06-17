@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  appNavigationItems,
   getActiveMobileTab,
   mobileTabs,
   moreNavigationItems,
@@ -14,6 +15,18 @@ describe("mobile navigation", () => {
       ["Analytics", "/analytics"],
       ["Goals", "/goals"],
       ["More", "/more"],
+    ]);
+  });
+
+  it("defines the shared app navigation destinations", () => {
+    expect(appNavigationItems.map((item) => [item.label, item.to])).toEqual([
+      ["Dashboard", "/dashboard"],
+      ["Calendar", "/calendar"],
+      ["Analytics", "/analytics"],
+      ["Goals", "/goals"],
+      ["Heatmap", "/heatmap"],
+      ["Weekly Summaries", "/weekly-summaries"],
+      ["Settings", "/settings"],
     ]);
   });
 
@@ -37,6 +50,11 @@ describe("mobile navigation", () => {
     expect(getActiveMobileTab("/heatmap")).toBe("more");
     expect(getActiveMobileTab("/weekly-summaries")).toBe("more");
     expect(getActiveMobileTab("/settings/profile")).toBe("more");
+  });
+
+  it("does not match unrelated paths with a shared prefix", () => {
+    expect(getActiveMobileTab("/calendarish")).toBeNull();
+    expect(getActiveMobileTab("/settings-old")).toBeNull();
   });
 
   it("hides bottom navigation on focused activity detail routes", () => {

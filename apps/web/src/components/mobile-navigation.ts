@@ -19,6 +19,24 @@ export type MobileTabId =
   | "goals"
   | "more";
 
+export type AppNavigationId =
+  | "dashboard"
+  | "calendar"
+  | "analytics"
+  | "goals"
+  | "heatmap"
+  | "weekly-summaries"
+  | "settings";
+
+export interface AppNavigationItem {
+  description?: string;
+  icon: NavigationIcon;
+  id: AppNavigationId;
+  label: string;
+  mobileTabId: MobileTabId;
+  to: string;
+}
+
 export interface MobileTabItem {
   id: MobileTabId;
   label: string;
@@ -33,31 +51,75 @@ export interface MoreNavigationItem {
   icon: NavigationIcon;
 }
 
-export const mobileTabs: MobileTabItem[] = [
+export const appNavigationItems: AppNavigationItem[] = [
   {
     id: "dashboard",
     label: "Dashboard",
     to: "/dashboard",
     icon: Home,
+    mobileTabId: "dashboard",
   },
   {
     id: "calendar",
     label: "Calendar",
     to: "/calendar",
     icon: CalendarDaysIcon,
+    mobileTabId: "calendar",
   },
   {
     id: "analytics",
     label: "Analytics",
     to: "/analytics",
     icon: LineChartIcon,
+    mobileTabId: "analytics",
   },
   {
     id: "goals",
     label: "Goals",
     to: "/goals",
     icon: TargetIcon,
+    mobileTabId: "goals",
   },
+  {
+    id: "heatmap",
+    label: "Heatmap",
+    description: "Explore your Activity Route Heatmap.",
+    to: "/heatmap",
+    icon: FlameIcon,
+    mobileTabId: "more",
+  },
+  {
+    id: "weekly-summaries",
+    label: "Weekly Summaries",
+    description: "Replay completed Training Weeks.",
+    to: "/weekly-summaries",
+    icon: TrophyIcon,
+    mobileTabId: "more",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    description: "Manage account, display, training, and security settings.",
+    to: "/settings",
+    icon: SettingsIcon,
+    mobileTabId: "more",
+  },
+];
+
+const primaryMobileItems = appNavigationItems.filter(
+  (item) => item.mobileTabId !== "more",
+);
+const secondaryMobileItems = appNavigationItems.filter(
+  (item) => item.mobileTabId === "more",
+);
+
+export const mobileTabs: MobileTabItem[] = [
+  ...primaryMobileItems.map((item) => ({
+    id: item.mobileTabId,
+    label: item.label,
+    to: item.to,
+    icon: item.icon,
+  })),
   {
     id: "more",
     label: "More",
@@ -66,54 +128,27 @@ export const mobileTabs: MobileTabItem[] = [
   },
 ];
 
-export const moreNavigationItems: MoreNavigationItem[] = [
-  {
-    label: "Heatmap",
-    description: "Explore your Activity Route Heatmap.",
-    to: "/heatmap",
-    icon: FlameIcon,
-  },
-  {
-    label: "Weekly Summaries",
-    description: "Replay completed Training Weeks.",
-    to: "/weekly-summaries",
-    icon: TrophyIcon,
-  },
-  {
-    label: "Settings",
-    description: "Manage account, display, training, and security settings.",
-    to: "/settings",
-    icon: SettingsIcon,
-  },
-];
+export const moreNavigationItems: MoreNavigationItem[] =
+  secondaryMobileItems.map((item) => ({
+    label: item.label,
+    description: item.description ?? "",
+    to: item.to,
+    icon: item.icon,
+  }));
 
 export function getActiveMobileTab(pathname: string): MobileTabId | null {
-  if (pathname === "/" || pathname.startsWith("/dashboard")) {
+  if (pathname === "/" || pathStartsWithRoute(pathname, "/dashboard")) {
     return "dashboard";
   }
 
-  if (pathname.startsWith("/calendar")) {
-    return "calendar";
-  }
-
-  if (pathname.startsWith("/analytics")) {
-    return "analytics";
-  }
-
-  if (pathname.startsWith("/goals")) {
-    return "goals";
-  }
-
-  if (
-    pathname.startsWith("/more") ||
-    pathname.startsWith("/heatmap") ||
-    pathname.startsWith("/weekly-summaries") ||
-    pathname.startsWith("/settings")
-  ) {
+  if (pathStartsWithRoute(pathname, "/more")) {
     return "more";
   }
 
-  return null;
+  return (
+    appNavigationItems.find((item) => pathStartsWithRoute(pathname, item.to))
+      ?.mobileTabId ?? null
+  );
 }
 
 export function shouldHideMobileBottomNav(pathname: string) {
@@ -121,4 +156,8 @@ export function shouldHideMobileBottomNav(pathname: string) {
     /^\/activity\/[^/]+$/.test(pathname) ||
     /^\/weekly-summaries\/[^/]+$/.test(pathname)
   );
+}
+
+function pathStartsWithRoute(pathname: string, route: string) {
+  return pathname === route || pathname.startsWith(`${route}/`);
 }

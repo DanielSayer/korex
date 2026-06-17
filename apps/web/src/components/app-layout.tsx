@@ -18,18 +18,10 @@ import {
   useLocation,
   useMatchRoute,
 } from "@tanstack/react-router";
-import {
-  Activity,
-  CalendarDaysIcon,
-  FlameIcon,
-  Home,
-  LineChartIcon,
-  SettingsIcon,
-  TargetIcon,
-  TrophyIcon,
-} from "lucide-react";
+import { Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  appNavigationItems,
   getActiveMobileTab,
   mobileTabs,
   shouldHideMobileBottomNav,
@@ -72,76 +64,22 @@ function DesktopAppLayout() {
           <SidebarGroup className="relative z-10 px-3 pt-6">
             <SidebarGroupContent>
               <SidebarMenu className="gap-1.5">
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: "/dashboard" }))}
-                    tooltip="Dashboard"
-                    render={<Link to="/dashboard" />}
-                  >
-                    <Home />
-                    <span>Dashboard</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: "/calendar" }))}
-                    tooltip="Calendar"
-                    render={<Link to="/calendar" />}
-                  >
-                    <CalendarDaysIcon />
-                    <span>Calendar</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: "/analytics" }))}
-                    tooltip="Analytics"
-                    render={<Link to="/analytics" />}
-                  >
-                    <LineChartIcon />
-                    <span>Analytics</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: "/goals" }))}
-                    tooltip="Goals"
-                    render={<Link to="/goals" />}
-                  >
-                    <TargetIcon />
-                    <span>Goals</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: "/heatmap" }))}
-                    tooltip="Heatmap"
-                    render={<Link to="/heatmap" />}
-                  >
-                    <FlameIcon />
-                    <span>Heatmap</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: "/weekly-summaries" }))}
-                    tooltip="Weekly Summaries"
-                    render={<Link to="/weekly-summaries" />}
-                  >
-                    <TrophyIcon />
-                    <span>Weekly Summaries</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={Boolean(matchRoute({ to: "/settings" }))}
-                    tooltip="Settings"
-                    render={<Link to="/settings" />}
-                  >
-                    <SettingsIcon />
-                    <span>Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {appNavigationItems.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        isActive={Boolean(matchRoute({ to: item.to }))}
+                        tooltip={item.label}
+                        render={<Link to={item.to} />}
+                      >
+                        <Icon />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
