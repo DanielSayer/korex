@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/more")({
 
 function RouteComponent() {
   return (
-    <div className="grid gap-5">
+    <div className="grid gap-5 p-3 md:p-0">
       <header className="grid gap-1">
         <h1 className="font-semibold text-2xl tracking-tight">More</h1>
         <p className="text-muted-foreground text-sm">

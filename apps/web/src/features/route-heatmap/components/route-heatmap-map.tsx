@@ -1,5 +1,6 @@
 import { env } from "@korex/env/web";
 import { MapContainer, TileLayer } from "react-leaflet";
+import { cn } from "@/lib/utils";
 import {
   routeHeatmapFallbackCenter,
   routeHeatmapInitialLocationZoom,
@@ -11,15 +12,17 @@ import { InitialUserLocationView } from "./initial-user-location-view";
 import { RouteHeatmapLegend } from "./route-heatmap-legend";
 
 function RouteHeatmapMap({
+  className,
   displayMode,
 }: {
+  className?: string;
   displayMode: RouteHeatmapDisplayMode;
 }) {
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-background">
+    <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-background [&_.leaflet-control-attribution]:mb-14">
       <MapContainer
         center={routeHeatmapFallbackCenter}
-        className="h-[calc(100svh-13rem)] min-h-128 w-full"
+        className={cn("h-[calc(100svh-13rem)] min-h-128 w-full", className)}
         maxZoom={18}
         minZoom={routeHeatmapMinMaterializedZoom}
         preferCanvas

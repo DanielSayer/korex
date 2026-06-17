@@ -117,5 +117,8 @@ export function getActiveMobileTab(pathname: string): MobileTabId | null {
 }
 
 export function shouldHideMobileBottomNav(pathname: string) {
-  return /^\/activity\/[^/]+$/.test(pathname);
+  return (
+    /^\/activity\/[^/]+$/.test(pathname) ||
+    /^\/weekly-summaries\/[^/]+$/.test(pathname)
+  );
 }

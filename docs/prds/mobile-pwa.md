@@ -44,14 +44,14 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 26. [x] As a mobile Korex user, I want Analytics controls to fit a narrow viewport, so that switching year and bucket mode remains easy.
 27. [x] As a mobile Korex user, I want Goals to support viewing Training Goal progress, so that I can track current targets from my phone.
 28. [x] As a mobile Korex user, I want Goals to support creating and managing Training Goals when feasible, so that mobile is useful beyond read-only monitoring.
-29. As a mobile Korex user, I want More to provide clear secondary navigation, so that Heatmap, Weekly Summaries, and Settings are easy to find.
-30. As a mobile Korex user, I want Heatmap to remain available from More, so that I can inspect my Activity Route Heatmap on mobile when needed.
-31. As a mobile Korex user, I want Heatmap controls to be reachable on small screens, so that display mode selection does not depend on desktop header layout.
-32. As a mobile Korex user, I want Weekly Summaries to remain available from More, so that I can replay completed Training Weeks.
-33. As a mobile Korex user, I want Weekly Summary detail to be a focused destination when needed, so that summary detail does not compete with list navigation.
-34. As a mobile Korex user, I want Settings to be reachable from More, so that account, display, training, notification, and security configuration remains available.
-35. As a mobile Korex user, I want Settings sections to use route-level progressive disclosure, so that each section is manageable on a phone.
-36. As a mobile Korex user, I want form-heavy settings to use mobile-appropriate controls, so that edits are possible without desktop table layouts.
+29. [x] As a mobile Korex user, I want More to provide clear secondary navigation, so that Heatmap, Weekly Summaries, and Settings are easy to find.
+30. [x] As a mobile Korex user, I want Heatmap to remain available from More, so that I can inspect my Activity Route Heatmap on mobile when needed.
+31. [x] As a mobile Korex user, I want Heatmap controls to be reachable on small screens, so that display mode selection does not depend on desktop header layout.
+32. [x] As a mobile Korex user, I want Weekly Summaries to remain available from More, so that I can replay completed Training Weeks.
+33. [x] As a mobile Korex user, I want Weekly Summary detail to be a focused destination when needed, so that summary detail does not compete with list navigation.
+34. [x] As a mobile Korex user, I want Settings to be reachable from More, so that account, display, training, notification, and security configuration remains available.
+35. [x] As a mobile Korex user, I want Settings sections to use route-level progressive disclosure, so that each section is manageable on a phone.
+36. [x] As a mobile Korex user, I want form-heavy settings to use mobile-appropriate controls, so that edits are possible without desktop table layouts.
 37. As a mobile Korex user, I want app chrome to respect device safe areas, so that bottom tabs and page content are not obscured by the OS.
 38. As a mobile Korex user, I want scroll behavior to feel app-like, so that bottom navigation remains stable while page content scrolls.
 39. As a mobile Korex user, I want loading and error states to fit mobile screens, so that unavailable data does not produce broken layouts.

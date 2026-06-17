@@ -41,6 +41,9 @@ describe("mobile navigation", () => {
 
   it("hides bottom navigation on focused activity detail routes", () => {
     expect(shouldHideMobileBottomNav("/activity/activity-1")).toBe(true);
+    expect(shouldHideMobileBottomNav("/weekly-summaries/2026-06-15")).toBe(
+      true,
+    );
     expect(shouldHideMobileBottomNav("/dashboard")).toBe(false);
     expect(shouldHideMobileBottomNav("/more")).toBe(false);
   });

@@ -23,10 +23,12 @@ function EquipmentSettings() {
   const defaultsQuery = useQuery(defaultsQueryOptions);
 
   return (
-    <section className="border-border/70 border-b pb-10">
-      <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
+    <section className="border-border/70 border-b pb-6 md:pb-10">
+      <div className="grid gap-4 md:gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
         <div>
-          <h2 className="font-semibold text-xl tracking-tight">Equipment</h2>
+          <h2 className="font-semibold text-lg tracking-tight md:text-xl">
+            Equipment
+          </h2>
           <p className="mt-2 text-muted-foreground text-sm leading-6">
             Track shoes from Korex assignments and apply defaults to newly
             imported runs.

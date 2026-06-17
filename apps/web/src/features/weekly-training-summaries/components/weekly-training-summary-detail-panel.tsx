@@ -17,8 +17,10 @@ import {
   SheetTitle,
 } from "@korex/ui/components/sheet";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import {
   ActivityIcon,
+  ArrowLeftIcon,
   ClockIcon,
   GaugeIcon,
   MedalIcon,
@@ -52,12 +54,78 @@ type WeeklyTrainingSummaryDetailPanelProps = {
   summary: WeeklyTrainingSummaryListItem | null;
 };
 
+function WeeklyTrainingSummaryDetailPage({
+  weekStartAt,
+}: {
+  weekStartAt: Date;
+}) {
+  const detailQueryOptions =
+    orpc.activities.getWeeklyTrainingSummary.queryOptions({
+      input: { weekStartAt },
+    });
+  const detailQuery = useQuery(detailQueryOptions);
+  const { isRegenerating, regenerate } = useWeeklySummaryRegeneration({
+    detailQueryKey: detailQueryOptions.queryKey,
+    weekStartAt,
+  });
+
+  return (
+    <div className="grid gap-4 p-3 md:p-0">
+      <Link
+        className="inline-flex w-fit items-center gap-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+        to="/weekly-summaries"
+      >
+        <ArrowLeftIcon className="size-4" />
+        Weekly Summaries
+      </Link>
+      <QueryRenderer
+        error={
+          <ErrorMessage
+            message="Could not load this weekly summary."
+            variant="banner"
+          />
+        }
+        loading={<WeeklyTrainingSummaryDetailLoading />}
+        query={detailQuery}
+      >
+        {(summary) =>
+          summary ? (
+            <>
+              <div className="flex items-start justify-between gap-3 border-border/70 border-b pb-4">
+                <div className="min-w-0">
+                  <p className="font-semibold text-primary text-xs uppercase">
+                    Weekly Summary
+                  </p>
+                  <h1 className="mt-1 font-semibold text-2xl tracking-tight">
+                    {formatTrainingWeek(summary.weekStartAt, summary.weekEndAt)}
+                  </h1>
+                  <p className="mt-1 text-muted-foreground text-sm">
+                    Generated {formatGeneratedAt(summary.generatedAt)}
+                  </p>
+                </div>
+                <WeeklySummaryActions
+                  isRegenerating={isRegenerating}
+                  onRegenerate={regenerate}
+                />
+              </div>
+              <WeeklyTrainingSummaryDetail summary={summary} />
+            </>
+          ) : (
+            <ErrorMessage
+              message="This weekly summary is no longer available."
+              variant="banner"
+            />
+          )
+        }
+      </QueryRenderer>
+    </div>
+  );
+}
+
 function WeeklyTrainingSummaryDetailPanel({
   onOpenChange,
   summary,
 }: WeeklyTrainingSummaryDetailPanelProps) {
-  const queryClient = useQueryClient();
-  const listQuery = orpc.activities.weeklyTrainingSummaries.queryOptions();
   const detailQueryOptions =
     orpc.activities.getWeeklyTrainingSummary.queryOptions({
       input: { weekStartAt: summary?.weekStartAt ?? new Date(0) },
@@ -66,42 +134,24 @@ function WeeklyTrainingSummaryDetailPanel({
     ...detailQueryOptions,
     enabled: summary !== null,
   });
-  const regenerateMutation = useMutation(
-    orpc.activities.regenerateWeeklyTrainingSummary.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: () => {
-        toast.success("Weekly Training Summary regeneration queued");
-        queryClient.invalidateQueries({
-          queryKey: detailQueryOptions.queryKey,
-        });
-        queryClient.invalidateQueries({ queryKey: listQuery.queryKey });
-      },
-    }),
-  );
-
-  const handleRegenerate = () => {
-    if (!summary) {
-      return;
-    }
-
-    regenerateMutation.mutate({ weekStartAt: summary.weekStartAt });
-  };
+  const { isRegenerating, regenerate } = useWeeklySummaryRegeneration({
+    detailQueryKey: detailQueryOptions.queryKey,
+    weekStartAt: summary?.weekStartAt ?? null,
+  });
 
   return (
     <Sheet onOpenChange={onOpenChange} open={summary !== null}>
       <SheetContent className="w-full overflow-y-auto p-0 data-[side=right]:sm:w-190 data-[side=right]:sm:max-w-190">
         {summary ? (
           <>
-            <SheetHeader className="border-b bg-background p-6">
+            <SheetHeader className="border-b bg-background p-4 sm:p-6">
               <div className="flex items-start justify-between gap-3 pr-10">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex size-11 shrink-0 items-center justify-center rounded-lg border bg-muted/40">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md border bg-muted/40 sm:size-11 sm:rounded-lg">
                     <MountainSnowIcon className="size-5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <SheetTitle className="text-xl">
+                    <SheetTitle className="text-lg sm:text-xl">
                       {formatTrainingWeek(
                         summary.weekStartAt,
                         summary.weekEndAt,
@@ -113,38 +163,14 @@ function WeeklyTrainingSummaryDetailPanel({
                     </SheetDescription>
                   </div>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button
-                        aria-label="Weekly summary actions"
-                        size="icon-sm"
-                        type="button"
-                        variant="outline"
-                      />
-                    }
-                  >
-                    <MoreHorizontalIcon className="size-4" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem
-                      disabled={regenerateMutation.isPending}
-                      onClick={handleRegenerate}
-                    >
-                      <RefreshCwIcon
-                        className={cn(
-                          "size-4",
-                          regenerateMutation.isPending && "animate-spin",
-                        )}
-                      />
-                      Regenerate
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <WeeklySummaryActions
+                  isRegenerating={isRegenerating}
+                  onRegenerate={regenerate}
+                />
               </div>
             </SheetHeader>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <AnimatePresence mode="wait">
                 <QueryRenderer
                   error={
@@ -177,6 +203,75 @@ function WeeklyTrainingSummaryDetailPanel({
         ) : null}
       </SheetContent>
     </Sheet>
+  );
+}
+
+function useWeeklySummaryRegeneration({
+  detailQueryKey,
+  weekStartAt,
+}: {
+  detailQueryKey: readonly unknown[];
+  weekStartAt: Date | null;
+}) {
+  const queryClient = useQueryClient();
+  const listQuery = orpc.activities.weeklyTrainingSummaries.queryOptions();
+  const regenerateMutation = useMutation(
+    orpc.activities.regenerateWeeklyTrainingSummary.mutationOptions({
+      onError: (error) => {
+        toast.error(error.message);
+      },
+      onSuccess: () => {
+        toast.success("Weekly Training Summary regeneration queued");
+        queryClient.invalidateQueries({
+          queryKey: detailQueryKey,
+        });
+        queryClient.invalidateQueries({ queryKey: listQuery.queryKey });
+      },
+    }),
+  );
+
+  return {
+    isRegenerating: regenerateMutation.isPending,
+    regenerate: () => {
+      if (!weekStartAt) {
+        return;
+      }
+
+      regenerateMutation.mutate({ weekStartAt });
+    },
+  };
+}
+
+function WeeklySummaryActions({
+  isRegenerating,
+  onRegenerate,
+}: {
+  isRegenerating: boolean;
+  onRegenerate: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button
+            aria-label="Weekly summary actions"
+            size="icon-sm"
+            type="button"
+            variant="outline"
+          />
+        }
+      >
+        <MoreHorizontalIcon className="size-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem disabled={isRegenerating} onClick={onRegenerate}>
+          <RefreshCwIcon
+            className={cn("size-4", isRegenerating && "animate-spin")}
+          />
+          Regenerate
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -223,7 +318,7 @@ function WeeklyTrainingSummaryDetail({
       key={summary.id}
       transition={{ duration: 0.22 }}
     >
-      <section className="relative overflow-hidden rounded-lg border bg-background p-5">
+      <section className="relative overflow-hidden rounded-md border bg-background p-4 sm:rounded-lg sm:p-5">
         <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-emerald-500 to-sky-500" />
         <motion.div
           animate={{ x: [0, 8, 0], y: [0, -5, 0] }}
@@ -247,7 +342,7 @@ function WeeklyTrainingSummaryDetail({
               <p className="font-medium text-muted-foreground text-xs uppercase">
                 Weekly shape
               </p>
-              <h3 className="mt-1 font-semibold text-xl">
+              <h3 className="mt-1 font-semibold text-lg sm:text-xl">
                 {summary.activityCount} activities,{" "}
                 {formatDurationCompact(summary.totalMovingTimeSeconds)} moving
               </h3>
@@ -263,7 +358,7 @@ function WeeklyTrainingSummaryDetail({
                 <RouteIcon className="size-4 text-primary" />
                 Total distance
               </div>
-              <div className="mt-2 whitespace-nowrap font-semibold text-6xl tracking-tight">
+              <div className="mt-2 whitespace-nowrap font-semibold text-4xl tracking-tight sm:text-6xl">
                 {formatDistance(summary.totalDistanceMeters)}
               </div>
               <DeltaLine value={summary.previousWeekDistanceDeltaMeters}>
@@ -294,7 +389,7 @@ function WeeklyTrainingSummaryDetail({
         </div>
       </section>
 
-      <section className="rounded-lg border">
+      <section className="rounded-md border sm:rounded-lg">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <h3 className="font-semibold">Week-over-week</h3>
           <span className="text-muted-foreground text-xs">
@@ -344,7 +439,7 @@ function WeeklyTrainingSummaryDetail({
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-lg border p-5">
+        <div className="rounded-md border p-4 sm:rounded-lg sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <MedalIcon className="size-4 text-primary" />
             <h3 className="font-semibold">Longest effort</h3>
@@ -355,7 +450,7 @@ function WeeklyTrainingSummaryDetail({
               <p className="mt-1 text-muted-foreground text-sm">
                 {formatActivityDate(longestActivity.startAt)}
               </p>
-              <p className="mt-4 whitespace-nowrap font-semibold text-3xl">
+              <p className="mt-4 whitespace-nowrap font-semibold text-2xl sm:text-3xl">
                 {formatDistance(longestActivity.distanceMeters)}
               </p>
             </div>
@@ -365,7 +460,7 @@ function WeeklyTrainingSummaryDetail({
             </p>
           )}
         </div>
-        <div className="rounded-lg border p-5">
+        <div className="rounded-md border p-4 sm:rounded-lg sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <ActivityIcon className="size-4 text-primary" />
             <h3 className="font-semibold">Previous baseline</h3>
@@ -413,12 +508,12 @@ function HeroMetric({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border bg-muted/20 p-4">
+    <div className="rounded-md border bg-muted/20 p-3 sm:rounded-lg sm:p-4">
       <div className="flex items-center gap-2 text-muted-foreground text-xs">
         {icon}
         {label}
       </div>
-      <div className="mt-2 whitespace-nowrap font-semibold text-2xl">
+      <div className="mt-2 whitespace-nowrap font-semibold text-xl sm:text-2xl">
         {value}
       </div>
       <div className="mt-1 text-muted-foreground text-xs">
@@ -556,4 +651,4 @@ function formatActivityDate(startAt: string) {
   }).format(new Date(startAt));
 }
 
-export { WeeklyTrainingSummaryDetailPanel };
+export { WeeklyTrainingSummaryDetailPage, WeeklyTrainingSummaryDetailPanel };

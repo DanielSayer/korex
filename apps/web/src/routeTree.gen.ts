@@ -21,7 +21,9 @@ import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
+import { Route as AuthenticatedWeeklySummariesIndexRouteImport } from './routes/_authenticated/weekly-summaries.index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
+import { Route as AuthenticatedWeeklySummariesWeekStartAtRouteImport } from './routes/_authenticated/weekly-summaries.$weekStartAt'
 import { Route as AuthenticatedSettingsTrainingRouteImport } from './routes/_authenticated/settings.training'
 import { Route as AuthenticatedSettingsTimeRouteImport } from './routes/_authenticated/settings.time'
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
@@ -93,11 +95,23 @@ const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedWeeklySummariesIndexRoute =
+  AuthenticatedWeeklySummariesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedWeeklySummariesRoute,
+  } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedWeeklySummariesWeekStartAtRoute =
+  AuthenticatedWeeklySummariesWeekStartAtRouteImport.update({
+    id: '/$weekStartAt',
+    path: '/$weekStartAt',
+    getParentRoute: () => AuthenticatedWeeklySummariesRoute,
   } as any)
 const AuthenticatedSettingsTrainingRoute =
   AuthenticatedSettingsTrainingRouteImport.update({
@@ -151,7 +165,7 @@ export interface FileRoutesByFullPath {
   '/heatmap': typeof AuthenticatedHeatmapRoute
   '/more': typeof AuthenticatedMoreRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
-  '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
+  '/weekly-summaries': typeof AuthenticatedWeeklySummariesRouteWithChildren
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
   '/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
@@ -161,7 +175,9 @@ export interface FileRoutesByFullPath {
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/settings/time': typeof AuthenticatedSettingsTimeRoute
   '/settings/training': typeof AuthenticatedSettingsTrainingRoute
+  '/weekly-summaries/$weekStartAt': typeof AuthenticatedWeeklySummariesWeekStartAtRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/weekly-summaries/': typeof AuthenticatedWeeklySummariesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -171,7 +187,6 @@ export interface FileRoutesByTo {
   '/goals': typeof AuthenticatedGoalsRoute
   '/heatmap': typeof AuthenticatedHeatmapRoute
   '/more': typeof AuthenticatedMoreRoute
-  '/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
   '/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
@@ -181,7 +196,9 @@ export interface FileRoutesByTo {
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/settings/time': typeof AuthenticatedSettingsTimeRoute
   '/settings/training': typeof AuthenticatedSettingsTrainingRoute
+  '/weekly-summaries/$weekStartAt': typeof AuthenticatedWeeklySummariesWeekStartAtRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/weekly-summaries': typeof AuthenticatedWeeklySummariesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -194,7 +211,7 @@ export interface FileRoutesById {
   '/_authenticated/heatmap': typeof AuthenticatedHeatmapRoute
   '/_authenticated/more': typeof AuthenticatedMoreRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
-  '/_authenticated/weekly-summaries': typeof AuthenticatedWeeklySummariesRoute
+  '/_authenticated/weekly-summaries': typeof AuthenticatedWeeklySummariesRouteWithChildren
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
   '/_authenticated/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
@@ -204,7 +221,9 @@ export interface FileRoutesById {
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/_authenticated/settings/time': typeof AuthenticatedSettingsTimeRoute
   '/_authenticated/settings/training': typeof AuthenticatedSettingsTrainingRoute
+  '/_authenticated/weekly-summaries/$weekStartAt': typeof AuthenticatedWeeklySummariesWeekStartAtRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/weekly-summaries/': typeof AuthenticatedWeeklySummariesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -227,7 +246,9 @@ export interface FileRouteTypes {
     | '/settings/security'
     | '/settings/time'
     | '/settings/training'
+    | '/weekly-summaries/$weekStartAt'
     | '/settings/'
+    | '/weekly-summaries/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -237,7 +258,6 @@ export interface FileRouteTypes {
     | '/goals'
     | '/heatmap'
     | '/more'
-    | '/weekly-summaries'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/activity/$activityId'
@@ -247,7 +267,9 @@ export interface FileRouteTypes {
     | '/settings/security'
     | '/settings/time'
     | '/settings/training'
+    | '/weekly-summaries/$weekStartAt'
     | '/settings'
+    | '/weekly-summaries'
   id:
     | '__root__'
     | '/'
@@ -269,7 +291,9 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/security'
     | '/_authenticated/settings/time'
     | '/_authenticated/settings/training'
+    | '/_authenticated/weekly-summaries/$weekStartAt'
     | '/_authenticated/settings/'
+    | '/_authenticated/weekly-summaries/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -365,12 +389,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/weekly-summaries/': {
+      id: '/_authenticated/weekly-summaries/'
+      path: '/'
+      fullPath: '/weekly-summaries/'
+      preLoaderRoute: typeof AuthenticatedWeeklySummariesIndexRouteImport
+      parentRoute: typeof AuthenticatedWeeklySummariesRoute
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/'
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
+    }
+    '/_authenticated/weekly-summaries/$weekStartAt': {
+      id: '/_authenticated/weekly-summaries/$weekStartAt'
+      path: '/$weekStartAt'
+      fullPath: '/weekly-summaries/$weekStartAt'
+      preLoaderRoute: typeof AuthenticatedWeeklySummariesWeekStartAtRouteImport
+      parentRoute: typeof AuthenticatedWeeklySummariesRoute
     }
     '/_authenticated/settings/training': {
       id: '/_authenticated/settings/training'
@@ -450,6 +488,24 @@ const AuthenticatedSettingsRouteWithChildren =
     AuthenticatedSettingsRouteChildren,
   )
 
+interface AuthenticatedWeeklySummariesRouteChildren {
+  AuthenticatedWeeklySummariesWeekStartAtRoute: typeof AuthenticatedWeeklySummariesWeekStartAtRoute
+  AuthenticatedWeeklySummariesIndexRoute: typeof AuthenticatedWeeklySummariesIndexRoute
+}
+
+const AuthenticatedWeeklySummariesRouteChildren: AuthenticatedWeeklySummariesRouteChildren =
+  {
+    AuthenticatedWeeklySummariesWeekStartAtRoute:
+      AuthenticatedWeeklySummariesWeekStartAtRoute,
+    AuthenticatedWeeklySummariesIndexRoute:
+      AuthenticatedWeeklySummariesIndexRoute,
+  }
+
+const AuthenticatedWeeklySummariesRouteWithChildren =
+  AuthenticatedWeeklySummariesRoute._addFileChildren(
+    AuthenticatedWeeklySummariesRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
@@ -458,7 +514,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedHeatmapRoute: typeof AuthenticatedHeatmapRoute
   AuthenticatedMoreRoute: typeof AuthenticatedMoreRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
-  AuthenticatedWeeklySummariesRoute: typeof AuthenticatedWeeklySummariesRoute
+  AuthenticatedWeeklySummariesRoute: typeof AuthenticatedWeeklySummariesRouteWithChildren
   AuthenticatedActivityActivityIdRoute: typeof AuthenticatedActivityActivityIdRoute
 }
 
@@ -470,7 +526,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHeatmapRoute: AuthenticatedHeatmapRoute,
   AuthenticatedMoreRoute: AuthenticatedMoreRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
-  AuthenticatedWeeklySummariesRoute: AuthenticatedWeeklySummariesRoute,
+  AuthenticatedWeeklySummariesRoute:
+    AuthenticatedWeeklySummariesRouteWithChildren,
   AuthenticatedActivityActivityIdRoute: AuthenticatedActivityActivityIdRoute,
 }
 

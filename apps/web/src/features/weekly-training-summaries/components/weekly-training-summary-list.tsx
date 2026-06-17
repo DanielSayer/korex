@@ -1,4 +1,5 @@
 import type { WeeklyTrainingSummaryListItem } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary.types";
+import { Link } from "@tanstack/react-router";
 import {
   CalendarDaysIcon,
   ClockIcon,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { useIsMobileViewport } from "@/components/responsive";
 import { cn } from "@/lib/utils";
 import {
   formatDistance,
@@ -25,6 +27,7 @@ type WeeklyTrainingSummaryListProps = {
 function WeeklyTrainingSummaryList({
   summaries,
 }: WeeklyTrainingSummaryListProps) {
+  const isMobileViewport = useIsMobileViewport();
   const [selectedSummary, setSelectedSummary] =
     useState<WeeklyTrainingSummaryListItem | null>(null);
 
@@ -43,9 +46,10 @@ function WeeklyTrainingSummaryList({
 
   return (
     <>
-      <div className="grid gap-3 lg:grid-cols-2">
+      <div className="grid gap-2 md:gap-3 lg:grid-cols-2">
         {summaries.map((summary) => (
           <WeeklyTrainingSummaryCard
+            isLink={isMobileViewport}
             isSelected={selectedSummary?.id === summary.id}
             key={summary.id}
             onSelect={() => setSelectedSummary(summary)}
@@ -66,23 +70,48 @@ function WeeklyTrainingSummaryList({
 }
 
 function WeeklyTrainingSummaryCard({
+  isLink,
   isSelected,
   onSelect,
   summary,
 }: {
+  isLink: boolean;
   isSelected: boolean;
   onSelect: () => void;
   summary: WeeklyTrainingSummaryListItem;
 }) {
+  const cardClassName = cn(
+    "block rounded-md border p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:rounded-lg md:p-4",
+    isSelected && "border-primary/60 bg-primary/5 shadow-sm",
+  );
+  const cardContent = <WeeklyTrainingSummaryCardContent summary={summary} />;
+
+  if (isLink) {
+    return (
+      <Link
+        className={cardClassName}
+        params={{ weekStartAt: formatTrainingWeekParam(summary.weekStartAt) }}
+        to="/weekly-summaries/$weekStartAt"
+      >
+        {cardContent}
+      </Link>
+    );
+  }
+
   return (
-    <button
-      className={cn(
-        "rounded-lg border p-4 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-        isSelected && "border-primary/60 bg-primary/5 shadow-sm",
-      )}
-      onClick={onSelect}
-      type="button"
-    >
+    <button className={cardClassName} onClick={onSelect} type="button">
+      {cardContent}
+    </button>
+  );
+}
+
+function WeeklyTrainingSummaryCardContent({
+  summary,
+}: {
+  summary: WeeklyTrainingSummaryListItem;
+}) {
+  return (
+    <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="font-semibold text-base">
@@ -97,7 +126,7 @@ function WeeklyTrainingSummaryCard({
         </DeltaBadge>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+      <div className="mt-4 grid grid-cols-3 gap-2 md:gap-3">
         <Metric
           icon={<RouteIcon className="size-4" />}
           label="Distance"
@@ -115,14 +144,14 @@ function WeeklyTrainingSummaryCard({
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-t pt-3 text-muted-foreground text-sm">
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t pt-3 text-muted-foreground text-sm md:gap-x-5">
         <span>{summary.activityCount} activities</span>
         <span>
           {formatSignedNumber(summary.previousWeekActivityCountDelta)} vs
           previous week
         </span>
       </div>
-    </button>
+    </>
   );
 }
 
@@ -136,12 +165,14 @@ function Metric({
   value: string;
 }) {
   return (
-    <div className="min-w-0 rounded-md bg-muted/50 p-3">
+    <div className="min-w-0 rounded-md bg-muted/50 p-2 md:p-3">
       <div className="flex items-center gap-2 text-muted-foreground text-xs">
         {icon}
-        <span>{label}</span>
+        <span className="truncate">{label}</span>
       </div>
-      <div className="mt-1 truncate font-semibold text-lg">{value}</div>
+      <div className="mt-1 truncate font-semibold text-sm md:text-lg">
+        {value}
+      </div>
     </div>
   );
 }
@@ -191,6 +222,17 @@ function formatDistanceDelta(distanceMeters: number) {
   const sign = distanceMeters >= 0 ? "+" : "-";
 
   return `${sign}${formatDistance(Math.abs(distanceMeters))}`;
+}
+
+function formatTrainingWeekParam(weekStartAt: Date) {
+  const brisbaneUtcOffsetHours = 10;
+  const millisecondsPerHour = 60 * 60 * 1000;
+  const brisbaneTime = new Date(
+    new Date(weekStartAt).getTime() +
+      brisbaneUtcOffsetHours * millisecondsPerHour,
+  );
+
+  return brisbaneTime.toISOString().slice(0, 10);
 }
 
 export { WeeklyTrainingSummaryList };
