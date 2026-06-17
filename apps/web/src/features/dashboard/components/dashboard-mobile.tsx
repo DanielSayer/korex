@@ -6,7 +6,6 @@ import type {
   RecentActivity,
   TrainingStreak,
 } from "@korex/api/modules/activities/activities.types";
-import { useQueries } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { addDays, format, isSameDay } from "date-fns";
 import {
@@ -25,7 +24,6 @@ import {
   formatDistanceValue,
   formatDurationClock,
 } from "@/utils/formatters";
-import { orpc } from "@/utils/orpc";
 import { DashboardHeader } from "./dashboard-header";
 
 type DashboardMobileProps = {
@@ -35,6 +33,10 @@ type DashboardMobileProps = {
   onSync: () => void;
   recentRuns: RecentActivity[];
   recentRunsLoading: boolean;
+  currentWeek?: CurrentTrainingWeekQualifyingActivities;
+  streak?: TrainingStreak | null;
+  streakHasError: boolean;
+  streakLoading: boolean;
   thisWeek?: DashboardThisWeek;
   weeklyDistance?: DashboardWeeklyDistance;
 };
@@ -46,6 +48,10 @@ function DashboardMobile({
   onSync,
   recentRuns,
   recentRunsLoading,
+  currentWeek,
+  streak,
+  streakHasError,
+  streakLoading,
   thisWeek,
   weeklyDistance,
 }: DashboardMobileProps) {
@@ -67,7 +73,12 @@ function DashboardMobile({
         thisWeek={thisWeek}
         weeklyDistance={weeklyDistance}
       />
-      <CompactTrainingStreak />
+      <CompactTrainingStreak
+        currentWeek={currentWeek}
+        isError={streakHasError}
+        isLoading={streakLoading}
+        streak={streak}
+      />
       <CompactRecentActivityList
         isLoading={recentRunsLoading}
         runs={recentRuns}
@@ -260,21 +271,24 @@ function CompactRecentActivityList({
   );
 }
 
-function CompactTrainingStreak() {
-  const [streakQuery, currentWeekQuery] = useQueries({
-    queries: [
-      orpc.activities.trainingStreak.queryOptions(),
-      orpc.activities.trainingStreakCurrentWeek.queryOptions(),
-    ],
-  });
-
-  if (streakQuery.isPending || currentWeekQuery.isPending) {
+function CompactTrainingStreak({
+  currentWeek,
+  isError,
+  isLoading,
+  streak,
+}: {
+  currentWeek?: CurrentTrainingWeekQualifyingActivities;
+  isError: boolean;
+  isLoading: boolean;
+  streak?: TrainingStreak | null;
+}) {
+  if (isLoading) {
     return (
       <section className="h-20 animate-pulse rounded-xl border border-border/70 bg-card" />
     );
   }
 
-  if (streakQuery.isError || currentWeekQuery.isError) {
+  if (isError || !currentWeek) {
     return (
       <ErrorMessage
         message="Could not load your training streak."
@@ -285,8 +299,8 @@ function CompactTrainingStreak() {
 
   return (
     <CompactTrainingStreakView
-      currentWeek={currentWeekQuery.data}
-      streak={streakQuery.data}
+      currentWeek={currentWeek}
+      streak={streak ?? null}
     />
   );
 }

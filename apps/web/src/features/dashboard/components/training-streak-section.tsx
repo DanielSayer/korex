@@ -1,21 +1,27 @@
-import { useQueries } from "@tanstack/react-query";
+import type {
+  CurrentTrainingWeekQualifyingActivities,
+  TrainingStreak,
+} from "@korex/api/modules/activities/activities.types";
 import { ErrorMessage } from "@/components/error-message";
-import { orpc } from "@/utils/orpc";
 import { TrainingStreakSkeleton } from "./training-streak-skeleton";
 import { TrainingStreakWidget } from "./training-streak-widget";
 
-function TrainingStreakSection() {
-  const [streakQuery, currentWeekQuery] = useQueries({
-    queries: [
-      orpc.activities.trainingStreak.queryOptions(),
-      orpc.activities.trainingStreakCurrentWeek.queryOptions(),
-    ],
-  });
-  if (streakQuery.isPending || currentWeekQuery.isPending) {
+function TrainingStreakSection({
+  currentWeek,
+  isError,
+  isLoading,
+  streak,
+}: {
+  currentWeek?: CurrentTrainingWeekQualifyingActivities;
+  isError: boolean;
+  isLoading: boolean;
+  streak?: TrainingStreak | null;
+}) {
+  if (isLoading) {
     return <TrainingStreakSkeleton />;
   }
 
-  if (streakQuery.isError || currentWeekQuery.isError) {
+  if (isError || !currentWeek) {
     return (
       <ErrorMessage
         message="Could not load your training streak."
@@ -25,10 +31,7 @@ function TrainingStreakSection() {
   }
 
   return (
-    <TrainingStreakWidget
-      currentWeek={currentWeekQuery.data}
-      streak={streakQuery.data}
-    />
+    <TrainingStreakWidget currentWeek={currentWeek} streak={streak ?? null} />
   );
 }
 

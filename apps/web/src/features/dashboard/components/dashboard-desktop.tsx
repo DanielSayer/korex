@@ -1,7 +1,9 @@
 import type {
+  CurrentTrainingWeekQualifyingActivities,
   DashboardThisWeek,
   DashboardWeeklyDistance,
   RecentActivity,
+  TrainingStreak,
 } from "@korex/api/modules/activities/activities.types";
 import { ErrorMessage } from "@/components/error-message";
 import { TrainingGoalsDashboardCard } from "@/features/training-goals/components/training-goals-dashboard-card";
@@ -23,6 +25,10 @@ type DashboardDesktopProps = {
   onSync: () => void;
   recentRuns: RecentActivity[];
   recentRunsLoading: boolean;
+  currentWeek?: CurrentTrainingWeekQualifyingActivities;
+  streak?: TrainingStreak | null;
+  streakHasError: boolean;
+  streakLoading: boolean;
   thisWeek?: DashboardThisWeek;
   weeklyDistance?: DashboardWeeklyDistance;
 };
@@ -34,6 +40,10 @@ function DashboardDesktop({
   onSync,
   recentRuns,
   recentRunsLoading,
+  currentWeek,
+  streak,
+  streakHasError,
+  streakLoading,
   thisWeek,
   weeklyDistance,
 }: DashboardDesktopProps) {
@@ -76,7 +86,12 @@ function DashboardDesktop({
             />
           </div>
           <div className="relative z-10 grid w-full max-w-110 gap-5 self-end justify-self-end">
-            <TrainingStreakSection />
+            <TrainingStreakSection
+              currentWeek={currentWeek}
+              isError={streakHasError}
+              isLoading={streakLoading}
+              streak={streak}
+            />
             <WeeklyDistanceSection weeklyDistance={weeklyDistance} />
           </div>
         </div>
