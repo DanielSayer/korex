@@ -11,9 +11,9 @@ export const Route = createLazyFileRoute("/auth/sign-up")({
 function RouteComponent() {
   const [step, setStep] = useState(0);
   const authImages = [
-    "/auth/auth-signup-profile-v2.webp",
-    "/auth/auth-signup-goals-v2.webp",
-    "/auth/auth-signup-route-v2.webp",
+    "/auth/auth-signup-profile.png",
+    "/auth/auth-signup-goals.png",
+    "/auth/auth-signup-route.png",
   ] as const;
 
   return (
