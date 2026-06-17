@@ -176,17 +176,11 @@ function MobileAppLayout() {
   const location = useLocation();
   const activeTab = getActiveMobileTab(location.pathname);
   const hideBottomNav = shouldHideMobileBottomNav(location.pathname);
-  const isDashboard = location.pathname === "/dashboard";
 
   return (
     <div className="flex h-svh min-h-0 flex-col overflow-hidden bg-background">
       <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div
-          className={cn(
-            "mx-auto w-full",
-            isDashboard ? "max-w-none" : "max-w-7xl p-4",
-          )}
-        >
+        <div className="mx-auto w-full max-w-7xl">
           <Outlet />
         </div>
       </main>

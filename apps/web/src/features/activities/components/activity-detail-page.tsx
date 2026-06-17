@@ -130,7 +130,7 @@ function ActivityDetailMobileView({
   );
 
   return (
-    <div className="-m-4 bg-background text-foreground">
+    <div className="bg-background text-foreground">
       <MobileActivityTopChrome activity={summary.activity} />
       <section className="h-92 min-h-0">
         <ActivityRouteMap
@@ -226,7 +226,7 @@ function MobileActivitySummaryPanel({
   ];
 
   return (
-    <section className="rounded-t-xl bg-card px-4 pt-5 pb-4 text-card-foreground shadow-lg">
+    <section className="rounded-t-xl bg-card px-3 pt-5 pb-4 text-card-foreground shadow-lg">
       <div className="mb-5">
         <div className="mt-4 flex items-end gap-2">
           <span className="font-semibold text-6xl tabular-nums leading-none">
@@ -311,7 +311,7 @@ function MobileActivitySection({
   title?: string;
 }) {
   return (
-    <section className="border-border border-t px-4 py-5">
+    <section className="border-border border-t px-3 py-5">
       {title ? (
         <h2 className="mb-3 font-semibold text-lg uppercase tracking-tight">
           {title}
