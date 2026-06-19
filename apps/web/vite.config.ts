@@ -21,6 +21,9 @@ export default defineConfig({
   resolve: {
     tsconfigPaths: true,
   },
+  preview: {
+    allowedHosts: ["korex-frontend-production.up.railway.app"],
+  },
   plugins: [
     tailwindcss(),
     tanstackRouter({
