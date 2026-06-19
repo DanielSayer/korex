@@ -17,6 +17,7 @@ export default defineConfig({
           name: "integration",
           globals: true,
           globalSetup: ["./src/setup/integration/global-setup.ts"],
+          hookTimeout: 30000,
           include: ["src/**/*.integration.test.ts"],
           pool: "forks",
           setupFiles: [

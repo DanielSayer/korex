@@ -41,6 +41,10 @@ export const replaceHeartRateZonesInput = z
       const previousZone = sortedZones[index - 1];
       const zone = sortedZones[index];
 
+      if (!previousZone || !zone) {
+        continue;
+      }
+
       if (previousZone.maxBpm === null) {
         context.addIssue({
           code: "custom",

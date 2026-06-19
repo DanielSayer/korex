@@ -62,8 +62,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 ## Rules / Codebase info
 
-This repo uses bun as the default package manager. Do not use other package managers.
-When running package scripts, include `run` in the command. For example, use `bun run test` instead of `bun test`, because `bun test` invokes Bun's native test runner and bypasses the repo's Vitest setup.
+This repo uses pnpm as the default package manager. Do not use other package managers.
+When running package scripts, include `run` in the command. For example, use `pnpm run test`.
 
 Never write your own migrations.
 

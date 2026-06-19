@@ -382,16 +382,27 @@ function readTrainingNoteTagName(name: string) {
 }
 
 function toTrainingNoteTagError(error: unknown) {
-  if (
-    error &&
-    typeof error === "object" &&
-    "constraint" in error &&
-    error.constraint === "training_note_tags_user_name_lower_idx"
-  ) {
+  if (readErrorConstraint(error) === "training_note_tags_user_name_lower_idx") {
     return new TrainingNoteTagError(
       "A Training Note Tag with this name already exists.",
     );
   }
 
   return error;
+}
+
+function readErrorConstraint(error: unknown): unknown {
+  if (!error || typeof error !== "object") {
+    return undefined;
+  }
+
+  if ("constraint" in error) {
+    return error.constraint;
+  }
+
+  if ("cause" in error) {
+    return readErrorConstraint(error.cause);
+  }
+
+  return undefined;
 }

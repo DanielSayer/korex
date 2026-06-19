@@ -14,7 +14,7 @@
   },
   "devDependencies": {
     "@korex/config": "workspace:*",
-    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
     "typescript": "catalog:"
   }
 }

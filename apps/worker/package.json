@@ -5,18 +5,20 @@
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc -b",
-    "dev": "bun run src/index.ts",
-    "enqueue:weekly-training-summaries": "bun run src/enqueue-weekly-training-summaries.ts",
-    "start": "bun run dist/index.mjs"
+    "dev": "tsx src/index.ts",
+    "enqueue:weekly-training-summaries": "tsx src/enqueue-weekly-training-summaries.ts",
+    "start": "node dist/index.mjs"
   },
   "dependencies": {
     "@korex/api": "workspace:*",
-    "dotenv": "catalog:"
+    "dotenv": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
     "@korex/config": "workspace:*",
-    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
     "tsdown": "^0.21.9",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   }
 }

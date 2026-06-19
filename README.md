@@ -10,7 +10,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Shared UI package** - shadcn/ui primitives live in `packages/ui`
 - **Hono** - Lightweight, performant server framework
 - **oRPC** - End-to-end type-safe APIs with OpenAPI integration
-- **Bun** - Runtime environment
+- **Node.js** - Runtime environment
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
 - **Authentication** - Better-Auth
@@ -23,7 +23,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 First, install the dependencies:
 
 ```bash
-bun install
+pnpm install
 ```
 
 ## Database Setup
@@ -36,13 +36,13 @@ This project uses PostgreSQL with Drizzle ORM.
 3. Apply the schema to your database:
 
 ```bash
-bun run db:push
+pnpm run db:push
 ```
 
 Then, run the development server:
 
 ```bash
-bun run dev
+pnpm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173) in your browser to see the web application.
@@ -76,7 +76,7 @@ If you want to add app-specific blocks instead of shared primitives, run the sha
 
 ## Git Hooks and Formatting
 
-- Format and lint fix: `bun run check`
+- Format and lint fix: `pnpm run check`
 
 ## Project Structure
 
@@ -94,14 +94,14 @@ korex/
 
 ## Available Scripts
 
-- `bun run dev`: Start all applications in development mode
-- `bun run build`: Build all applications
-- `bun run dev:web`: Start only the web application
-- `bun run dev:server`: Start only the server
-- `bun run check-types`: Check TypeScript types across all apps
-- `bun run db:push`: Push schema changes to database
-- `bun run db:generate`: Generate database client/types
-- `bun run db:migrate`: Run database migrations
-- `bun run db:studio`: Open database studio UI
-- `bun run check`: Run Biome formatting and linting
-- `cd apps/web && bun run generate-pwa-assets`: Generate PWA assets
+- `pnpm run dev`: Start all applications in development mode
+- `pnpm run build`: Build all applications
+- `pnpm run dev:web`: Start only the web application
+- `pnpm run dev:server`: Start only the server
+- `pnpm run check-types`: Check TypeScript types across all apps
+- `pnpm run db:push`: Push schema changes to database
+- `pnpm run db:generate`: Generate database client/types
+- `pnpm run db:migrate`: Run database migrations
+- `pnpm run db:studio`: Open database studio UI
+- `pnpm run check`: Run Biome formatting and linting
+- `cd apps/web && pnpm run generate-pwa-assets`: Generate PWA assets

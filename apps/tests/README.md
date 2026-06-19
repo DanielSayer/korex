@@ -1,6 +1,6 @@
 # Tests
 
-`bun run test` runs unit and integration tests through Vitest.
+`pnpm run test` runs unit and integration tests through Vitest.
 
 ## Conventions
 
@@ -84,5 +84,5 @@ If a test process is interrupted, remove stale integration containers and volume
 with:
 
 ```sh
-bun run test:integration:clean
+pnpm run test:integration:clean
 ```

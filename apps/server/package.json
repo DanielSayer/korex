@@ -5,25 +5,27 @@
   "scripts": {
     "build": "tsdown",
     "check-types": "tsc -b",
-    "compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
-    "dev": "bun run --hot src/index.ts",
-    "start": "bun run dist/index.mjs"
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.mjs"
   },
   "dependencies": {
     "@korex/api": "workspace:*",
     "@korex/auth": "workspace:*",
     "@korex/env": "workspace:*",
+    "@hono/node-server": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
     "dotenv": "catalog:",
     "hono": "catalog:",
+    "pg": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@korex/config": "workspace:*",
-    "@types/bun": "catalog:",
+    "@types/node": "catalog:",
     "tsdown": "^0.21.9",
+    "tsx": "catalog:",
     "typescript": "catalog:"
   }
 }

@@ -37,7 +37,7 @@ async function createDatabase(name: string) {
 }
 
 async function pushSchema(url: string) {
-  await run("bun", ["run", "db:push"], {
+  await run("pnpm", ["run", "db:push"], {
     cwd: dbPackageRoot,
     env: {
       ...process.env,

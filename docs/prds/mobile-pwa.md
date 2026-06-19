@@ -100,7 +100,7 @@ The first PWA phase focuses on installability, mobile UX, and graceful online-on
 - True offline data support, offline writes, and conflict resolution are deferred from v1.
 - The app should show graceful online-only/offline-required states rather than pretending to support offline workflows.
 - Do not introduce migrations for this PRD unless a future story separately proves a schema need; none is expected from the current scope.
-- Use Bun commands with `bun run` for package scripts.
+- Use pnpm commands with `pnpm run` for package scripts.
 - Do not run the dev server as part of implementation work; assume the user runs it locally.
 
 ## Testing Decisions

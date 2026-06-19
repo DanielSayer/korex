@@ -1,3 +1,4 @@
+import { serve } from "@hono/node-server";
 import { createContext } from "@korex/api/context";
 import {
   ActivityRouteHeatmapTileInputError,
@@ -121,6 +122,16 @@ app.use("/*", async (c, next) => {
 app.get("/", (c) => {
   return c.text("OK");
 });
+
+const port = Number(process.env.PORT ?? 3000);
+
+serve({
+  fetch: app.fetch,
+  hostname: "0.0.0.0",
+  port,
+});
+
+console.info(`Server listening on http://localhost:${port}`);
 
 export default app;
 
