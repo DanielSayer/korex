@@ -122,16 +122,6 @@ app.get("/", (c) => {
   return c.text("OK");
 });
 
-const port = Number(process.env.PORT ?? 3000);
-
-Bun.serve({
-  fetch: app.fetch,
-  hostname: "0.0.0.0",
-  port,
-});
-
-console.info(`Server listening on port ${port}`);
-
 export default app;
 
 function routeHeatmapTileResponse(tile: Buffer) {

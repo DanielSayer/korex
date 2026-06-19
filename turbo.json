@@ -22,15 +22,13 @@
       "persistent": true
     },
     "db:push": {
-      "cache": false,
-      "passThroughEnv": ["DATABASE_URL"]
+      "cache": false
     },
     "db:generate": {
       "cache": false
     },
     "db:migrate": {
       "cache": false,
-      "passThroughEnv": ["DATABASE_URL"],
       "persistent": true
     },
     "db:studio": {
