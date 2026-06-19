@@ -1,6 +1,7 @@
 import {
   listHeartRateZones,
   replaceHeartRateZones,
+  seedHeartRateZonesIfEmpty,
 } from "@korex/api/modules/heart-rate-zones/heart-rate-zones.repository";
 import { describe, expect, it } from "vitest";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -84,5 +85,67 @@ describe("Heart Rate Zones repository", () => {
       }),
     ]);
     expect(zones.map((zone) => zone.id)).not.toContain(existing.id);
+  });
+
+  it("seeds a user's Heart Rate Zones when none exist", async () => {
+    const zones = await seedHeartRateZonesIfEmpty({
+      userId: userDataExtensions.HughJass.id,
+      zones: [
+        {
+          name: "Recovery",
+          position: 1,
+          range: { maxBpm: 153, minBpm: 0 },
+        },
+        {
+          name: "Aerobic",
+          position: 2,
+          range: { maxBpm: 170, minBpm: 153 },
+        },
+      ],
+    });
+
+    expect(zones).toEqual([
+      expect.objectContaining({
+        maxBpm: 153,
+        minBpm: 0,
+        name: "Recovery",
+        position: 1,
+      }),
+      expect.objectContaining({
+        maxBpm: 170,
+        minBpm: 153,
+        name: "Aerobic",
+        position: 2,
+      }),
+    ]);
+  });
+
+  it("does not overwrite existing user Heart Rate Zones when seeding", async () => {
+    const existing = HeartRateZoneBuilder.initWithUser(
+      userDataExtensions.HughJass.id,
+    ).build();
+
+    await DataSeedAsync.withHeartRateZones(existing).seedAsync();
+
+    const zones = await seedHeartRateZonesIfEmpty({
+      userId: userDataExtensions.HughJass.id,
+      zones: [
+        {
+          name: "Provider Recovery",
+          position: 1,
+          range: { maxBpm: 153, minBpm: 0 },
+        },
+      ],
+    });
+
+    expect(zones).toEqual([
+      {
+        id: existing.id,
+        maxBpm: existing.maxBpm,
+        minBpm: existing.minBpm,
+        name: existing.name,
+        position: existing.position,
+      },
+    ]);
   });
 });

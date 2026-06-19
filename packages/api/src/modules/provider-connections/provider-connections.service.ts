@@ -4,6 +4,8 @@ import {
 } from "@korex/integrations/intervals-icu/client";
 import { INTERVALS_ICU_BASIC_AUTH_USERNAME } from "@korex/integrations/intervals-icu/constants";
 import { Effect } from "effect";
+import { toHeartRateZoneSeedInputsFromIntervalsIcuProfile } from "../heart-rate-zones/anti-corruption/intervals-icu-profile.acl";
+import { seedHeartRateZonesIfEmpty } from "../heart-rate-zones/heart-rate-zones.repository";
 import {
   InvalidProviderCredentialError,
   ProviderUnavailableError,
@@ -29,7 +31,7 @@ export function connectIntervalsIcu({
       .pipe(Effect.mapError(mapIntervalsIcuClientError));
     const encryptedApiKey = yield* encryptProviderSecret(apiKey);
 
-    return yield* Effect.promise(() =>
+    const providerConnection = yield* Effect.promise(() =>
       upsertIntervalsIcuProviderConnection({
         authSecretEncrypted: encryptedApiKey,
         authUsername: INTERVALS_ICU_BASIC_AUTH_USERNAME,
@@ -39,6 +41,17 @@ export function connectIntervalsIcu({
         userId,
       }),
     );
+
+    yield* Effect.promise(() =>
+      seedHeartRateZonesIfEmpty({
+        userId,
+        zones: toHeartRateZoneSeedInputsFromIntervalsIcuProfile(
+          athleteProfile,
+        ),
+      }),
+    );
+
+    return providerConnection;
   });
 }
 

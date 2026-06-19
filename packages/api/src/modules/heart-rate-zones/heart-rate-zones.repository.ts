@@ -2,6 +2,7 @@ import { db, heartRateZones } from "@korex/db";
 import { asc, eq } from "drizzle-orm";
 import type {
   HeartRateZone,
+  HeartRateZoneSeedInput,
   HeartRateZoneWriteInput,
 } from "./heart-rate-zones.types";
 
@@ -48,6 +49,41 @@ export async function replaceHeartRateZones({
       zones.map((zone) => ({
         maxBpm: zone.maxBpm,
         minBpm: zone.minBpm,
+        name: zone.name,
+        position: zone.position,
+        userId,
+      })),
+    );
+  });
+
+  return listHeartRateZones({ userId });
+}
+
+export async function seedHeartRateZonesIfEmpty({
+  userId,
+  zones,
+}: {
+  userId: string;
+  zones: HeartRateZoneSeedInput[];
+}): Promise<HeartRateZone[]> {
+  if (zones.length === 0) {
+    return listHeartRateZones({ userId });
+  }
+
+  await db.transaction(async (tx) => {
+    const existingZones = await listHeartRateZones({
+      database: tx,
+      userId,
+    });
+
+    if (existingZones.length > 0) {
+      return;
+    }
+
+    await tx.insert(heartRateZones).values(
+      zones.map((zone) => ({
+        maxBpm: zone.range.maxBpm,
+        minBpm: zone.range.minBpm,
         name: zone.name,
         position: zone.position,
         userId,
