@@ -4,7 +4,7 @@ import { runActivityRouteHeatmapWorkerOnce } from "@korex/api/modules/activities
 import {
   activities,
   activityRouteHeatmapCells,
-  activityRouteHeatmapContributions,
+  activityRouteHeatmapContributionSets,
   db,
 } from "@korex/db";
 import { eq } from "drizzle-orm";
@@ -48,12 +48,17 @@ describe("activity route heatmap workflow", () => {
 
     const firstResult = await runWorkflow();
 
-    const firstContributions = await db
+    const firstContributionSets = await db
       .select()
-      .from(activityRouteHeatmapContributions);
+      .from(activityRouteHeatmapContributionSets);
     const firstCells = await db.select().from(activityRouteHeatmapCells);
     expect(firstResult).toEqual({ processed: 2 });
-    expect(firstContributions.length).toBeGreaterThan(0);
+    expect(firstContributionSets).toHaveLength(24);
+    expect(
+      firstContributionSets.every(
+        (contributionSet) => contributionSet.cellKeys.length > 0,
+      ),
+    ).toBe(true);
     expect(firstCells.length).toBeGreaterThan(0);
     expect(firstCells.every((cell) => cell.activityCount === 2)).toBe(true);
 
@@ -67,15 +72,15 @@ describe("activity route heatmap workflow", () => {
 
     const secondResult = await runWorkflow();
 
-    const secondActivityContributions = await db
+    const secondActivityContributionSets = await db
       .select()
-      .from(activityRouteHeatmapContributions)
+      .from(activityRouteHeatmapContributionSets)
       .where(
-        eq(activityRouteHeatmapContributions.activityId, secondActivity.id),
+        eq(activityRouteHeatmapContributionSets.activityId, secondActivity.id),
       );
     const secondCells = await db.select().from(activityRouteHeatmapCells);
     expect(secondResult).toEqual({ processed: 1 });
-    expect(secondActivityContributions).toEqual([]);
+    expect(secondActivityContributionSets).toEqual([]);
     expect(secondCells.length).toBeGreaterThan(0);
     expect(secondCells.every((cell) => cell.activityCount === 1)).toBe(true);
 
@@ -89,12 +94,12 @@ describe("activity route heatmap workflow", () => {
 
     const thirdResult = await runWorkflow();
 
-    const finalContributions = await db
+    const finalContributionSets = await db
       .select()
-      .from(activityRouteHeatmapContributions);
+      .from(activityRouteHeatmapContributionSets);
     const finalCells = await db.select().from(activityRouteHeatmapCells);
     expect(thirdResult).toEqual({ processed: 1 });
-    expect(finalContributions).toEqual([]);
+    expect(finalContributionSets).toEqual([]);
     expect(finalCells).toEqual([]);
   });
 });
