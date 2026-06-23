@@ -3,6 +3,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
+    "backfill:route-heatmap": "tsx src/backfill-activity-route-heatmap.ts",
     "build": "tsdown",
     "check-types": "tsc -b",
     "dev": "tsx src/index.ts",
@@ -11,7 +12,10 @@
   },
   "dependencies": {
     "@korex/api": "workspace:*",
+    "@korex/db": "workspace:*",
     "dotenv": "catalog:",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
     "pg": "catalog:"
   },
   "devDependencies": {

@@ -8,6 +8,13 @@
       "when": 1781846302376,
       "tag": "0000_sloppy_yellowjacket",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781917276223,
+      "tag": "0001_pack_heatmap_contributions",
+      "breakpoints": true
     }
   ]
 }

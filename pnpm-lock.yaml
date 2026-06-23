@@ -312,9 +312,18 @@ importers:
       '@korex/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@korex/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       dotenv:
         specifier: 'catalog:'
         version: 17.4.2
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(kysely@0.28.17)(pg@8.22.0)
+      effect:
+        specifier: 'catalog:'
+        version: 3.21.4
       pg:
         specifier: 'catalog:'
         version: 8.22.0

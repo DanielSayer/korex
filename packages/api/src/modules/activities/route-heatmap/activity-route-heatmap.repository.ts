@@ -2,7 +2,7 @@ import {
   activities,
   activityMaps,
   activityRouteHeatmapCells,
-  activityRouteHeatmapContributions,
+  activityRouteHeatmapContributionSets,
   db,
 } from "@korex/db";
 import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
@@ -11,6 +11,8 @@ import type { ActivityRouteHeatmapContributionInput } from "./activity-route-hea
 import {
   type ActivityRouteHeatmapCellCoordinate,
   calculateActivityRouteHeatmapCellDeltas,
+  packActivityRouteHeatmapContributionSets,
+  unpackActivityRouteHeatmapContributionSets,
 } from "./activity-route-heatmap-projection";
 
 type ActivityDatabase = Pick<
@@ -80,40 +82,39 @@ export async function replaceActivityRouteHeatmapContributions({
   database?: ActivityDatabase;
   userId: string;
 }) {
+  const contributionSets =
+    packActivityRouteHeatmapContributionSets(contributions);
+
   await database.transaction(async (tx) => {
-    const existingContributions = await tx
+    const existingContributionSets = await tx
       .select({
-        cellX: activityRouteHeatmapContributions.cellX,
-        cellY: activityRouteHeatmapContributions.cellY,
-        tileX: activityRouteHeatmapContributions.tileX,
-        tileY: activityRouteHeatmapContributions.tileY,
-        zoom: activityRouteHeatmapContributions.zoom,
+        cellKeys: activityRouteHeatmapContributionSets.cellKeys,
+        zoom: activityRouteHeatmapContributionSets.zoom,
       })
-      .from(activityRouteHeatmapContributions)
-      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+      .from(activityRouteHeatmapContributionSets)
+      .where(eq(activityRouteHeatmapContributionSets.activityId, activityId));
 
     await tx
-      .delete(activityRouteHeatmapContributions)
-      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+      .delete(activityRouteHeatmapContributionSets)
+      .where(eq(activityRouteHeatmapContributionSets.activityId, activityId));
 
-    if (contributions.length > 0) {
-      await tx.insert(activityRouteHeatmapContributions).values(
-        contributions.map((contribution) => ({
+    if (contributionSets.length > 0) {
+      await tx.insert(activityRouteHeatmapContributionSets).values(
+        contributionSets.map((contributionSet) => ({
           activityId,
           activityStartAt,
-          cellX: contribution.cellX,
-          cellY: contribution.cellY,
-          tileX: contribution.tileX,
-          tileY: contribution.tileY,
+          cellKeys: contributionSet.cellKeys,
           userId,
-          zoom: contribution.zoom,
+          zoom: contributionSet.zoom,
         })),
       );
     }
 
     await applyActivityRouteHeatmapCellDeltas({
       contributions,
-      existingContributions,
+      existingContributions: unpackActivityRouteHeatmapContributionSets(
+        existingContributionSets,
+      ),
       tx,
       userId,
     });
@@ -128,33 +129,32 @@ export async function clearActivityRouteHeatmapContributions({
   database?: ActivityDatabase;
 }) {
   await database.transaction(async (tx) => {
-    const existingContributions = await tx
+    const existingContributionSets = await tx
       .select({
-        cellX: activityRouteHeatmapContributions.cellX,
-        cellY: activityRouteHeatmapContributions.cellY,
-        tileX: activityRouteHeatmapContributions.tileX,
-        tileY: activityRouteHeatmapContributions.tileY,
-        userId: activityRouteHeatmapContributions.userId,
-        zoom: activityRouteHeatmapContributions.zoom,
+        cellKeys: activityRouteHeatmapContributionSets.cellKeys,
+        userId: activityRouteHeatmapContributionSets.userId,
+        zoom: activityRouteHeatmapContributionSets.zoom,
       })
-      .from(activityRouteHeatmapContributions)
-      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+      .from(activityRouteHeatmapContributionSets)
+      .where(eq(activityRouteHeatmapContributionSets.activityId, activityId));
 
     await tx
-      .delete(activityRouteHeatmapContributions)
-      .where(eq(activityRouteHeatmapContributions.activityId, activityId));
+      .delete(activityRouteHeatmapContributionSets)
+      .where(eq(activityRouteHeatmapContributionSets.activityId, activityId));
 
     const contributionsByUser = new Map<
       string,
       ActivityRouteHeatmapCellCoordinate[]
     >();
 
-    for (const contribution of existingContributions) {
+    for (const contributionSet of existingContributionSets) {
       const userContributions =
-        contributionsByUser.get(contribution.userId) ?? [];
+        contributionsByUser.get(contributionSet.userId) ?? [];
 
-      userContributions.push(contribution);
-      contributionsByUser.set(contribution.userId, userContributions);
+      userContributions.push(
+        ...unpackActivityRouteHeatmapContributionSets([contributionSet]),
+      );
+      contributionsByUser.set(contributionSet.userId, userContributions);
     }
 
     for (const [userId, userContributions] of contributionsByUser) {
@@ -254,55 +254,63 @@ async function applyActivityRouteHeatmapCellDeltas({
     existingContributions,
   });
 
-  for (const contribution of deltas) {
-    if (contribution.delta > 0) {
-      await tx
-        .insert(activityRouteHeatmapCells)
-        .values({
-          activityCount: contribution.delta,
-          cellX: contribution.cellX,
-          cellY: contribution.cellY,
-          tileX: contribution.tileX,
-          tileY: contribution.tileY,
-          userId,
-          zoom: contribution.zoom,
-        })
-        .onConflictDoUpdate({
-          target: [
-            activityRouteHeatmapCells.userId,
-            activityRouteHeatmapCells.zoom,
-            activityRouteHeatmapCells.tileX,
-            activityRouteHeatmapCells.tileY,
-            activityRouteHeatmapCells.cellX,
-            activityRouteHeatmapCells.cellY,
-          ],
-          set: {
-            activityCount: sql`${activityRouteHeatmapCells.activityCount} + ${contribution.delta}`,
-            updatedAt: new Date(),
-          },
-        });
-      continue;
-    }
-
-    await tx
-      .update(activityRouteHeatmapCells)
-      .set({
-        activityCount: sql`${activityRouteHeatmapCells.activityCount} + ${contribution.delta}`,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(activityRouteHeatmapCells.userId, userId),
-          eq(activityRouteHeatmapCells.zoom, contribution.zoom),
-          eq(activityRouteHeatmapCells.tileX, contribution.tileX),
-          eq(activityRouteHeatmapCells.tileY, contribution.tileY),
-          eq(activityRouteHeatmapCells.cellX, contribution.cellX),
-          eq(activityRouteHeatmapCells.cellY, contribution.cellY),
-        ),
-      );
+  if (deltas.length === 0) {
+    return;
   }
+
+  const serializedDeltas = JSON.stringify(
+    deltas.map(({ cellX, cellY, delta, tileX, tileY, zoom }) => ({
+      activity_count: delta,
+      cell_x: cellX,
+      cell_y: cellY,
+      tile_x: tileX,
+      tile_y: tileY,
+      zoom,
+    })),
+  );
+
+  await tx.execute(sql`
+    INSERT INTO activity_route_heatmap_cells (
+      user_id,
+      zoom,
+      tile_x,
+      tile_y,
+      cell_x,
+      cell_y,
+      activity_count,
+      created_at,
+      updated_at
+    )
+    SELECT
+      ${userId},
+      delta.zoom,
+      delta.tile_x,
+      delta.tile_y,
+      delta.cell_x,
+      delta.cell_y,
+      delta.activity_count,
+      NOW(),
+      NOW()
+    FROM JSONB_TO_RECORDSET(${serializedDeltas}::jsonb) AS delta(
+      zoom integer,
+      tile_x integer,
+      tile_y integer,
+      cell_x integer,
+      cell_y integer,
+      activity_count integer
+    )
+    ON CONFLICT (user_id, zoom, tile_x, tile_y, cell_x, cell_y)
+    DO UPDATE SET
+      activity_count = activity_route_heatmap_cells.activity_count + EXCLUDED.activity_count,
+      updated_at = NOW()
+  `);
 
   await tx
     .delete(activityRouteHeatmapCells)
-    .where(lte(activityRouteHeatmapCells.activityCount, 0));
+    .where(
+      and(
+        eq(activityRouteHeatmapCells.userId, userId),
+        lte(activityRouteHeatmapCells.activityCount, 0),
+      ),
+    );
 }

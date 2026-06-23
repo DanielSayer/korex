@@ -2,7 +2,7 @@ import {
   activities,
   activityMaps,
   activityRouteHeatmapCalculationJobs,
-  activityRouteHeatmapContributions,
+  activityRouteHeatmapContributionSets,
   db,
 } from "@korex/db";
 import { and, eq, isNull } from "drizzle-orm";
@@ -73,13 +73,13 @@ export async function enqueueMissingActivityRouteHeatmapCalculations({
     .from(activities)
     .innerJoin(activityMaps, eq(activityMaps.activityId, activities.id))
     .leftJoin(
-      activityRouteHeatmapContributions,
-      eq(activityRouteHeatmapContributions.activityId, activities.id),
+      activityRouteHeatmapContributionSets,
+      eq(activityRouteHeatmapContributionSets.activityId, activities.id),
     )
     .where(
       and(
         eq(activities.sportType, "run"),
-        isNull(activityRouteHeatmapContributions.id),
+        isNull(activityRouteHeatmapContributionSets.activityId),
       ),
     )
     .limit(batchSize);

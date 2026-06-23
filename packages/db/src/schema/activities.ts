@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  bigint,
   doublePrecision,
   index,
   integer,
@@ -154,10 +155,9 @@ export const activityMaps = pgTable(
   ],
 );
 
-export const activityRouteHeatmapContributions = pgTable(
+export const activityRouteHeatmapContributionSets = pgTable(
   "activity_route_heatmap_contributions",
   {
-    id: serial("id").primaryKey(),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -166,36 +166,16 @@ export const activityRouteHeatmapContributions = pgTable(
       .references(() => activities.id, { onDelete: "cascade" }),
     activityStartAt: timestamp("activity_start_at").notNull(),
     zoom: integer("zoom").notNull(),
-    tileX: integer("tile_x").notNull(),
-    tileY: integer("tile_y").notNull(),
-    cellX: integer("cell_x").notNull(),
-    cellY: integer("cell_y").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
-      .notNull(),
+    cellKeys: bigint("cell_keys", { mode: "number" }).array().notNull(),
   },
   (table) => [
-    uniqueIndex("activity_route_heatmap_activity_cell_idx").on(
-      table.activityId,
-      table.zoom,
-      table.tileX,
-      table.tileY,
-      table.cellX,
-      table.cellY,
-    ),
-    index("activity_route_heatmap_user_viewport_idx").on(
-      table.userId,
-      table.zoom,
-      table.tileX,
-      table.tileY,
-    ),
-    index("activity_route_heatmap_user_start_at_idx").on(
+    uniqueIndex(
+      "activity_route_heatmap_contribution_sets_activity_zoom_idx",
+    ).on(table.activityId, table.zoom),
+    index("activity_route_heatmap_contribution_sets_user_start_at_idx").on(
       table.userId,
       table.activityStartAt,
     ),
-    index("activity_route_heatmap_activity_id_idx").on(table.activityId),
   ],
 );
 
@@ -432,7 +412,7 @@ export const activitiesRelations = relations(activities, ({ many, one }) => ({
   bestEfforts: many(activityBestEfforts),
   heartRateZoneSnapshots: many(activityHeartRateZoneSnapshots),
   heartRateZoneTimes: many(activityHeartRateZoneTimes),
-  heatmapContributions: many(activityRouteHeatmapContributions),
+  heatmapContributionSets: many(activityRouteHeatmapContributionSets),
   laps: many(activityLaps),
   map: one(activityMaps),
   streams: many(activityStreams),
@@ -456,15 +436,15 @@ export const activityMapsRelations = relations(activityMaps, ({ one }) => ({
   }),
 }));
 
-export const activityRouteHeatmapContributionsRelations = relations(
-  activityRouteHeatmapContributions,
+export const activityRouteHeatmapContributionSetsRelations = relations(
+  activityRouteHeatmapContributionSets,
   ({ one }) => ({
     activity: one(activities, {
-      fields: [activityRouteHeatmapContributions.activityId],
+      fields: [activityRouteHeatmapContributionSets.activityId],
       references: [activities.id],
     }),
     user: one(user, {
-      fields: [activityRouteHeatmapContributions.userId],
+      fields: [activityRouteHeatmapContributionSets.userId],
       references: [user.id],
     }),
   }),

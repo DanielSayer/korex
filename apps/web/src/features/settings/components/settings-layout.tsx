@@ -2,6 +2,7 @@ import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import {
   BellIcon,
   ChevronLeftIcon,
+  CloudIcon,
   ClockIcon,
   MonitorIcon,
   PaletteIcon,
@@ -73,6 +74,12 @@ function MobileSettingsBackLink() {
 
 const settingsTabs = [
   {
+    description: "Provider connection health and recent sync activity.",
+    icon: CloudIcon,
+    label: "Connections",
+    to: "/settings/connections",
+  },
+  {
     description: "Account identity and profile details.",
     icon: UserIcon,
     label: "Profile",
@@ -97,13 +104,13 @@ const settingsTabs = [
     to: "/settings/training",
   },
   {
-    description: "Weekly Training Summary notification behavior.",
+    description: "Current notification availability.",
     icon: BellIcon,
     label: "Notifications",
     to: "/settings/notifications",
   },
   {
-    description: "Password and account security.",
+    description: "Current account access options.",
     icon: ShieldIcon,
     label: "Security",
     to: "/settings/security",

@@ -60,6 +60,10 @@ _Avoid_: Heat map, all-activity heatmap, route overlay
 A materialized spatial bucket showing that one run **Activity** passed through one area for **Activity Route Heatmap** display.
 _Avoid_: Activity route, heatmap map, raw heatmap point
 
+**Activity Route Heatmap Contribution Set**:
+The packed persistence representation of one run **Activity's** unique **Activity Route Heatmap Contributions** at one materialized zoom level.
+_Avoid_: Heatmap blob, route cache, contribution batch
+
 **Activity Route Heatmap Display Mode**:
 A presentation choice for an **Activity Route Heatmap**, initially either density display or visited display.
 _Avoid_: Binary heatmap, separate heatmap
@@ -265,7 +269,8 @@ _Avoid_: Shoe lifespan, mileage limit, max miles
 - The initial **Activity Route Heatmap** is private to the authenticated **User** whose run **Activities** produced it.
 - An **Activity Route Heatmap Contribution** belongs to exactly one run **Activity**.
 - An **Activity Route Heatmap Contribution** identifies one cell in a fixed 64 by 64 grid inside a slippy-map tile at one materialized zoom level.
-- An **Activity Route Heatmap Contribution** preserves the parent **Activity** start time so future heatmap date range filtering can avoid joining every contribution back to its **Activity**.
+- **Activity Route Heatmap Contributions** are persisted as one **Activity Route Heatmap Contribution Set** per **Activity** and materialized zoom level.
+- An **Activity Route Heatmap Contribution Set** preserves the parent **Activity** start time so future heatmap date range filtering can avoid joining every set back to its **Activity**.
 - Replacing an **Activity Map** for a run **Activity** replaces that **Activity's** **Activity Route Heatmap Contributions** as a set.
 - **Activity Route Heatmap Contributions** are calculated by a separate durable job after **Activity Map** replacement, not inside provider sync request or import transaction lifetimes.
 - **Activity Route Heatmap Contributions** are calculated from consecutive **Activity Map Coordinate** segments, not from isolated coordinate samples.

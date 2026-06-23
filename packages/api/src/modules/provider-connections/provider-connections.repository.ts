@@ -1,5 +1,5 @@
-import { db, providerConnections } from "@korex/db";
-import { and, eq } from "drizzle-orm";
+import { db, providerConnections, syncRuns } from "@korex/db";
+import { and, desc, eq } from "drizzle-orm";
 import type { Provider } from "./provider-session";
 
 type UpsertProviderConnectionInput = {
@@ -172,4 +172,59 @@ export async function markProviderConnectionSynced({
       updatedAt: new Date(),
     })
     .where(eq(providerConnections.id, connectionId));
+}
+
+export async function getProviderConnectionOverviewForUser(userId: string) {
+  const connection = await db
+    .select({
+      id: providerConnections.id,
+      lastSyncedAt: providerConnections.lastSyncedAt,
+      provider: providerConnections.provider,
+      providerUserId: providerConnections.providerUserId,
+      providerUserName: providerConnections.providerUserName,
+      status: providerConnections.status,
+    })
+    .from(providerConnections)
+    .where(eq(providerConnections.userId, userId))
+    .orderBy(desc(providerConnections.updatedAt))
+    .limit(1)
+    .then(([value]) => value ?? null);
+
+  const recentSyncRuns = await db
+    .select({
+      activitiesCreated: syncRuns.activitiesCreated,
+      activitiesSeen: syncRuns.activitiesSeen,
+      activitiesUpdated: syncRuns.activitiesUpdated,
+      errorMessage: syncRuns.errorMessage,
+      finishedAt: syncRuns.finishedAt,
+      id: syncRuns.id,
+      startedAt: syncRuns.startedAt,
+      status: syncRuns.status,
+      syncType: syncRuns.syncType,
+    })
+    .from(syncRuns)
+    .where(eq(syncRuns.userId, userId))
+    .orderBy(desc(syncRuns.startedAt))
+    .limit(5);
+
+  return { connection, recentSyncRuns };
+}
+
+export async function disconnectProviderConnectionForUser(userId: string) {
+  const [connection] = await db
+    .update(providerConnections)
+    .set({
+      disconnectedAt: new Date(),
+      status: "disconnected",
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(providerConnections.userId, userId),
+        eq(providerConnections.status, "active"),
+      ),
+    )
+    .returning({ id: providerConnections.id });
+
+  return connection ?? null;
 }

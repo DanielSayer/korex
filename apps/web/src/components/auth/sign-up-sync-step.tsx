@@ -2,9 +2,7 @@ import { Button } from "@korex/ui/components/button";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, CloudSyncIcon } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { LoadingProgress } from "@/components/loading-progress";
 import { orpc } from "@/utils/orpc";
 
 type SyncResult = {
@@ -12,19 +10,10 @@ type SyncResult = {
   status: string;
 };
 
-const syncLoadingMessages = [
-  "Fetching your runs",
-  "Reading workout history",
-  "Generating charts",
-  "Preparing your dashboard",
-];
-
 function SignUpSyncStep({
   onGoToDashboard,
-  onProgressChange,
 }: {
   onGoToDashboard: () => void;
-  onProgressChange?: (progress?: number) => void;
 }) {
   const initialSyncMutation = useMutation(
     orpc.syncs.initial.mutationOptions({
@@ -33,7 +22,6 @@ function SignUpSyncStep({
       },
       onSuccess: () => {
         toast.success("Sync complete");
-        onProgressChange?.(undefined);
       },
     }),
   );
@@ -60,7 +48,7 @@ function SignUpSyncStep({
       {initialSyncMutation.data ? (
         <SignUpSyncSummary result={initialSyncMutation.data} />
       ) : initialSyncMutation.isPending ? (
-        <SignUpSyncLoader onProgressChange={onProgressChange} />
+        <SignUpSyncLoader />
       ) : (
         <div className="my-4 flex flex-col items-center gap-2 text-center">
           <div className="relative flex size-28 items-center justify-center">
@@ -143,31 +131,7 @@ function getSyncStatusLabel(status: string) {
   }
 }
 
-function SignUpSyncLoader({
-  onProgressChange,
-}: {
-  onProgressChange?: (progress?: number) => void;
-}) {
-  const [mockProgress, setMockProgress] = useState(8);
-
-  useEffect(() => {
-    setMockProgress(8);
-    onProgressChange?.(8);
-
-    const progressInterval = window.setInterval(() => {
-      setMockProgress((currentProgress) => {
-        const nextProgress = Math.min(currentProgress + 4, 96);
-        onProgressChange?.(nextProgress);
-        return nextProgress;
-      });
-    }, 650);
-
-    return () => {
-      window.clearInterval(progressInterval);
-      onProgressChange?.(undefined);
-    };
-  }, [onProgressChange]);
-
+function SignUpSyncLoader() {
   return (
     <div className="my-4 flex flex-col items-center gap-2 text-center">
       <div className="relative flex size-28 items-center justify-center">
@@ -208,7 +172,17 @@ function SignUpSyncLoader({
           workspace.
         </p>
       </div>
-      <LoadingProgress messages={syncLoadingMessages} progress={mockProgress} />
+      <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+        <motion.div
+          animate={{ x: ["-100%", "250%"] }}
+          className="h-full w-1/3 rounded-full bg-primary"
+          transition={{
+            duration: 1.4,
+            ease: "easeInOut",
+            repeat: Number.POSITIVE_INFINITY,
+          }}
+        />
+      </div>
     </div>
   );
 }
