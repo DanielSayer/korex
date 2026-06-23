@@ -4,7 +4,7 @@ import type {
 } from "@korex/api/modules/activities/activities.types";
 import { Button } from "@korex/ui/components/button";
 import { Link } from "@tanstack/react-router";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -170,7 +170,8 @@ function MobileWeekSummaryItem({
           Training Week
         </h2>
         <span className="text-muted-foreground text-xs">
-          {format(weekStartDate, "MMM d")}
+          {format(weekStartDate, "MMM d")} –{" "}
+          {format(addDays(weekStartDate, 6), "MMM d")}
         </span>
       </div>
       <dl className="grid grid-cols-3 gap-2">

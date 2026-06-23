@@ -20,6 +20,11 @@ describe("calendar agenda", () => {
           name: "Next week",
           startAt: "2026-06-08T07:00:00.000Z",
         }),
+        activity({
+          id: 4,
+          name: "Later next week",
+          startAt: "2026-06-14T07:00:00.000Z",
+        }),
       ],
       summaries: [
         summary("2026-06-01T00:00:00.000Z"),
@@ -29,20 +34,21 @@ describe("calendar agenda", () => {
     });
 
     expect(items.map((item) => item.id)).toEqual([
+      "summary-2026-06-08",
+      "activities-2026-06-14",
+      "activities-2026-06-08",
       "summary-2026-06-01",
       "activities-2026-06-03",
-      "summary-2026-06-08",
-      "activities-2026-06-08",
     ]);
-    expect(items[1]?.type).toBe("activityDay");
+    expect(items[4]?.type).toBe("activityDay");
 
-    if (items[1]?.type !== "activityDay") {
+    if (items[4]?.type !== "activityDay") {
       throw new Error("Expected an Activity day");
     }
 
-    expect(items[1].activities.map((item) => item.name)).toEqual([
-      "Morning run",
+    expect(items[4].activities.map((item) => item.name)).toEqual([
       "Lunch run",
+      "Morning run",
     ]);
   });
 

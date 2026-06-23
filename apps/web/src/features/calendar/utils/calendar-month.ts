@@ -148,8 +148,8 @@ export function getCalendarAgendaItems({
     items.push({
       activities: [...dayActivities].sort(
         (first, second) =>
-          new Date(first.startAt).getTime() -
-          new Date(second.startAt).getTime(),
+          new Date(second.startAt).getTime() -
+          new Date(first.startAt).getTime(),
       ),
       date: datesByDay.get(dayKey) ?? new Date(dayKey),
       id: `activities-${dayKey}`,
@@ -158,12 +158,20 @@ export function getCalendarAgendaItems({
   }
 
   return items.sort((first, second) => {
-    const dateDifference = first.date.getTime() - second.date.getTime();
+    const firstWeekStart = startOfWeek(first.date, { weekStartsOn }).getTime();
+    const secondWeekStart = startOfWeek(second.date, {
+      weekStartsOn,
+    }).getTime();
+    const weekDifference = secondWeekStart - firstWeekStart;
 
-    if (dateDifference !== 0) {
-      return dateDifference;
+    if (weekDifference !== 0) {
+      return weekDifference;
     }
 
-    return first.type === "summary" ? -1 : 1;
+    if (first.type !== second.type) {
+      return first.type === "summary" ? -1 : 1;
+    }
+
+    return second.date.getTime() - first.date.getTime();
   });
 }
