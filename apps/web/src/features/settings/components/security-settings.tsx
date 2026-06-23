@@ -1,22 +1,17 @@
-import { Button } from "@korex/ui/components/button";
 import { SettingsSection } from "./settings-section";
 
 function SecuritySettings() {
   return (
     <SettingsSection
-      description="Security controls and sign-in behavior placeholders."
+      description="Korex currently supports email and password sign-in."
       title="Security"
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-medium text-sm">Password and sessions</p>
-          <p className="text-muted-foreground text-sm">
-            Manage password changes, active sessions, and recovery methods.
-          </p>
-        </div>
-        <Button type="button" variant="outline">
-          Manage access
-        </Button>
+      <div className="rounded-md border border-border/70 bg-muted/20 p-4">
+        <p className="font-medium text-sm">Account access</p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Password changes, session management, and recovery controls are not
+          available in the app yet.
+        </p>
       </div>
     </SettingsSection>
   );

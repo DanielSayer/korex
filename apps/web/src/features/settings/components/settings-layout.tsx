@@ -104,13 +104,13 @@ const settingsTabs = [
     to: "/settings/training",
   },
   {
-    description: "Weekly Training Summary notification behavior.",
+    description: "Current notification availability.",
     icon: BellIcon,
     label: "Notifications",
     to: "/settings/notifications",
   },
   {
-    description: "Password and account security.",
+    description: "Current account access options.",
     icon: ShieldIcon,
     label: "Security",
     to: "/settings/security",
