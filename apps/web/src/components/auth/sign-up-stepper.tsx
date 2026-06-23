@@ -10,15 +10,10 @@ const steps = [
 
 function SignUpStepper({
   currentStep,
-  syncProgress,
 }: {
   currentStep: number;
-  syncProgress?: number;
 }) {
-  const progress =
-    syncProgress === undefined
-      ? ((currentStep + 1) / steps.length) * 100
-      : ((currentStep + syncProgress / 100) / steps.length) * 100;
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
     <div className="space-y-3">
