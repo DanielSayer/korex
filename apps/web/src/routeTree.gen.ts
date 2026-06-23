@@ -29,6 +29,7 @@ import { Route as AuthenticatedSettingsTimeRouteImport } from './routes/_authent
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsNotificationsRouteImport } from './routes/_authenticated/settings.notifications'
+import { Route as AuthenticatedSettingsConnectionsRouteImport } from './routes/_authenticated/settings.connections'
 import { Route as AuthenticatedSettingsAppearanceRouteImport } from './routes/_authenticated/settings.appearance'
 import { Route as AuthenticatedActivityActivityIdRouteImport } from './routes/_authenticated/activity.$activityId'
 
@@ -143,6 +144,12 @@ const AuthenticatedSettingsNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedSettingsConnectionsRoute =
+  AuthenticatedSettingsConnectionsRouteImport.update({
+    id: '/connections',
+    path: '/connections',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
 const AuthenticatedSettingsAppearanceRoute =
   AuthenticatedSettingsAppearanceRouteImport.update({
     id: '/appearance',
@@ -170,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/auth/sign-up': typeof AuthSignUpLazyRoute
   '/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -191,6 +199,7 @@ export interface FileRoutesByTo {
   '/auth/sign-up': typeof AuthSignUpLazyRoute
   '/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
   '/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -216,6 +225,7 @@ export interface FileRoutesById {
   '/auth/sign-up': typeof AuthSignUpLazyRoute
   '/_authenticated/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
   '/_authenticated/settings/appearance': typeof AuthenticatedSettingsAppearanceRoute
+  '/_authenticated/settings/connections': typeof AuthenticatedSettingsConnectionsRoute
   '/_authenticated/settings/notifications': typeof AuthenticatedSettingsNotificationsRoute
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/activity/$activityId'
     | '/settings/appearance'
+    | '/settings/connections'
     | '/settings/notifications'
     | '/settings/profile'
     | '/settings/security'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/activity/$activityId'
     | '/settings/appearance'
+    | '/settings/connections'
     | '/settings/notifications'
     | '/settings/profile'
     | '/settings/security'
@@ -286,6 +298,7 @@ export interface FileRouteTypes {
     | '/auth/sign-up'
     | '/_authenticated/activity/$activityId'
     | '/_authenticated/settings/appearance'
+    | '/_authenticated/settings/connections'
     | '/_authenticated/settings/notifications'
     | '/_authenticated/settings/profile'
     | '/_authenticated/settings/security'
@@ -445,6 +458,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsNotificationsRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/settings/connections': {
+      id: '/_authenticated/settings/connections'
+      path: '/connections'
+      fullPath: '/settings/connections'
+      preLoaderRoute: typeof AuthenticatedSettingsConnectionsRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/settings/appearance': {
       id: '/_authenticated/settings/appearance'
       path: '/appearance'
@@ -464,6 +484,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedSettingsRouteChildren {
   AuthenticatedSettingsAppearanceRoute: typeof AuthenticatedSettingsAppearanceRoute
+  AuthenticatedSettingsConnectionsRoute: typeof AuthenticatedSettingsConnectionsRoute
   AuthenticatedSettingsNotificationsRoute: typeof AuthenticatedSettingsNotificationsRoute
   AuthenticatedSettingsProfileRoute: typeof AuthenticatedSettingsProfileRoute
   AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
@@ -474,6 +495,7 @@ interface AuthenticatedSettingsRouteChildren {
 
 const AuthenticatedSettingsRouteChildren: AuthenticatedSettingsRouteChildren = {
   AuthenticatedSettingsAppearanceRoute: AuthenticatedSettingsAppearanceRoute,
+  AuthenticatedSettingsConnectionsRoute: AuthenticatedSettingsConnectionsRoute,
   AuthenticatedSettingsNotificationsRoute:
     AuthenticatedSettingsNotificationsRoute,
   AuthenticatedSettingsProfileRoute: AuthenticatedSettingsProfileRoute,
