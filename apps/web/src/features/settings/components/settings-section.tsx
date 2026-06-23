@@ -1,5 +1,3 @@
-import { Input } from "@korex/ui/components/input";
-import { Label } from "@korex/ui/components/label";
 import type { ReactNode } from "react";
 
 function SettingsSection({
@@ -28,15 +26,4 @@ function SettingsSection({
   );
 }
 
-function MockField({ label, value }: { label: string; value: string }) {
-  const id = `settings-${label.toLowerCase().replaceAll(" ", "-")}`;
-
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={id}>{label}</Label>
-      <Input id={id} readOnly value={value} />
-    </div>
-  );
-}
-
-export { MockField, SettingsSection };
+export { SettingsSection };
