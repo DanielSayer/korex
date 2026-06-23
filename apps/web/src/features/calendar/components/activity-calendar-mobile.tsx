@@ -17,10 +17,13 @@ import {
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { ErrorMessage } from "@/components/error-message";
+import { RouteAccent, SectionLabel } from "@/features/dashboard/components/dashboard-brand";
 import {
   formatDistance,
+  formatDistanceValue,
   formatDurationClock,
   formatDurationCompact,
+  formatMeters,
 } from "@/utils/formatters";
 import { getCalendarAgendaItems } from "../utils/calendar-month";
 
@@ -55,7 +58,7 @@ function ActivityCalendarMobile({
   );
 
   return (
-    <div className="grid gap-3 p-3">
+    <div className="flex flex-col gap-7 p-4">
       <MobileCalendarHeader
         monthLabel={monthGrid.monthLabel}
         onNextMonth={onNextMonth}
@@ -67,25 +70,23 @@ function ActivityCalendarMobile({
       ) : null}
       {isFetching ? (
         <div
-          className="inline-flex items-center rounded-lg border bg-background px-3 py-2 text-muted-foreground text-sm"
+          className="inline-flex items-center gap-2 text-muted-foreground text-sm"
           aria-live="polite"
         >
-          <Loader2Icon className="mr-2 size-4 animate-spin" />
+          <Loader2Icon className="size-4 animate-spin" />
           Loading activities
         </div>
       ) : null}
       {isPending ? (
-        <div className="grid gap-3" aria-hidden="true">
-          <div className="h-24 animate-pulse rounded-xl border bg-card" />
-          <div className="h-32 animate-pulse rounded-xl border bg-card" />
-          <div className="h-24 animate-pulse rounded-xl border bg-card" />
+        <div className="flex flex-col gap-7" aria-hidden="true">
+          <div className="h-24 animate-pulse rounded-3xl bg-muted/50" />
+          <div className="h-32 animate-pulse rounded-3xl bg-muted/50" />
+          <div className="h-24 animate-pulse rounded-3xl bg-muted/50" />
         </div>
       ) : agendaItems.length === 0 ? (
-        <section className="rounded-xl border border-border/70 bg-card p-4 text-muted-foreground text-sm">
-          No Activities in this month.
-        </section>
+        <CalendarEmptyState />
       ) : (
-        <div className="relative grid gap-3 pl-4 before:absolute before:top-2 before:bottom-2 before:left-1 before:w-px before:bg-border">
+        <div className="relative flex flex-col gap-7 pl-4 before:absolute before:top-2 before:bottom-2 before:left-1 before:w-px before:bg-border">
           {agendaItems.map((item) =>
             item.type === "summary" ? (
               <MobileWeekSummaryItem item={item} key={item.id} />
@@ -111,13 +112,13 @@ function MobileCalendarHeader({
   onToday: () => void;
 }) {
   return (
-    <header className="grid gap-3">
-      <div className="flex items-center justify-between gap-4">
+    <header className="flex flex-col gap-3">
+      <div className="flex items-end justify-between gap-4">
         <div className="min-w-0">
-          <p className="font-semibold text-primary text-xs uppercase">
+          <p className="font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em]">
             Calendar
           </p>
-          <h1 className="mt-1 truncate font-semibold text-2xl tracking-tight">
+          <h1 className="mt-1 font-display text-3xl tracking-tight">
             {monthLabel}
           </h1>
         </div>
@@ -163,22 +164,23 @@ function MobileWeekSummaryItem({
   const weekStartDate = new Date(item.summary.weekStartDate);
 
   return (
-    <section className="relative rounded-xl border border-border/70 bg-muted/35 p-3">
+    <section className="relative">
       <TimelineDot />
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h2 className="font-semibold text-primary text-xs uppercase">
+        <SectionLabel>
           Training Week
-        </h2>
-        <span className="text-muted-foreground text-xs">
+        </SectionLabel>
+        <span className="font-display text-sm text-muted-foreground">
           {format(weekStartDate, "MMM d")} –{" "}
           {format(addDays(weekStartDate, 6), "MMM d")}
         </span>
       </div>
-      <dl className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 divide-x divide-border/30">
         <MobileSummaryMetric
           icon={<RouteIcon />}
           label="Distance"
-          value={formatDistance(item.summary.distanceMeters)}
+          unit="km"
+          value={formatDistanceValue(item.summary.distanceMeters)}
         />
         <MobileSummaryMetric
           icon={<ClockIcon />}
@@ -188,9 +190,9 @@ function MobileWeekSummaryItem({
         <MobileSummaryMetric
           icon={<MountainIcon />}
           label="Gain"
-          value={formatElevation(item.summary.totalElevationGainMeters)}
+          value={formatMeters(item.summary.totalElevationGainMeters)}
         />
-      </dl>
+      </div>
     </section>
   );
 }
@@ -198,19 +200,30 @@ function MobileWeekSummaryItem({
 function MobileSummaryMetric({
   icon,
   label,
+  unit,
   value,
 }: {
   icon: ReactNode;
   label: string;
+  unit?: string;
   value: string;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border border-border/60 bg-background p-2">
-      <dt className="flex items-center gap-1.5 text-muted-foreground text-xs">
+    <div className="flex flex-col items-center gap-1.5 px-2 text-center first:pl-0 last:pr-0">
+      <span className="flex items-center gap-1 text-muted-foreground">
         <span className="[&>svg]:size-3.5">{icon}</span>
-        <span className="truncate">{label}</span>
-      </dt>
-      <dd className="mt-1 truncate font-semibold text-sm">{value}</dd>
+        <span className="text-[11px] uppercase tracking-wider">
+          {label}
+        </span>
+      </span>
+      <p className="font-display text-xl tabular-nums leading-none">
+        {value}
+        {unit ? (
+          <span className="ml-1 font-medium font-sans text-muted-foreground text-sm">
+            {unit}
+          </span>
+        ) : null}
+      </p>
     </div>
   );
 }
@@ -224,64 +237,67 @@ function MobileActivityDayItem({
   >;
 }) {
   return (
-    <section className="relative rounded-xl border border-border/70 bg-card p-3">
+    <section className="relative">
       <TimelineDot />
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h2 className="font-semibold text-sm">{format(item.date, "EEEE")}</h2>
-        <span className="text-muted-foreground text-xs">
+        <h2 className="font-display text-sm">
+          {format(item.date, "EEEE")}
+        </h2>
+        <span className="font-display text-sm text-muted-foreground">
           {format(item.date, "MMM d")}
         </span>
       </div>
-      <div className="grid divide-y divide-border/70">
+      <ol className="flex flex-col">
         {item.activities.map((activity) => (
-          <MobileActivityLink activity={activity} key={activity.id} />
+          <li key={activity.id}>
+            <Link
+              to="/activity/$activityId"
+              params={{ activityId: String(activity.id) }}
+              className="block py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="flex items-center justify-between gap-3">
+                  <span className="line-clamp-1 font-medium text-sm">
+                    {activity.name}
+                  </span>
+                  <span className="shrink-0 font-display text-sm tabular-nums">
+                    {formatDistance(activity.distanceMeters)}
+                  </span>
+                </span>
+                <span className="block text-muted-foreground text-xs">
+                  {formatDurationClock(activity.durationSeconds)}
+                  {activity.averageHeartRateBeatsPerMinute
+                    ? ` · ${activity.averageHeartRateBeatsPerMinute} bpm`
+                    : ""}
+                </span>
+              </span>
+            </Link>
+          </li>
         ))}
-      </div>
+      </ol>
     </section>
   );
 }
 
-function MobileActivityLink({ activity }: { activity: ActivityListItem }) {
+function CalendarEmptyState() {
   return (
-    <Link
-      to="/activity/$activityId"
-      params={{ activityId: String(activity.id) }}
-      className="grid gap-1 py-2 first:pt-0 last:pb-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-    >
-      <div className="flex items-start justify-between gap-3">
-        <h3 className="line-clamp-2 font-medium text-sm">{activity.name}</h3>
-        <span className="shrink-0 text-muted-foreground text-xs">
-          {format(new Date(activity.startAt), "HH:mm")}
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs">
-        <span className="inline-flex items-center gap-1">
-          <RouteIcon className="size-3.5" />
-          {formatDistance(activity.distanceMeters)}
-        </span>
-        <span className="inline-flex items-center gap-1">
-          <ClockIcon className="size-3.5" />
-          {formatDurationClock(activity.durationSeconds)}
-        </span>
-        {activity.averageHeartRateBeatsPerMinute ? (
-          <span className="inline-flex items-center gap-1">
-            <HeartPulseIcon className="size-3.5" />
-            {activity.averageHeartRateBeatsPerMinute} bpm
-          </span>
-        ) : null}
-      </div>
-    </Link>
+    <div className="flex flex-col items-center gap-3 py-6 text-center">
+      <img
+        alt="An empty winding trail cresting a small hill with a single route waypoint marker"
+        className="h-20 w-auto opacity-90"
+        src="/brand/empty-trail.svg"
+      />
+      <p className="text-muted-foreground text-sm">
+        Nothing logged this month. Your trail starts here.
+      </p>
+    </div>
   );
 }
 
 function TimelineDot() {
   return (
-    <span className="absolute top-5 left-[-1.08rem] size-2.5 rounded-full border-2 border-background bg-primary" />
+    <span className="absolute top-1.5 left-[-1.08rem] size-2.5 rounded-full border-2 border-background bg-primary" />
   );
-}
-
-function formatElevation(elevationMeters: number) {
-  return `${Math.round(elevationMeters)} m`;
 }
 
 export { ActivityCalendarMobile };
