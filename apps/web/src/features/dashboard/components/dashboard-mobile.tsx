@@ -24,6 +24,7 @@ import {
   formatDistanceValue,
   formatDurationClock,
 } from "@/utils/formatters";
+import { RouteAccent, SectionLabel, StrideTexture } from "./dashboard-brand";
 import { DashboardHeader } from "./dashboard-header";
 
 type DashboardMobileProps = {
@@ -56,7 +57,7 @@ function DashboardMobile({
   weeklyDistance,
 }: DashboardMobileProps) {
   return (
-    <div className="grid gap-3 p-3">
+    <div className="flex flex-col gap-7 p-4">
       <MobileDashboardHeader isSyncing={isSyncing} onSync={onSync} />
       {hasError ? (
         <ErrorMessage
@@ -95,15 +96,19 @@ function MobileDashboardHeader({
   isSyncing: boolean;
   onSync: () => void;
 }) {
+  const now = new Date();
+  const hour = now.getHours();
+  const partOfDay = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
+
   return (
-    <header className="flex items-center justify-between gap-4">
+    <header className="flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <p className="font-semibold text-primary text-xs uppercase">
-          Dashboard
+        <p className="font-display text-3xl lowercase leading-none tracking-tight">
+          korex
         </p>
-        <h1 className="mt-1 truncate font-semibold text-2xl tracking-tight">
-          This week
-        </h1>
+        <p className="mt-2 text-muted-foreground text-sm">
+          {format(now, "EEEE")} {partOfDay}. Let's move.
+        </p>
       </div>
       <DashboardHeader isSyncing={isSyncing} onSync={onSync} />
     </header>
@@ -118,30 +123,32 @@ function CompactFocusPanel({
   isLoading: boolean;
 }) {
   return (
-    <section className="rounded-xl border border-border/70 bg-card p-4">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="font-semibold text-primary text-xs uppercase">
+    <section className="relative overflow-hidden rounded-3xl bg-primary/5 p-5">
+      <StrideTexture />
+      <div className="relative">
+        <div className="flex items-start justify-between gap-4">
+          <p className="font-display text-[11px] text-primary uppercase tracking-[0.18em]">
             Weekly Focus
           </p>
-          <h2 className="mt-2 line-clamp-1 font-semibold text-xl">
-            {isLoading ? "Reading this week." : (focus?.title ?? "Build.")}
-          </h2>
+          <p className="shrink-0 rounded-full bg-background/70 px-2.5 py-0.5 font-medium text-primary text-xs">
+            {isLoading ? "..." : (focus?.status ?? "steady")}
+          </p>
         </div>
-        <p className="shrink-0 rounded-full bg-muted px-2 py-1 font-medium text-muted-foreground text-xs">
-          {isLoading ? "..." : (focus?.status ?? "steady")}
+        <h2 className="mt-3 line-clamp-2 font-display text-4xl leading-[1.05] tracking-tight">
+          {isLoading ? "Reading this week." : (focus?.title ?? "Build.")}
+        </h2>
+        <RouteAccent className="mt-3 h-3 w-16 text-primary" />
+        <p className="mt-3 line-clamp-2 text-muted-foreground text-sm leading-relaxed">
+          {isLoading
+            ? "Checking current training signals."
+            : (focus?.body ?? "Keep the next session repeatable.")}
         </p>
-      </div>
-      <p className="mt-3 line-clamp-2 text-muted-foreground text-sm">
-        {isLoading
-          ? "Checking current training signals."
-          : (focus?.body ?? "Keep the next session repeatable.")}
-      </p>
-      <div className="mt-3 flex items-center gap-2 text-sm">
-        <TargetIcon className="size-4 text-primary" />
-        <span className="line-clamp-1 font-medium">
-          {isLoading ? "Preparing next step" : (focus?.action ?? "One run")}
-        </span>
+        <div className="mt-4 flex items-center gap-2 font-medium text-sm">
+          <TargetIcon className="size-4 text-primary" />
+          <span className="line-clamp-1">
+            {isLoading ? "Preparing next step" : (focus?.action ?? "One run")}
+          </span>
+        </div>
       </div>
     </section>
   );
@@ -186,23 +193,25 @@ function CompactMetricStrip({
   ];
 
   return (
-    <section className="grid grid-cols-3 gap-2">
+    <section className="grid grid-cols-3 divide-x divide-border/30">
       {metrics.map((metric) => {
         const Icon = metric.icon;
 
         return (
           <div
-            className="min-w-0 rounded-lg border border-border/60 bg-card p-3"
+            className="flex flex-col items-center gap-1.5 px-2 text-center first:pl-0 last:pr-0"
             key={metric.label}
           >
-            <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-              <Icon className="size-3.5 shrink-0" />
-              <span className="truncate">{metric.label}</span>
-            </div>
-            <p className="mt-2 truncate font-semibold text-lg tabular-nums">
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <Icon className="size-3.5" />
+              <span className="text-[11px] uppercase tracking-wider">
+                {metric.label}
+              </span>
+            </span>
+            <p className="font-display text-3xl tabular-nums leading-none">
               {metric.value}
               {metric.unit ? (
-                <span className="ml-1 font-normal text-muted-foreground text-xs">
+                <span className="ml-1 font-medium font-sans text-muted-foreground text-sm">
                   {metric.unit}
                 </span>
               ) : null}
@@ -222,52 +231,75 @@ function CompactRecentActivityList({
   runs: RecentActivity[];
 }) {
   return (
-    <section className="rounded-xl border border-border/70 bg-card p-3">
-      <div className="mb-1 flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-primary text-xs uppercase">
-          Recent Activities
-        </h2>
-        <Link
-          className="inline-flex items-center gap-1 text-muted-foreground text-xs"
-          to="/calendar"
-        >
-          Calendar <ChevronRightIcon className="size-3" />
-        </Link>
-      </div>
+    <section className="flex flex-col gap-3">
+      <SectionLabel
+        action={
+          <Link
+            className="inline-flex items-center gap-1 text-muted-foreground text-xs"
+            to="/calendar"
+          >
+            Calendar <ChevronRightIcon className="size-3" />
+          </Link>
+        }
+      >
+        Recent
+      </SectionLabel>
       {isLoading ? (
-        <div className="grid min-h-20 place-items-center text-muted-foreground text-sm">
+        <div className="py-6 text-center text-muted-foreground text-sm">
           Loading recent Activities...
         </div>
       ) : runs.length === 0 ? (
-        <div className="grid min-h-20 place-items-center text-muted-foreground text-sm">
-          No recent Activities yet.
-        </div>
+        <RecentActivityEmpty />
       ) : (
-        <div className="grid divide-y divide-border/70">
+        <ol className="flex flex-col">
           {runs.slice(0, 5).map((run) => (
-            <Link
-              className="grid gap-0.5 py-2 first:pt-1 last:pb-0"
-              key={run.id}
-              params={{ activityId: String(run.id) }}
-              to="/activity/$activityId"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="line-clamp-1 font-medium text-sm">{run.name}</h3>
-                <span className="shrink-0 font-medium text-xs">
-                  {formatDistance(run.distanceMeters)}
+            <li key={run.id}>
+              <Link
+                className="flex items-center gap-3 py-3"
+                params={{ activityId: String(run.id) }}
+                to="/activity/$activityId"
+              >
+                <span
+                  aria-hidden="true"
+                  className="size-2 shrink-0 rounded-full bg-primary"
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-3">
+                    <span className="line-clamp-1 font-medium text-sm">
+                      {run.name}
+                    </span>
+                    <span className="shrink-0 font-display text-sm tabular-nums">
+                      {formatDistance(run.distanceMeters)}
+                    </span>
+                  </span>
+                  <span className="block text-muted-foreground text-xs">
+                    {formatDurationClock(run.durationSeconds ?? null)}
+                    {run.averageHeartRateBeatsPerMinute
+                      ? ` · ${run.averageHeartRateBeatsPerMinute} bpm`
+                      : ""}
+                  </span>
                 </span>
-              </div>
-              <p className="text-muted-foreground text-xs">
-                {formatDurationClock(run.durationSeconds ?? null)}
-                {run.averageHeartRateBeatsPerMinute
-                  ? ` - ${run.averageHeartRateBeatsPerMinute} bpm`
-                  : ""}
-              </p>
-            </Link>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ol>
       )}
     </section>
+  );
+}
+
+function RecentActivityEmpty() {
+  return (
+    <div className="flex flex-col items-center gap-3 py-6 text-center">
+      <img
+        alt="An empty winding trail cresting a small hill with a single route waypoint marker"
+        className="h-20 w-auto opacity-90"
+        src="/brand/empty-trail.svg"
+      />
+      <p className="text-muted-foreground text-sm">
+        No runs logged yet. Your trail starts here.
+      </p>
+    </div>
   );
 }
 
@@ -283,9 +315,7 @@ function CompactTrainingStreak({
   streak?: TrainingStreak | null;
 }) {
   if (isLoading) {
-    return (
-      <section className="h-20 animate-pulse rounded-xl border border-border/70 bg-card" />
-    );
+    return <div className="h-24 animate-pulse rounded-3xl bg-muted/50" />;
   }
 
   if (isError || !currentWeek) {
@@ -327,30 +357,35 @@ function CompactTrainingStreakView({
   });
 
   return (
-    <section className="rounded-xl border border-border/70 bg-card px-3 py-3">
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h2 className="font-semibold text-primary text-xs uppercase">
-            Streak
-          </h2>
-          <p className="mt-1 font-semibold text-sm">
-            {streak?.currentStreak ?? 0} weeks
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
+    <section className="flex flex-col gap-4">
+      <SectionLabel
+        action={
+          <span className="font-display text-base">
+            {streak?.currentStreak ?? 0}
+            <span className="ml-1 font-normal font-sans text-muted-foreground text-xs">
+              weeks
+            </span>
+          </span>
+        }
+      >
+        Streak
+      </SectionLabel>
+      <div className="relative px-1">
+        <div
+          aria-hidden="true"
+          className="absolute top-[9px] right-3 left-3 h-0.5 rounded-full bg-border"
+        />
+        <ol className="relative flex items-start justify-between">
           {days.map((day) => (
-            <div
-              className="grid justify-items-center gap-1"
+            <li
+              className="flex flex-col items-center gap-2"
               key={day.date.toISOString()}
             >
-              <span className="text-[10px] text-muted-foreground">
-                {day.dayLabel}
-              </span>
               <span
                 className={cn(
-                  "grid size-6 place-items-center rounded-full border text-[10px]",
+                  "grid size-[18px] place-items-center rounded-full border-2 transition-colors",
                   day.hasActivity
-                    ? "border-primary/20 bg-primary/15 text-primary"
+                    ? "border-primary bg-primary text-primary-foreground"
                     : "border-border bg-background text-muted-foreground",
                 )}
                 title={
@@ -359,13 +394,14 @@ function CompactTrainingStreakView({
                     : "No qualifying activity logged"
                 }
               >
-                {day.hasActivity ? (
-                  <FlameIcon className="size-3.5 fill-primary" />
-                ) : null}
+                {day.hasActivity ? <FlameIcon className="size-2.5" /> : null}
               </span>
-            </div>
+              <span className="font-medium text-[10px] text-muted-foreground">
+                {day.dayLabel}
+              </span>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );

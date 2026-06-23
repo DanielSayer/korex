@@ -13,17 +13,17 @@ function TrainingGoalsDashboardCard() {
   );
 
   return (
-    <section className="rounded-xl border border-border/70 bg-card p-3 md:p-5">
+    <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-primary text-xs uppercase">
+        <p className="font-medium text-muted-foreground text-xs">
           Training goals
-        </h2>
+        </p>
         <Button size="sm" variant="ghost" render={<Link to="/goals" />}>
           Manage
           <ChevronRightIcon className="size-3.5" />
         </Button>
       </div>
-      <div className="mt-3">
+      <div>
         {progressQuery.isPending ? <TrainingGoalsSkeleton /> : null}
         {progressQuery.isError ? (
           <ErrorMessage
@@ -39,7 +39,7 @@ function TrainingGoalsDashboardCard() {
           />
         ) : null}
       </div>
-    </section>
+    </div>
   );
 }
 

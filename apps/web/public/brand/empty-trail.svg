@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 90" fill="none" role="img" aria-label="An empty winding trail cresting a small hill with a single route waypoint marker">
+  <path d="M6 82 C 50 82, 90 80, 154 70" stroke="#cdbfa9" stroke-width="2" stroke-linecap="round" />
+  <path d="M6 78 C 40 78, 52 70, 78 52 S 124 22, 152 18" stroke="#b9a78f" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 9" />
+  <circle cx="152" cy="18" r="11" stroke="#d39a5b" stroke-width="2" opacity="0.4" />
+  <circle cx="152" cy="18" r="6" fill="#d39a5b" />
+</svg>
