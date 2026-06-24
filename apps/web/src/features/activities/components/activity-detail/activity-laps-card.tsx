@@ -1,5 +1,5 @@
 import type { ActivityLapSummary } from "@korex/api/modules/activities/activities.types";
-import { RouteIcon } from "lucide-react";
+import { SectionLabel } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import { formatDurationClock, formatPaceFromSpeed } from "@/utils/formatters";
 import { MetricValue } from "./metric-value";
@@ -18,15 +18,9 @@ function ActivityLapsCard({
   }
 
   return (
-    <section className="space-y-4">
+    <section className="flex flex-col gap-4">
       <div className={cn(compactMobile && "hidden md:block")}>
-        <h2 className="flex items-center gap-2 font-bold text-2xl md:text-3xl">
-          <RouteIcon className="size-6" />
-          Laps
-        </h2>
-        <p className="hidden text-muted-foreground text-sm md:block">
-          Detailed lap data for your activity.
-        </p>
+        <SectionLabel>Laps</SectionLabel>
       </div>
 
       <MobileLapsTable laps={laps} />
@@ -165,16 +159,26 @@ function MobileLapsTable({ laps }: { laps: ActivityLapSummary[] }) {
       <table className="w-full table-fixed text-sm">
         <thead className="text-muted-foreground">
           <tr>
-            <th className="w-10 py-2 text-left font-medium">1 km</th>
-            <th className="py-2 text-right font-medium">Distance</th>
-            <th className="py-2 text-right font-medium">Time</th>
-            <th className="py-2 text-right font-medium">Avg. Pace</th>
-            <th className="py-2 text-right font-medium">Avg. HR</th>
+            <th className="w-10 py-2 text-left font-display text-[10px] uppercase tracking-wider">
+              Lap
+            </th>
+            <th className="py-2 text-right font-display text-[10px] uppercase tracking-wider">
+              Distance
+            </th>
+            <th className="py-2 text-right font-display text-[10px] uppercase tracking-wider">
+              Time
+            </th>
+            <th className="py-2 text-right font-display text-[10px] uppercase tracking-wider">
+              Pace
+            </th>
+            <th className="py-2 text-right font-display text-[10px] uppercase tracking-wider">
+              HR
+            </th>
           </tr>
         </thead>
-        <tbody className="font-medium tabular-nums">
+        <tbody className="font-display tabular-nums">
           {laps.map((lap) => (
-            <tr key={lap.id} className="border-border border-t">
+            <tr key={lap.id} className="border-border/40 border-t">
               <td className="py-3 text-muted-foreground">{lap.index + 1}</td>
               <td className="py-3 text-right">
                 {formatDistanceValue(lap.distanceMeters)}
@@ -190,7 +194,7 @@ function MobileLapsTable({ laps }: { laps: ActivityLapSummary[] }) {
               </td>
             </tr>
           ))}
-          <tr className="border-border border-t font-semibold">
+          <tr className="border-border/40 border-t font-semibold">
             <td className="py-3 text-foreground">Total</td>
             <td className="py-3 text-right">
               {formatDistanceValue(totals.distanceMeters)}

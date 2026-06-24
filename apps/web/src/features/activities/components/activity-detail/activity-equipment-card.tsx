@@ -3,8 +3,9 @@ import type { Equipment } from "@korex/api/modules/equipment/equipment.types";
 import { Button } from "@korex/ui/components/button";
 import { Label } from "@korex/ui/components/label";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FootprintsIcon, XIcon } from "lucide-react";
+import { XIcon } from "lucide-react";
 import { toast } from "sonner";
+import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { orpc } from "@/utils/orpc";
@@ -139,13 +140,9 @@ function ActivityEquipmentEditor({
 
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="flex items-center gap-2 font-medium text-muted-foreground text-xs uppercase">
-          <FootprintsIcon className="size-4 text-primary" />
-          Equipment
-        </p>
-        <div className="min-h-8">
-          {assignedShoes ? (
+      <SectionLabel
+        action={
+          assignedShoes ? (
             <Button
               aria-label="Remove shoes from Activity"
               disabled={removeMutation.isPending}
@@ -162,11 +159,13 @@ function ActivityEquipmentEditor({
               <XIcon className="size-4" />
               Remove
             </Button>
-          ) : null}
-        </div>
-      </div>
+          ) : null
+        }
+      >
+        Equipment
+      </SectionLabel>
 
-      <div className="space-y-2">
+      <div className="mt-3 space-y-2">
         <Label className="sr-only" htmlFor="activity-shoes">
           Shoes
         </Label>

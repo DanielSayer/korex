@@ -3,8 +3,8 @@ import type {
   ActivityStreamsChartData,
 } from "@korex/api/modules/activities/activities.types";
 import { Button } from "@korex/ui/components/button";
-import { ActivityIcon } from "lucide-react";
 import { useState } from "react";
+import { SectionLabel } from "@/components/brand";
 import { ActivityStreamChart } from "./activity-stream-chart";
 import {
   type ChartMetric,
@@ -35,14 +35,9 @@ function ActivityStreamCharts({ streams, summary }: ActivityStreamChartsProps) {
   const activeXAxisMode = hasDistanceAxis ? xAxisMode : "time";
 
   return (
-    <section className="space-y-4">
+    <section className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="flex items-center gap-2 font-bold text-2xl md:text-3xl">
-            <ActivityIcon className="size-5 md:size-6" />
-            Activity Streams
-          </h2>
-        </div>
+        <SectionLabel>Activity streams</SectionLabel>
         {hasDistanceAxis ? (
           <div className="flex items-center gap-1 md:rounded-md md:border md:p-1">
             <Button

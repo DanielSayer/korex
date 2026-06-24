@@ -1,5 +1,5 @@
 import type { ActivityDetailSummary } from "@korex/api/modules/activities/activities.types";
-import { HeartPulseIcon } from "lucide-react";
+import { SectionLabel } from "@/components/brand";
 import { formatDurationClock } from "@/utils/formatters";
 
 type HeartRateZonesCardProps = {
@@ -20,15 +20,10 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
   );
 
   return (
-    <section className="space-y-4">
-      <div>
-        <h2 className="flex items-center gap-2 font-bold text-2xl md:text-3xl">
-          <HeartPulseIcon className="size-5 md:size-6" />
-          Heart Rate Zones
-        </h2>
-      </div>
+    <section className="flex flex-col gap-4">
+      <SectionLabel>Heart rate zones</SectionLabel>
 
-      <div className="space-y-3 border-y py-4">
+      <div className="flex flex-col gap-3">
         {summary.heartRateZoneSnapshots.map((zone) => {
           const zoneTime =
             summary.heartRateZoneTimes.find(
@@ -39,12 +34,12 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
           const color = getZoneColor(zone.position);
 
           return (
-            <div key={zone.position} className="space-y-1.5">
+            <div key={zone.position} className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="font-medium">
                   {zone.name} ({formatZoneRange(zone)})
                 </span>
-                <span className="text-muted-foreground">
+                <span className="font-display text-muted-foreground tabular-nums">
                   {formatDurationClock(zoneTime)}
                 </span>
               </div>

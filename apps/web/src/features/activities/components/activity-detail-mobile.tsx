@@ -3,6 +3,7 @@ import { Button } from "@korex/ui/components/button";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon, CalendarIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { RouteAccent, SectionLabel } from "@/components/brand";
 import { QueryRenderer } from "@/components/query-renderer";
 import { TrainingNotesSection } from "@/features/training-notes/components/training-notes-section";
 import {
@@ -72,7 +73,7 @@ function ActivityDetailMobile({
         <MobileActivitySection>
           <HeartRateZonesCard summary={summary} />
         </MobileActivitySection>
-        <MobileActivitySection title="Lap Details">
+        <MobileActivitySection label="Lap details">
           <ActivityLapsCard compactMobile laps={summary.laps} />
         </MobileActivitySection>
         <MobileActivitySection>
@@ -128,27 +129,28 @@ function MobileActivitySummaryPanel({
   ];
 
   return (
-    <section className="rounded-t-xl bg-card px-3 pt-5 pb-4 text-card-foreground shadow-lg">
+    <section className="px-4 pt-6 pb-5">
       <div className="mb-5">
-        <div className="mt-4 flex items-end gap-2">
-          <span className="font-semibold text-6xl tabular-nums leading-none">
-            {formatDistanceValue(activity.distanceMeters)}
-          </span>
-          <span className="pb-1 font-semibold text-lg text-muted-foreground">
+        <p className="font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em]">
+          Distance
+        </p>
+        <p className="mt-1 font-display text-[clamp(3.5rem,18vw,4.5rem)] tabular-nums leading-[0.9] tracking-tight">
+          {formatDistanceValue(activity.distanceMeters)}
+          <span className="ml-1.5 align-middle font-medium font-sans text-lg text-muted-foreground">
             km
           </span>
-        </div>
-        <p className="mt-1 text-muted-foreground text-sm">Distance</p>
+        </p>
+        <RouteAccent className="mt-2 h-3 w-16 text-primary" />
       </div>
 
-      <dl className="grid grid-cols-3 gap-x-4 gap-y-5 border-border border-t pt-5">
+      <dl className="grid grid-cols-3 gap-x-4 gap-y-5 border-border/40 border-t pt-5">
         {metrics.map((metric) => (
           <div className="min-w-0" key={metric.label}>
-            <dt className="line-clamp-2 min-h-8 text-muted-foreground text-xs leading-tight">
+            <dt className="line-clamp-2 min-h-8 text-[11px] text-muted-foreground uppercase leading-tight tracking-wider">
               {metric.label}
             </dt>
             <dd className="mt-1 flex min-w-0 items-baseline gap-1">
-              <span className="truncate font-semibold text-2xl tabular-nums leading-none">
+              <span className="truncate font-display text-xl tabular-nums leading-none tracking-tight">
                 {metric.value}
               </span>
               {metric.unit ? (
@@ -170,19 +172,18 @@ function MobileActivityTopChrome({
   activity: ActivityDetailSummary["activity"];
 }) {
   return (
-    <header className="border-border border-b bg-background px-3 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3">
+    <header className="border-border/40 border-b bg-background px-4 pt-[calc(0.75rem+env(safe-area-inset-top))] pb-3">
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
         <Button
           aria-label="Back to dashboard"
           render={<Link to="/dashboard" />}
-          size="sm"
-          variant="outline"
+          size="icon"
+          variant="ghost"
         >
-          <ArrowLeftIcon className="size-4" />
-          Back
+          <ArrowLeftIcon className="size-5" />
         </Button>
         <div className="min-w-0">
-          <h1 className="truncate font-semibold text-base leading-tight">
+          <h1 className="truncate font-display text-base leading-tight tracking-tight">
             {activity.name}
           </h1>
           <p className="mt-0.5 flex min-w-0 items-center gap-1 text-muted-foreground text-xs">
@@ -192,12 +193,12 @@ function MobileActivityTopChrome({
             </span>
           </p>
         </div>
-        <span className="inline-flex h-6 items-center rounded-md border bg-secondary px-2 font-medium text-[10px] text-secondary-foreground uppercase">
+        <span className="font-display text-[10px] text-muted-foreground lowercase tracking-[0.18em]">
           {activity.sportType}
         </span>
       </div>
       {activity.deviceName ? (
-        <p className="mt-1 truncate pl-21 text-muted-foreground text-xs">
+        <p className="mt-1 truncate pl-10 text-muted-foreground text-xs">
           {activity.deviceName}
         </p>
       ) : null}
@@ -207,17 +208,17 @@ function MobileActivityTopChrome({
 
 function MobileActivitySection({
   children,
-  title,
+  label,
 }: {
   children: ReactNode;
-  title?: string;
+  label?: string;
 }) {
   return (
-    <section className="border-border border-t px-3 py-5">
-      {title ? (
-        <h2 className="mb-3 font-semibold text-lg uppercase tracking-tight">
-          {title}
-        </h2>
+    <section className="border-border/40 border-t px-4 py-5">
+      {label ? (
+        <div className="mb-4">
+          <SectionLabel>{label}</SectionLabel>
+        </div>
       ) : null}
       {children}
     </section>
