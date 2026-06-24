@@ -2,6 +2,7 @@ import { Button } from "@korex/ui/components/button";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { FootprintsIcon } from "lucide-react";
+import { RouteProgress, SectionLabel } from "@/components/brand";
 import { RecentTrainingNotesCard } from "@/features/training-notes/components/training-notes-section";
 import { formatDistance } from "@/utils/formatters";
 import { orpc } from "@/utils/orpc";
@@ -28,17 +29,13 @@ function ShoeMileageCard() {
       : null;
 
   return (
-    <section className="rounded-xl border border-border/55 bg-card/40 p-5 shadow-black/5 shadow-md backdrop-blur-sm dark:bg-card/35 dark:shadow-black/15">
+    <section className="pb-8">
       <div className="grid gap-5">
         <div className="flex items-center gap-4">
-          <div className="grid size-16 shrink-0 place-items-center rounded-md border border-border/70 bg-muted/20">
-            <FootprintsIcon className="size-9 text-primary" />
-          </div>
+          <FootprintsIcon className="size-5 shrink-0 text-primary" />
           <div>
-            <h2 className="font-semibold font-serif text-sm uppercase">
-              Shoe mileage
-            </h2>
-            <p className="mt-2 font-semibold font-serif">
+            <SectionLabel>Shoe mileage</SectionLabel>
+            <p className="mt-1 font-display font-medium">
               {primaryShoe?.name ?? "No shoes tracked"}
             </p>
           </div>
@@ -49,7 +46,7 @@ function ShoeMileageCard() {
           <div>
             <div className="flex items-end justify-between gap-4">
               <div>
-                <p className="font-semibold font-serif text-5xl tabular-nums">
+                <p className="font-display text-5xl tabular-nums">
                   {Math.round(primaryShoe.usageDistanceMeters / 1000)}
                   <span className="ml-1 font-normal font-sans text-muted-foreground text-sm">
                     km
@@ -66,12 +63,7 @@ function ShoeMileageCard() {
               ) : null}
             </div>
             {retirementPercent !== null ? (
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${retirementPercent}%` }}
-                />
-              </div>
+              <RouteProgress className="mt-5" value={retirementPercent} />
             ) : null}
           </div>
         ) : (

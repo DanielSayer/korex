@@ -12,6 +12,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { SectionLabel } from "@/components/brand";
 import { formatDistance, formatDistanceValue } from "@/utils/formatters";
 import {
   formatLongDate,
@@ -47,13 +48,13 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
   );
   const deltaClassName =
     weeklyDistance.distanceDeltaMeters >= 0
-      ? "text-emerald-600 dark:text-emerald-400"
-      : "text-destructive";
+      ? "text-primary"
+      : "text-foreground";
 
   return (
-    <section className="rounded-xl border border-border/55 bg-card/40 p-5 shadow-black/5 shadow-md backdrop-blur-sm dark:bg-card/35 dark:shadow-black/15">
+    <section>
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="font-semibold text-xs uppercase">This week trend</h2>
+        <SectionLabel>This week trend</SectionLabel>
         <p className="text-muted-foreground text-xs">
           {formatWeekRange(weeklyDistance.weekStartAt)}
         </p>
@@ -65,7 +66,7 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
               This week
             </p>
             <p className="mt-1 flex items-baseline gap-2">
-              <span className="font-semibold font-serif text-5xl tracking-tight">
+              <span className="font-display text-5xl tracking-tight">
                 {formatDistanceValue(weeklyDistance.thisWeekDistanceMeters)}
               </span>
               <span className="text-muted-foreground text-sm">km</span>

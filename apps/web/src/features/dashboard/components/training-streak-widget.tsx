@@ -4,6 +4,7 @@ import type {
 } from "@korex/api/modules/activities/activities.types";
 import { addDays, format, isSameDay } from "date-fns";
 import { FlameIcon } from "lucide-react";
+import { SectionLabel } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 type TrainingStreakWidgetProps = {
@@ -32,18 +33,16 @@ function TrainingStreakWidget({
   });
 
   return (
-    <section className="rounded-xl border border-border/55 bg-background/20 p-4 shadow-black/15 shadow-xl backdrop-blur-md sm:p-5 dark:bg-background/20 dark:shadow-black/25">
+    <section>
       <div className="grid gap-5">
         <div className="flex items-end justify-between gap-4 border-border/70 border-b pb-4">
           <div>
-            <h2 className="font-semibold text-primary text-xs uppercase">
-              Your streak
-            </h2>
+            <SectionLabel>Your streak</SectionLabel>
             <p className="mt-1 font-semibold text-muted-foreground text-xs uppercase">
               Weeks
             </p>
           </div>
-          <p className="font-semibold font-serif text-6xl text-primary tabular-nums leading-none">
+          <p className="font-display text-6xl text-primary tabular-nums leading-none">
             {currentStreak}
           </p>
         </div>

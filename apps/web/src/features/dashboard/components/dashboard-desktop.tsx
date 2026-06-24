@@ -5,7 +5,6 @@ import type {
   RecentActivity,
   TrainingStreak,
 } from "@korex/api/modules/activities/activities.types";
-import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { TrainingGoalsDashboardCard } from "@/features/training-goals/components/training-goals-dashboard-card";
 import { DashboardHeader } from "./dashboard-header";
