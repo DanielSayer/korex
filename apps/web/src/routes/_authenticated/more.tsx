@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronRightIcon } from "lucide-react";
+import { RouteAccent } from "@/components/brand";
 import { moreNavigationItems } from "@/components/mobile-navigation";
 
 export const Route = createFileRoute("/_authenticated/more")({
@@ -8,31 +9,32 @@ export const Route = createFileRoute("/_authenticated/more")({
 
 function RouteComponent() {
   return (
-    <div className="grid gap-5 p-3 md:p-0">
-      <header className="grid gap-1">
-        <h1 className="font-semibold text-2xl tracking-tight">More</h1>
-        <p className="text-muted-foreground text-sm">
-          Secondary Korex areas and settings.
+    <div className="flex flex-col gap-6 p-4">
+      <header>
+        <h1 className="font-display text-3xl lowercase leading-none tracking-tight">
+          More
+        </h1>
+        <p className="mt-2 text-muted-foreground text-sm">
+          The rest of your trail.
         </p>
+        <RouteAccent className="mt-3 h-3 w-16 text-primary" />
       </header>
-      <nav aria-label="Secondary" className="grid gap-2">
+      <nav aria-label="Secondary" className="flex flex-col">
         {moreNavigationItems.map((item) => {
           const Icon = item.icon;
 
           return (
             <Link
-              className="flex min-w-0 items-center gap-3 rounded-md border border-border/70 bg-card px-3 py-3 text-card-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+              className="flex min-w-0 items-center gap-3 border-border/40 border-b py-4 transition-colors last:border-b-0 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
               key={item.to}
               to={item.to}
             >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
-                <Icon className="size-5" />
-              </span>
+              <Icon className="size-5 shrink-0 text-primary" />
               <span className="grid min-w-0 flex-1 gap-0.5">
-                <span className="truncate font-medium text-sm">
+                <span className="truncate font-display text-base tracking-tight">
                   {item.label}
                 </span>
-                <span className="line-clamp-2 text-muted-foreground text-sm">
+                <span className="line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                   {item.description}
                 </span>
               </span>
