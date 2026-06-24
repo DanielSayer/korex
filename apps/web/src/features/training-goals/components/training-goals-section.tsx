@@ -1,5 +1,5 @@
-import { Skeleton } from "@korex/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
+import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { cn } from "@/lib/utils";
@@ -27,18 +27,14 @@ function TrainingGoalsSection({
       )}
     >
       <section>
-        <div className="flex items-center justify-between gap-3">
-          <h2
-            className={cn(
-              "font-semibold",
-              isMobile ? "text-primary text-xs uppercase" : "text-lg",
-            )}
-          >
-            Active goals
-          </h2>
-          {isMobile ? <TrainingGoalCreateForm density={density} /> : null}
-        </div>
-        <div className={cn(isMobile ? "mt-2" : "mt-5")}>
+        <SectionLabel
+          action={
+            isMobile ? <TrainingGoalCreateForm density={density} /> : null
+          }
+        >
+          Active goals
+        </SectionLabel>
+        <div className={cn(isMobile ? "mt-3" : "mt-5")}>
           <QueryRenderer
             query={progressQuery}
             error={
@@ -67,9 +63,9 @@ function TrainingGoalsSection({
 
 function TrainingGoalsSkeleton() {
   return (
-    <div className="grid gap-3">
-      <Skeleton className="h-29" />
-      <Skeleton className="h-29" />
+    <div className="grid gap-4">
+      <div className="flex h-20 animate-pulse flex-col gap-2 rounded-lg bg-muted/40" />
+      <div className="flex h-20 animate-pulse flex-col gap-2 rounded-lg bg-muted/40" />
     </div>
   );
 }

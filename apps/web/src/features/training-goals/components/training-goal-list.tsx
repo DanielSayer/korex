@@ -106,6 +106,31 @@ function TrainingGoalRow({
     );
   }
 
+  if (variant === "full" && density === "mobile") {
+    return (
+      <div className="border-border/40 border-b py-4 first:pt-0 last:border-b-0 last:pb-0">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="line-clamp-1 font-display text-base tracking-tight">
+            {formatGoalTitle(goal)}
+          </p>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <span className="flex items-center gap-1 font-display text-sm tabular-nums">
+              {goal.achieved ? (
+                <CheckIcon className="size-3.5 text-primary" />
+              ) : null}
+              {formatGoalProgress(goal)}
+            </span>
+            <TrainingGoalMobileActions goal={goal} />
+          </div>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {formatGoalPeriod(goal.period)}
+        </p>
+        <RouteProgress className="mt-3" value={progress} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(

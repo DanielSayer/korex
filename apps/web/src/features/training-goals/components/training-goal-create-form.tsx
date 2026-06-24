@@ -92,7 +92,9 @@ function TrainingGoalCreateForm({
           side="bottom"
         >
           <SheetHeader className="border-b p-5">
-            <SheetTitle>Create Training Goal</SheetTitle>
+            <SheetTitle className="font-display lowercase tracking-tight">
+              New goal
+            </SheetTitle>
             <SheetDescription>
               Set a recurring running target for a week or month.
             </SheetDescription>
