@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
+import { RouteAccent, SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
-import { RouteAccent, SectionLabel } from "@/features/dashboard/components/dashboard-brand";
 import {
   formatDistance,
   formatDistanceValue,
@@ -167,10 +167,8 @@ function MobileWeekSummaryItem({
     <section className="relative">
       <TimelineDot />
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <SectionLabel>
-          Training Week
-        </SectionLabel>
-        <span className="font-display text-sm text-muted-foreground">
+        <SectionLabel>Training Week</SectionLabel>
+        <span className="font-display text-muted-foreground text-sm">
           {format(weekStartDate, "MMM d")} –{" "}
           {format(addDays(weekStartDate, 6), "MMM d")}
         </span>
@@ -212,9 +210,7 @@ function MobileSummaryMetric({
     <div className="flex flex-col items-center gap-1.5 px-2 text-center first:pl-0 last:pr-0">
       <span className="flex items-center gap-1 text-muted-foreground">
         <span className="[&>svg]:size-3.5">{icon}</span>
-        <span className="text-[11px] uppercase tracking-wider">
-          {label}
-        </span>
+        <span className="text-[11px] uppercase tracking-wider">{label}</span>
       </span>
       <p className="font-display text-xl tabular-nums leading-none">
         {value}
@@ -240,10 +236,8 @@ function MobileActivityDayItem({
     <section className="relative">
       <TimelineDot />
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-sm">
-          {format(item.date, "EEEE")}
-        </h2>
-        <span className="font-display text-sm text-muted-foreground">
+        <h2 className="font-display text-sm">{format(item.date, "EEEE")}</h2>
+        <span className="font-display text-muted-foreground text-sm">
           {format(item.date, "MMM d")}
         </span>
       </div>

@@ -1,8 +1,8 @@
 import { Button } from "@korex/ui/components/button";
-import { Skeleton } from "@korex/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ChevronRightIcon } from "lucide-react";
+import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { orpc } from "@/utils/orpc";
 import { TrainingGoalList } from "./training-goal-list";
@@ -14,15 +14,16 @@ function TrainingGoalsDashboardCard() {
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-3">
-        <p className="font-medium text-muted-foreground text-xs">
-          Training goals
-        </p>
-        <Button size="sm" variant="ghost" render={<Link to="/goals" />}>
-          Manage
-          <ChevronRightIcon className="size-3.5" />
-        </Button>
-      </div>
+      <SectionLabel
+        action={
+          <Button size="sm" variant="ghost" render={<Link to="/goals" />}>
+            Manage
+            <ChevronRightIcon className="size-3.5" />
+          </Button>
+        }
+      >
+        Goals
+      </SectionLabel>
       <div>
         {progressQuery.isPending ? <TrainingGoalsSkeleton /> : null}
         {progressQuery.isError ? (
@@ -34,7 +35,7 @@ function TrainingGoalsDashboardCard() {
         {progressQuery.isSuccess ? (
           <TrainingGoalList
             empty="No active goals yet."
-            goals={progressQuery.data.slice(0, 2)}
+            goals={progressQuery.data.slice(0, 1)}
             variant="compact"
           />
         ) : null}
@@ -45,9 +46,13 @@ function TrainingGoalsDashboardCard() {
 
 function TrainingGoalsSkeleton() {
   return (
-    <div className="grid gap-2">
-      <Skeleton className="h-16" />
-      <Skeleton className="h-16" />
+    <div className="py-3 first:pt-0 last:pb-0">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="h-4 w-2/3 animate-pulse rounded-sm bg-muted/60" />
+        <div className="h-4 w-16 animate-pulse rounded-sm bg-muted/40" />
+      </div>
+      <div className="mt-2 h-3 w-1/3 animate-pulse rounded-sm bg-muted/40" />
+      <div className="mt-3 h-1 w-full animate-pulse rounded-full bg-muted/50" />
     </div>
   );
 }

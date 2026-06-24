@@ -11,9 +11,15 @@ import {
 } from "@korex/ui/components/sheet";
 import { cn } from "@korex/ui/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArchiveIcon, MoreHorizontalIcon, SaveIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  CheckIcon,
+  MoreHorizontalIcon,
+  SaveIcon,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { RouteProgress } from "@/components/brand";
 import { orpc } from "@/utils/orpc";
 import {
   formatGoalPeriod,
@@ -78,13 +84,33 @@ function TrainingGoalRow({
 }) {
   const progress = Math.max(0, Math.min(goal.percentComplete, 100));
 
+  if (variant === "compact") {
+    return (
+      <div className="py-3 first:pt-0 last:pb-0">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="line-clamp-1 font-medium text-sm">
+            {formatGoalTitle(goal)}
+          </p>
+          <span className="flex shrink-0 items-center gap-1 font-display text-sm tabular-nums">
+            {goal.achieved ? (
+              <CheckIcon className="size-3.5 text-primary" />
+            ) : null}
+            {formatGoalProgress(goal)}
+          </span>
+        </div>
+        <p className="text-muted-foreground text-xs">
+          {formatGoalPeriod(goal.period)}
+        </p>
+        <RouteProgress className="mt-3" value={progress} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
-        variant === "full"
-          ? "rounded-md border border-border/70 p-4"
-          : "py-3 first:pt-0 last:pb-0",
-        density === "mobile" && variant === "full" && "bg-card p-3",
+        "rounded-md border border-border/70 p-4",
+        density === "mobile" && "bg-card p-3",
       )}
     >
       <div className="flex items-start justify-between gap-3">

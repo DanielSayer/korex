@@ -13,9 +13,15 @@ import {
   ChevronRightIcon,
   ClockIcon,
   FlameIcon,
-  RouteIcon,
   TargetIcon,
 } from "lucide-react";
+import type { ReactNode } from "react";
+import {
+  RouteAccent,
+  SectionLabel,
+  StrideTexture,
+  WaypointDot,
+} from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { TrainingGoalsDashboardCard } from "@/features/training-goals/components/training-goals-dashboard-card";
 import { cn } from "@/lib/utils";
@@ -24,7 +30,6 @@ import {
   formatDistanceValue,
   formatDurationClock,
 } from "@/utils/formatters";
-import { RouteAccent, SectionLabel, StrideTexture } from "./dashboard-brand";
 import { DashboardHeader } from "./dashboard-header";
 
 type DashboardMobileProps = {
@@ -65,26 +70,43 @@ function DashboardMobile({
           variant="banner"
         />
       ) : null}
-      <CompactFocusPanel
+      <TrailheadHero
         focus={thisWeek?.weeklyFocus}
-        isLoading={isSummaryLoading}
-      />
-      <CompactMetricStrip
         isLoading={isSummaryLoading}
         thisWeek={thisWeek}
         weeklyDistance={weeklyDistance}
       />
-      <CompactTrainingStreak
-        currentWeek={currentWeek}
-        isError={streakHasError}
-        isLoading={streakLoading}
-        streak={streak}
-      />
-      <CompactRecentActivityList
-        isLoading={recentRunsLoading}
-        runs={recentRuns}
-      />
-      <TrainingGoalsDashboardCard />
+      <TrailSpine>
+        <SpineSection className="pb-7">
+          <CompactTrainingStreak
+            currentWeek={currentWeek}
+            isError={streakHasError}
+            isLoading={streakLoading}
+            streak={streak}
+          />
+        </SpineSection>
+        <SpineSignpost className="pb-1">
+          <SectionLabel
+            action={
+              <Link
+                className="inline-flex items-center gap-1 text-muted-foreground text-xs"
+                to="/calendar"
+              >
+                Calendar <ChevronRightIcon className="size-3" />
+              </Link>
+            }
+          >
+            Recent
+          </SectionLabel>
+        </SpineSignpost>
+        <CompactRecentActivityList
+          isLoading={recentRunsLoading}
+          runs={recentRuns}
+        />
+        <SpineSection className="pt-7">
+          <TrainingGoalsDashboardCard />
+        </SpineSection>
+      </TrailSpine>
     </div>
   );
 }
@@ -103,8 +125,9 @@ function MobileDashboardHeader({
   return (
     <header className="flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <p className="font-display text-3xl lowercase leading-none tracking-tight">
+        <p className="flex items-baseline gap-1.5 font-display text-4xl lowercase leading-none tracking-tight">
           korex
+          <WaypointDot className="translate-y-[-0.125em]" />
         </p>
         <p className="mt-2 text-muted-foreground text-sm">
           {format(now, "EEEE")} {partOfDay}. Let's move.
@@ -115,38 +138,76 @@ function MobileDashboardHeader({
   );
 }
 
-function CompactFocusPanel({
+function TrailheadHero({
   focus,
   isLoading,
+  thisWeek,
+  weeklyDistance,
 }: {
   focus?: DashboardWeeklyFocus;
   isLoading: boolean;
+  thisWeek?: DashboardThisWeek;
+  weeklyDistance?: DashboardWeeklyDistance;
 }) {
+  const distanceValue = isLoading
+    ? "--"
+    : formatDistanceValue(
+        thisWeek?.distanceMeters ??
+          weeklyDistance?.thisWeekDistanceMeters ??
+          null,
+      );
+
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-primary/5 p-5">
+    <section className="relative overflow-hidden rounded-3xl bg-primary/5 p-6">
       <StrideTexture />
       <div className="relative">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <p className="font-display text-[11px] text-primary uppercase tracking-[0.18em]">
-            Weekly Focus
+            This week
           </p>
-          <p className="shrink-0 rounded-full bg-background/70 px-2.5 py-0.5 font-medium text-primary text-xs">
+          <span className="shrink-0 rounded-full bg-background/70 px-2.5 py-0.5 font-medium text-primary text-xs">
             {isLoading ? "..." : (focus?.status ?? "steady")}
-          </p>
+          </span>
         </div>
-        <h2 className="mt-3 line-clamp-2 font-display text-4xl leading-[1.05] tracking-tight">
+
+        <p className="mt-4 font-display text-[clamp(3.25rem,17vw,4.25rem)] tabular-nums leading-[0.9] tracking-tight">
+          {distanceValue}
+          <span className="ml-1.5 align-middle font-medium font-sans text-lg text-muted-foreground">
+            km
+          </span>
+        </p>
+
+        <RouteAccent className="mt-3 h-4 w-24 text-primary" />
+
+        <h2 className="mt-3 font-display text-3xl leading-tight tracking-tight">
           {isLoading ? "Reading this week." : (focus?.title ?? "Build.")}
         </h2>
-        <RouteAccent className="mt-3 h-3 w-16 text-primary" />
-        <p className="mt-3 line-clamp-2 text-muted-foreground text-sm leading-relaxed">
+        <p className="mt-1.5 line-clamp-2 text-muted-foreground text-sm leading-relaxed">
           {isLoading
             ? "Checking current training signals."
             : (focus?.body ?? "Keep the next session repeatable.")}
         </p>
-        <div className="mt-4 flex items-center gap-2 font-medium text-sm">
+        <div className="mt-3 flex items-center gap-2 font-medium text-sm">
           <TargetIcon className="size-4 text-primary" />
           <span className="line-clamp-1">
             {isLoading ? "Preparing next step" : (focus?.action ?? "One run")}
+          </span>
+        </div>
+
+        <div className="mt-5 flex items-center gap-4 border-border/40 border-t pt-4 text-muted-foreground text-xs">
+          <span className="flex items-center gap-1.5">
+            <ClockIcon className="size-3.5" />
+            <span className="tabular-nums">
+              {isLoading
+                ? "--"
+                : formatDurationClock(thisWeek?.durationSeconds ?? 0)}
+            </span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <ActivityIcon className="size-3.5" />
+            <span className="tabular-nums">
+              {isLoading ? "--" : `${thisWeek?.activityCount ?? 0} runs`}
+            </span>
           </span>
         </div>
       </div>
@@ -154,72 +215,58 @@ function CompactFocusPanel({
   );
 }
 
-function CompactMetricStrip({
-  isLoading,
-  thisWeek,
-  weeklyDistance,
-}: {
-  isLoading: boolean;
-  thisWeek?: DashboardThisWeek;
-  weeklyDistance?: DashboardWeeklyDistance;
-}) {
-  const metrics = [
-    {
-      icon: RouteIcon,
-      label: "Distance",
-      unit: "km",
-      value: isLoading
-        ? "--"
-        : formatDistanceValue(
-            thisWeek?.distanceMeters ??
-              weeklyDistance?.thisWeekDistanceMeters ??
-              null,
-          ),
-    },
-    {
-      icon: ClockIcon,
-      label: "Time",
-      unit: "",
-      value: isLoading
-        ? "--"
-        : formatDurationClock(thisWeek?.durationSeconds ?? 0),
-    },
-    {
-      icon: ActivityIcon,
-      label: "Runs",
-      unit: "",
-      value: isLoading ? "--" : String(thisWeek?.activityCount ?? 0),
-    },
-  ];
-
+/**
+ * The vertical route spine — a single hairline trail tying every section
+ * together as waypoints. The trail *is* the layout.
+ */
+function TrailSpine({ children }: { children: ReactNode }) {
   return (
-    <section className="grid grid-cols-3 divide-x divide-border/30">
-      {metrics.map((metric) => {
-        const Icon = metric.icon;
+    <div className="relative">
+      <div
+        aria-hidden="true"
+        className="absolute top-2 bottom-0 left-3 w-px bg-border [mask-image:linear-gradient(to_bottom,black_0,black_78%,transparent_100%)]"
+      />
+      <div className="flex flex-col">{children}</div>
+    </div>
+  );
+}
 
-        return (
-          <div
-            className="flex flex-col items-center gap-1.5 px-2 text-center first:pl-0 last:pr-0"
-            key={metric.label}
-          >
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <Icon className="size-3.5" />
-              <span className="text-[11px] uppercase tracking-wider">
-                {metric.label}
-              </span>
-            </span>
-            <p className="font-display text-3xl tabular-nums leading-none">
-              {metric.value}
-              {metric.unit ? (
-                <span className="ml-1 font-medium font-sans text-muted-foreground text-sm">
-                  {metric.unit}
-                </span>
-              ) : null}
-            </p>
-          </div>
-        );
-      })}
-    </section>
+function SpineSection({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={cn("relative pl-9", className)}>
+      <Marker className="top-2" />
+      {children}
+    </div>
+  );
+}
+
+function SpineSignpost({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return <div className={cn("relative pl-9", className)}>{children}</div>;
+}
+
+function Marker({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "absolute left-3 -translate-x-1/2 -translate-y-1/2",
+        className,
+      )}
+    >
+      <WaypointDot filled={false} />
+    </span>
   );
 }
 
@@ -230,67 +277,63 @@ function CompactRecentActivityList({
   isLoading: boolean;
   runs: RecentActivity[];
 }) {
-  return (
-    <section className="flex flex-col gap-3">
-      <SectionLabel
-        action={
-          <Link
-            className="inline-flex items-center gap-1 text-muted-foreground text-xs"
-            to="/calendar"
-          >
-            Calendar <ChevronRightIcon className="size-3" />
-          </Link>
-        }
-      >
-        Recent
-      </SectionLabel>
-      {isLoading ? (
-        <div className="py-6 text-center text-muted-foreground text-sm">
-          Loading recent Activities...
-        </div>
-      ) : runs.length === 0 ? (
+  if (isLoading) {
+    return (
+      <div className="py-6 pl-9 text-muted-foreground text-sm">
+        Loading recent activities...
+      </div>
+    );
+  }
+
+  if (runs.length === 0) {
+    return (
+      <div className="pl-9">
         <RecentActivityEmpty />
-      ) : (
-        <ol className="flex flex-col">
-          {runs.slice(0, 5).map((run) => (
-            <li key={run.id}>
-              <Link
-                className="flex items-center gap-3 py-3"
-                params={{ activityId: String(run.id) }}
-                to="/activity/$activityId"
-              >
-                <span
-                  aria-hidden="true"
-                  className="size-2 shrink-0 rounded-full bg-primary"
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center justify-between gap-3">
-                    <span className="line-clamp-1 font-medium text-sm">
-                      {run.name}
-                    </span>
-                    <span className="shrink-0 font-display text-sm tabular-nums">
-                      {formatDistance(run.distanceMeters)}
-                    </span>
-                  </span>
-                  <span className="block text-muted-foreground text-xs">
-                    {formatDurationClock(run.durationSeconds ?? null)}
-                    {run.averageHeartRateBeatsPerMinute
-                      ? ` · ${run.averageHeartRateBeatsPerMinute} bpm`
-                      : ""}
-                  </span>
+      </div>
+    );
+  }
+
+  return (
+    <ol className="flex flex-col">
+      {runs.slice(0, 5).map((run) => (
+        <li className="relative pl-9" key={run.id}>
+          <span
+            aria-hidden="true"
+            className="absolute top-5 left-3 -translate-x-1/2 -translate-y-1/2"
+          >
+            <WaypointDot />
+          </span>
+          <Link
+            className="flex items-center gap-3 py-3"
+            params={{ activityId: String(run.id) }}
+            to="/activity/$activityId"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center justify-between gap-3">
+                <span className="line-clamp-1 font-medium text-sm">
+                  {run.name}
                 </span>
-              </Link>
-            </li>
-          ))}
-        </ol>
-      )}
-    </section>
+                <span className="shrink-0 font-display text-sm tabular-nums">
+                  {formatDistance(run.distanceMeters)}
+                </span>
+              </span>
+              <span className="block text-muted-foreground text-xs">
+                {formatDurationClock(run.durationSeconds ?? null)}
+                {run.averageHeartRateBeatsPerMinute
+                  ? ` · ${run.averageHeartRateBeatsPerMinute} bpm`
+                  : ""}
+              </span>
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ol>
   );
 }
 
 function RecentActivityEmpty() {
   return (
-    <div className="flex flex-col items-center gap-3 py-6 text-center">
+    <div className="flex flex-col items-start gap-3 py-3">
       <img
         alt="An empty winding trail cresting a small hill with a single route waypoint marker"
         className="h-20 w-auto opacity-90"
