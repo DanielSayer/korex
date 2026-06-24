@@ -10,6 +10,7 @@ import {
 } from "@korex/ui/components/chart";
 import { useMemo } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { SectionLabel } from "@/components/brand";
 import { formatDurationClock, formatShortMonth } from "@/utils/formatters";
 import { chartAxisTick } from "../analytics-chart-utils";
 import {
@@ -59,20 +60,18 @@ function PersonalBestEffortTrendChart({
   } satisfies ChartConfig;
 
   return (
-    <div className="rounded-lg border p-3 sm:p-5">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h3 className="font-medium text-base">Monthly best trend</h3>
-          <p className="text-muted-foreground text-sm">
-            Fastest effort achieved by the end of each month in {year}.
-          </p>
-        </div>
+    <section className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <SectionLabel>Monthly best trend</SectionLabel>
         <BestEffortDistancePicker
           availableDistanceCodes={availableDistanceCodes}
           onDistanceCodeChange={onDistanceCodeChange}
           selectedDistanceCode={selectedDistanceCode}
         />
       </div>
+      <p className="-mt-1 text-muted-foreground text-xs">
+        Fastest effort by month end in {year}.
+      </p>
       <ChartContainer
         className="aspect-auto h-64 w-full sm:h-80"
         config={chartConfig}
@@ -130,7 +129,7 @@ function PersonalBestEffortTrendChart({
           />
         </LineChart>
       </ChartContainer>
-    </div>
+    </section>
   );
 }
 

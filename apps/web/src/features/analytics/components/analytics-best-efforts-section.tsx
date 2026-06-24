@@ -2,9 +2,9 @@ import type {
   AnalyticsBestEfforts,
   BestEffortStandardDistanceCode,
 } from "@korex/api/modules/activities/activities.types";
-import { Skeleton } from "@korex/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { orpc } from "@/utils/orpc";
@@ -51,12 +51,10 @@ function AnalyticsBestEffortsPanel({
 
   return (
     <section className="flex flex-col gap-4">
-      <div>
-        <h2 className="font-semibold text-xl tracking-tight">Best efforts</h2>
-        <p className="text-muted-foreground text-sm">
-          All-time personal best efforts and monthly progression.
-        </p>
-      </div>
+      <SectionLabel>Best efforts</SectionLabel>
+      <p className="-mt-1 text-muted-foreground text-xs">
+        All-time personal bests and monthly progression.
+      </p>
       <PersonalBestEffortGrid efforts={analytics.allTime} />
       <PersonalBestEffortTrendChart
         analytics={analytics}
@@ -71,14 +69,20 @@ function AnalyticsBestEffortsPanel({
 
 function AnalyticsBestEffortsSkeleton() {
   return (
-    <div className="space-y-4">
-      <Skeleton className="h-14" />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="flex flex-col gap-4">
+      <div className="h-3 w-24 animate-pulse rounded-sm bg-muted/60" />
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {bestEffortSkeletonKeys.map((key) => (
-          <Skeleton className="h-28" key={key} />
+          <div
+            className="flex h-16 animate-pulse items-center justify-between border-border/30 border-b py-3"
+            key={key}
+          >
+            <div className="h-3 w-16 animate-pulse rounded-sm bg-muted/40" />
+            <div className="h-4 w-20 animate-pulse rounded-sm bg-muted/50" />
+          </div>
         ))}
       </div>
-      <Skeleton className="h-96" />
+      <div className="h-64 w-full animate-pulse rounded-lg bg-muted/30" />
     </div>
   );
 }

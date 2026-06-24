@@ -6,6 +6,7 @@ import {
   ChartTooltipContent,
 } from "@korex/ui/components/chart";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
+import { SectionLabel } from "@/components/brand";
 import {
   chartAxisTick,
   formatKilometers,
@@ -30,10 +31,8 @@ function CumulativeDistanceChart({
   } satisfies ChartConfig;
 
   return (
-    <div className="rounded-lg border p-3 sm:p-5">
-      <div className="mb-4 flex flex-col gap-1">
-        <h3 className="font-medium text-base">Cumulative distance</h3>
-      </div>
+    <section className="flex flex-col gap-3">
+      <SectionLabel>Cumulative distance</SectionLabel>
       <ChartContainer
         className="aspect-auto h-64 w-full sm:h-80"
         config={chartConfig}
@@ -79,7 +78,7 @@ function CumulativeDistanceChart({
           />
         </LineChart>
       </ChartContainer>
-    </div>
+    </section>
   );
 }
 

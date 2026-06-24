@@ -12,9 +12,9 @@ function PersonalBestEffortGrid({
 }) {
   if (efforts.length === 0) {
     return (
-      <div className="rounded-lg border p-4 text-muted-foreground text-sm">
+      <p className="py-3 text-muted-foreground text-sm">
         No personal best efforts yet.
-      </div>
+      </p>
     );
   }
 
@@ -23,24 +23,24 @@ function PersonalBestEffortGrid({
   );
 
   return (
-    <div className="overflow-hidden rounded-lg border">
+    <div className="border-border/30 border-t">
       {bestEffortDistanceCodes.map((standardDistanceCode) => {
         const effort = effortsByDistance.get(standardDistanceCode);
 
         return (
           <div
-            className="grid min-h-16 grid-cols-[minmax(7rem,1fr)_auto] items-center gap-3 border-border border-b px-4 py-3 last:border-b-0 xl:inline-grid xl:w-1/3 xl:border-r xl:nth-[3n]:border-r-0 xl:nth-last-[-n+3]:border-b-0"
+            className="grid min-h-14 grid-cols-[minmax(7rem,1fr)_auto] items-center gap-3 border-border/30 border-b py-2.5 xl:inline-grid xl:w-1/3 xl:border-r xl:nth-[3n]:border-r-0 xl:nth-last-[-n+3]:border-b-0"
             key={standardDistanceCode}
           >
             <div className="min-w-0">
-              <div className="truncate text-muted-foreground text-sm">
+              <div className="truncate font-display text-sm tracking-tight">
                 {bestEffortDistanceLabels[standardDistanceCode]}
               </div>
               <div className="mt-0.5 truncate text-muted-foreground text-xs">
                 {effort ? formatShortDate(effort.activityStartAt) : "No effort"}
               </div>
             </div>
-            <div className="whitespace-nowrap text-right font-semibold text-xl tracking-tight">
+            <div className="whitespace-nowrap text-right font-display text-lg tabular-nums tracking-tight">
               {formatDurationClock(effort?.durationSeconds ?? null)}
             </div>
           </div>

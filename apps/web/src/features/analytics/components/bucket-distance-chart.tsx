@@ -6,6 +6,7 @@ import {
   ChartTooltipContent,
 } from "@korex/ui/components/chart";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { SectionLabel } from "@/components/brand";
 import {
   chartAxisTick,
   formatKilometers,
@@ -29,10 +30,8 @@ function BucketDistanceChart({ analytics }: { analytics: AnalyticsVolume }) {
   } satisfies ChartConfig;
 
   return (
-    <div className="rounded-lg border p-3 sm:p-5">
-      <div className="mb-4 flex flex-col gap-1">
-        <h3 className="font-medium text-base">{title}</h3>
-      </div>
+    <section className="flex flex-col gap-3">
+      <SectionLabel>{title}</SectionLabel>
       <ChartContainer
         className="aspect-auto h-64 w-full sm:h-80"
         config={chartConfig}
@@ -76,7 +75,7 @@ function BucketDistanceChart({ analytics }: { analytics: AnalyticsVolume }) {
           />
         </BarChart>
       </ChartContainer>
-    </div>
+    </section>
   );
 }
 

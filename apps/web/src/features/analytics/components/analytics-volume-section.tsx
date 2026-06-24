@@ -10,13 +10,16 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@korex/ui/components/dropdown-menu";
-import { Skeleton } from "@korex/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, ChevronDownIcon } from "lucide-react";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { cn } from "@/lib/utils";
-import { formatDistance, formatDurationCompact } from "@/utils/formatters";
+import {
+  formatDistance,
+  formatDistanceValue,
+  formatDurationCompact,
+} from "@/utils/formatters";
 import { orpc } from "@/utils/orpc";
 import { BucketDistanceChart } from "./bucket-distance-chart";
 import { CumulativeDistanceChart } from "./cumulative-distance-chart";
@@ -131,40 +134,43 @@ function AnalyticsVolumePanel({ analytics }: { analytics: AnalyticsVolume }) {
   const summary = getAnalyticsVolumeSummary(analytics);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-3">
-        <MetricCard
-          detail={formatDurationCompact(analytics.totalDurationSeconds)}
-          label="This year"
-          value={formatDistance(analytics.totalDistanceMeters)}
-        />
-        <MetricCard
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1">
+        <p className="font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em]">
+          {analytics.year} total
+        </p>
+        <p className="font-display text-[clamp(3rem,14vw,3.75rem)] tabular-nums leading-[0.9] tracking-tight">
+          {formatDistanceValue(analytics.totalDistanceMeters)}
+          <span className="ml-1.5 align-middle font-medium font-sans text-lg text-muted-foreground">
+            km
+          </span>
+        </p>
+        <p className="text-muted-foreground text-xs tabular-nums">
+          {formatDurationCompact(analytics.totalDurationSeconds)} ·{" "}
+          {analytics.totalActivityCount} runs
+        </p>
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-y divide-border/30 border-border/30 border-t sm:grid-cols-3 sm:divide-y-0">
+        <StatBlock
+          className="pt-3"
           detail={formatDurationCompact(summary.weekDurationSeconds)}
           label="This week"
           value={formatDistance(summary.weekDistanceMeters)}
         />
-        <MetricCard
+        <StatBlock
+          className="pt-3"
           detail={formatDurationCompact(summary.monthDurationSeconds)}
           label="This month"
           value={formatDistance(summary.monthDistanceMeters)}
         />
-        <MetricCard
-          detail={`${summary.monthActivityCount} this month`}
-          label="Yearly activity count"
-          value={analytics.totalActivityCount.toString()}
-        />
-        <MetricCard
-          detail={formatDurationCompact(summary.averageMonthlyDurationSeconds)}
-          label="Average monthly distance"
-          value={formatDistance(summary.averageMonthlyDistanceMeters)}
-        />
-        <MetricCard
-          detail={formatDurationCompact(summary.averageWeeklyDurationSeconds)}
-          label="Average weekly distance"
+        <StatBlock
+          className="pt-3"
+          detail={`${summary.monthActivityCount} runs`}
+          label="Avg / week"
           value={formatDistance(summary.averageWeeklyDistanceMeters)}
         />
       </div>
-      <div className="grid gap-3 sm:gap-4 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <BucketDistanceChart analytics={analytics} />
         <CumulativeDistanceChart analytics={analytics} />
       </div>
@@ -172,24 +178,33 @@ function AnalyticsVolumePanel({ analytics }: { analytics: AnalyticsVolume }) {
   );
 }
 
-function MetricCard({
+function StatBlock({
+  className,
   detail,
   label,
   value,
 }: {
+  className?: string;
   detail: string;
   label: string;
   value: string;
 }) {
   return (
-    <div className="min-w-0 rounded-lg border p-3 sm:p-4">
-      <div className="truncate text-muted-foreground text-sm">{label}</div>
-      <div className="mt-1 truncate font-semibold text-xl tracking-tight sm:text-2xl">
+    <div
+      className={cn(
+        "flex flex-col gap-1 px-3 py-2 first:pl-0 last:pr-0",
+        className,
+      )}
+    >
+      <span className="text-[11px] text-muted-foreground uppercase tracking-wider">
+        {label}
+      </span>
+      <span className="font-display text-xl tabular-nums tracking-tight">
         {value}
-      </div>
-      <div className="mt-1 truncate text-muted-foreground text-xs sm:text-sm">
+      </span>
+      <span className="text-muted-foreground text-xs tabular-nums">
         {detail}
-      </div>
+      </span>
     </div>
   );
 }
@@ -254,16 +269,21 @@ function toDate(value: Date | string) {
 
 function AnalyticsVolumeSkeleton() {
   return (
-    <div className="rounded-lg border p-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        <Skeleton className="h-16" />
-        <Skeleton className="h-16" />
-        <Skeleton className="h-16" />
-        <Skeleton className="h-16" />
-        <Skeleton className="h-16" />
-        <Skeleton className="h-16" />
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1">
+        <div className="h-3 w-20 animate-pulse rounded-sm bg-muted/60" />
+        <div className="h-12 w-40 animate-pulse rounded-sm bg-muted/50" />
+        <div className="h-3 w-32 animate-pulse rounded-sm bg-muted/40" />
       </div>
-      <Skeleton className="mt-5 h-80" />
+      <div className="grid grid-cols-2 border-border/30 border-t sm:grid-cols-3">
+        {["week", "month", "avg"].map((key) => (
+          <div className="flex flex-col gap-1.5 px-3 py-3" key={key}>
+            <div className="h-3 w-16 animate-pulse rounded-sm bg-muted/40" />
+            <div className="h-5 w-20 animate-pulse rounded-sm bg-muted/50" />
+          </div>
+        ))}
+      </div>
+      <div className="h-64 w-full animate-pulse rounded-lg bg-muted/30" />
     </div>
   );
 }

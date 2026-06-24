@@ -1,4 +1,5 @@
 import type { AnalyticsVolumeBucketMode } from "@korex/api/modules/activities/activities.types";
+import { RouteAccent } from "@/components/brand";
 import { PageHeader, PageLayout } from "@/components/page-layout";
 import { useIsMobileViewport } from "@/components/responsive";
 import { AnalyticsBestEffortsSection } from "./analytics-best-efforts-section";
@@ -57,18 +58,19 @@ function AnalyticsMobile({
   year,
 }: AnalyticsPageProps) {
   return (
-    <PageLayout className="gap-4 p-3">
+    <PageLayout className="gap-6 p-4">
       <header className="grid gap-3">
         <div className="min-w-0">
-          <p className="font-semibold text-primary text-xs uppercase">
+          <p className="font-display text-[11px] text-primary uppercase tracking-[0.18em]">
             Analytics
           </p>
-          <h1 className="mt-1 font-semibold text-2xl tracking-tight">
-            Training trends
+          <h1 className="mt-1 font-display text-3xl lowercase leading-none tracking-tight">
+            Trends
           </h1>
-          <p className="mt-1 text-muted-foreground text-sm">
+          <p className="mt-2 text-muted-foreground text-sm">
             Yearly volume and personal best efforts.
           </p>
+          <RouteAccent className="mt-3 h-3 w-16 text-primary" />
         </div>
         <AnalyticsVolumeControls
           bucketMode={bucketMode}
