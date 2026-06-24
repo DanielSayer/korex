@@ -2,6 +2,7 @@ import { Button } from "@korex/ui/components/button";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ChevronLeftIcon } from "lucide-react";
 import { z } from "zod";
+import { RouteAccent } from "@/components/brand";
 import { PageHeader, PageLayout } from "@/components/page-layout";
 import { useIsMobileViewport } from "@/components/responsive";
 import { RouteHeatmapMap } from "@/features/route-heatmap/components/route-heatmap-map";
@@ -71,24 +72,25 @@ function HeatmapMobile({
 }) {
   return (
     <div className="grid min-h-full grid-rows-[auto_minmax(0,1fr)]">
-      <header className="grid gap-3 border-border/70 border-b p-3">
+      <header className="grid gap-3 border-border/40 border-b p-4">
         <Link
-          className="inline-flex w-fit items-center gap-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+          className="inline-flex w-fit items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
           to="/more"
         >
           <ChevronLeftIcon className="size-4" />
           More
         </Link>
         <div className="min-w-0">
-          <p className="font-semibold text-primary text-xs uppercase">
+          <p className="font-display text-[11px] text-primary uppercase tracking-[0.18em]">
             Heatmap
           </p>
-          <h1 className="mt-1 font-semibold text-2xl tracking-tight">
-            Activity Route Heatmap
+          <h1 className="mt-1 font-display text-3xl lowercase leading-none tracking-tight">
+            Route heatmap
           </h1>
-          <p className="mt-1 text-muted-foreground text-sm">
+          <p className="mt-2 text-muted-foreground text-sm">
             {getHeatmapDescription(displayMode)}
           </p>
+          <RouteAccent className="mt-3 h-3 w-16 text-primary" />
         </div>
         <RouteHeatmapDisplayModeControl
           className="w-full"

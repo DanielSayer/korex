@@ -6,6 +6,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { toast } from "sonner";
 import z from "zod";
+import { RouteAccent } from "@/components/brand";
 import { authClient } from "@/lib/auth-client";
 import { ErrorMessage } from "../error-message";
 
@@ -62,10 +63,13 @@ function SignIn() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
           >
-            <h1 className="font-bold text-4xl tracking-tight">Welcome back</h1>
-            <p className="text-muted-foreground">
-              Sign into your korex account
+            <h1 className="font-display text-4xl lowercase leading-none tracking-tight">
+              Welcome back
+            </h1>
+            <p className="mt-2 text-muted-foreground text-sm">
+              Your trail starts here.
             </p>
+            <RouteAccent className="mt-3 h-3 w-16 text-primary" />
           </motion.div>
         </AnimatePresence>
         <div className="flex flex-col gap-2">
@@ -153,7 +157,7 @@ function SignIn() {
                     loading={isSubmitting}
                     loadingText="Submitting..."
                   >
-                    Sign In
+                    Sign in
                   </Button>
                 )}
               </form.Subscribe>
@@ -165,7 +169,7 @@ function SignIn() {
               to="/auth/sign-up"
               className="hover:text-accent-foreground hover:underline hover:underline-offset-1"
             >
-              Sign Up
+              Sign up
             </Link>
           </p>
         </div>

@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import z from "zod";
+import { RouteAccent } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { authClient } from "@/lib/auth-client";
 
@@ -55,10 +56,13 @@ function SignUpAccountStep({ onComplete }: { onComplete: () => void }) {
       className="flex flex-col gap-6"
     >
       <div>
-        <h1 className="font-bold text-3xl tracking-tight">Welcome</h1>
-        <p className="text-muted-foreground text-sm">
-          Create your korex account
+        <h1 className="font-display text-3xl lowercase leading-none tracking-tight">
+          Welcome
+        </h1>
+        <p className="mt-2 text-muted-foreground text-sm">
+          Create your korex account.
         </p>
+        <RouteAccent className="mt-3 h-3 w-16 text-primary" />
       </div>
 
       <form

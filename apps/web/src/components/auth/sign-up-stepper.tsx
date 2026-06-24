@@ -1,6 +1,6 @@
 import { cn } from "@korex/ui/lib/utils";
 import { Check } from "lucide-react";
-import { motion } from "motion/react";
+import { RouteProgress } from "@/components/brand";
 
 const steps = [
   { label: "Account", description: "Create your login" },
@@ -8,22 +8,12 @@ const steps = [
   { label: "Sync", description: "Import data" },
 ] as const;
 
-function SignUpStepper({
-  currentStep,
-}: {
-  currentStep: number;
-}) {
+function SignUpStepper({ currentStep }: { currentStep: number }) {
   const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
-    <div className="space-y-3">
-      <div className="h-1 overflow-hidden rounded-full bg-muted">
-        <motion.div
-          className="h-full rounded-full bg-primary"
-          initial={false}
-          animate={{ width: `${progress}%` }}
-        />
-      </div>
+    <div className="flex flex-col gap-3">
+      <RouteProgress value={progress} />
       <div className="grid grid-cols-3 gap-2">
         {steps.map((step, index) => {
           const isComplete = index < currentStep;
@@ -33,18 +23,17 @@ function SignUpStepper({
             <div
               key={step.label}
               className={cn(
-                "rounded-md border border-transparent bg-muted/20 px-3 py-2 text-xs",
-                isCurrent && "border-border bg-muted/40",
+                "border-border/40 border-b px-1 py-2 text-xs",
+                isCurrent && "border-primary",
               )}
             >
-              <div className="flex items-center gap-2 font-medium">
+              <div className="flex items-center gap-2 font-display lowercase tracking-tight">
                 <span
                   className={cn(
-                    "flex size-5 items-center justify-center rounded-full bg-muted text-[11px] text-muted-foreground",
-                    {
-                      "bg-primary text-primary-foreground":
-                        isCurrent || isComplete,
-                    },
+                    "flex size-5 items-center justify-center rounded-full text-[11px]",
+                    isCurrent || isComplete
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   {isComplete ? <Check className="size-3" /> : index + 1}
