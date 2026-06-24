@@ -71,17 +71,24 @@ Tradeoff: one extra font dependency in exchange for a distinct, athletic voice.
 
 ## 5. The motif system
 
-The route line + waypoint, implemented in
-`apps/web/src/features/dashboard/components/dashboard-brand.tsx`:
+The route line + waypoint, implemented in `apps/web/src/components/brand.tsx`:
 
 - **`RouteAccent`** — ascending line ending in a filled dot. Sits under hero
   titles as a signature flourish.
 - **`StrideTexture`** — the icon's diagonal stride lines as a faded, masked CSS
   texture on hero surfaces. Themed via `--primary`, no raster asset.
 - **`SectionLabel`** — consistent display-font, tracked, uppercase headers.
+  Used everywhere instead of ad-hoc headings.
+- **`WaypointDot`** — the core brand mark, filled or hollow. Filled marks a
+  point on the trail; hollow marks a future point. Use sparingly: active tab
+  indicator, list bullets on a spine, streak markers. Never decorative spam.
+- **`RouteProgress`** — a hairline trail with a waypoint dot climbing to the
+  progress %. Replaces generic progress bars.
 - **Waypoint track** — the weekly streak rendered as dots on a connecting line;
   a filled waypoint means a qualifying activity. The trail *is* the data.
 - **Route-dot bullets** — list items use a small primary dot, echoing waypoints.
+- **Trail spine** — a vertical hairline route tying dashboard sections together
+  as waypoints (dashboard-only; not a shared primitive).
 
 Reuse these before inventing new decoration.
 
@@ -124,10 +131,15 @@ the existing hero imagery.
 
 ## 9. Scope & status
 
-- **Implemented:** mobile dashboard (`features/dashboard/components/dashboard-mobile.tsx`)
-  and shared motif primitives (`dashboard-brand.tsx`).
-- **Not yet aligned:** desktop dashboard, and shared components like
-  `TrainingGoalsDashboardCard` still use the plainer pre-identity styling.
+- **Implemented (mobile):** the full mobile app now follows Trail Telemetry:
+  dashboard, calendar, analytics, goals, activity detail, weekly summaries
+  (list + detail), settings (layout + hub + sub-routes), heatmap, more hub,
+  auth (sign-in + sign-up), and the bottom tab bar.
+- **Shared primitives:** `components/brand.tsx` exports `RouteAccent`,
+  `StrideTexture`, `SectionLabel`, `WaypointDot`, and `RouteProgress`.
+- **Not yet aligned:** desktop dashboard and desktop-specific layouts still use
+  pre-identity styling in places. Shared components like `TrainingNotesSection`
+  may still need alignment.
 - **Future:** promote the motif primitives into `packages/ui` once the language
   is proven, so the rest of the app can adopt Trail Telemetry consistently.
 
