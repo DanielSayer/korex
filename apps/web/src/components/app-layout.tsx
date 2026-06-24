@@ -19,6 +19,7 @@ import {
   useMatchRoute,
 } from "@tanstack/react-router";
 import { Activity } from "lucide-react";
+import { WaypointDot } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import {
   appNavigationItems,
@@ -133,7 +134,7 @@ function MobileAppLayout() {
       {hideBottomNav ? null : (
         <nav
           aria-label="Primary"
-          className="shrink-0 border-border/70 border-t bg-background/95 px-2 pt-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-10px_30px_color-mix(in_oklch,var(--background)_70%,transparent)] backdrop-blur"
+          className="shrink-0 border-border/40 border-t bg-background/95 px-2 pt-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-[0_-10px_30px_color-mix(in_oklch,var(--background)_70%,transparent)] backdrop-blur"
         >
           <div className="grid grid-cols-5 gap-1">
             {mobileTabs.map((item) => {
@@ -144,14 +145,19 @@ function MobileAppLayout() {
                 <Link
                   aria-current={isActive ? "page" : undefined}
                   className={cn(
-                    "flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-md px-1 py-2 text-muted-foreground text-xs transition-colors hover:bg-muted/70 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                    isActive && "bg-muted text-foreground",
+                    "flex min-w-0 flex-col items-center justify-center gap-1 rounded-md px-1 py-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
+                    isActive && "text-primary",
                   )}
                   key={item.id}
                   to={item.to}
                 >
+                  {isActive ? (
+                    <WaypointDot className="size-1.5" />
+                  ) : (
+                    <span className="size-1.5" aria-hidden="true" />
+                  )}
                   <Icon className="size-5" />
-                  <span className="w-full truncate text-center font-medium leading-tight">
+                  <span className="w-full truncate text-center font-display text-[10px] lowercase leading-tight tracking-wide">
                     {item.label}
                   </span>
                 </Link>
@@ -166,11 +172,13 @@ function MobileAppLayout() {
 
 function MobileOfflineRequiredBanner() {
   return (
-    <div className="mx-3 mt-3 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-sm">
-      <p className="font-medium">Connection required</p>
-      <p className="mt-0.5 text-destructive/80 text-xs">
-        Korex is online-only for this phase. Reconnect to load or update your
-        training data.
+    <div className="mx-4 mt-4 border-destructive/30 border-l-2 pl-3 text-destructive text-sm">
+      <p className="font-display font-medium lowercase tracking-wide">
+        Connection required
+      </p>
+      <p className="mt-0.5 text-destructive/80 text-xs leading-relaxed">
+        Korex is online-only for now. Reconnect to load or update your training
+        data.
       </p>
     </div>
   );
