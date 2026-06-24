@@ -12,6 +12,7 @@ import {
   TargetIcon,
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
+import { RouteAccent, SectionLabel, StrideTexture } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 type WeeklyFocusCardProps = {
@@ -76,11 +77,11 @@ function WeeklyFocusCard({ focus, isLoading }: WeeklyFocusCardProps) {
   const visibleFocus = isLoading ? loadingFocus : (focus ?? unavailableFocus);
 
   return (
-    <section className="max-w-2xl">
+    <section className="relative max-w-2xl">
+      <StrideTexture className="opacity-30" />
+      <div className="relative">
       <div className="flex items-center gap-2">
-        <p className="font-semibold text-primary text-xs uppercase">
-          Weekly Focus
-        </p>
+        <SectionLabel>Weekly focus</SectionLabel>
         <span
           className={cn(
             "h-1.5 w-1.5 rounded-full",
@@ -92,9 +93,10 @@ function WeeklyFocusCard({ focus, isLoading }: WeeklyFocusCardProps) {
         </span>
       </div>
 
-      <h1 className="mt-5 max-w-130 font-semibold font-serif text-4xl leading-[0.98] tracking-tight sm:text-6xl">
+      <h1 className="mt-5 max-w-130 font-display text-5xl leading-[0.94] tracking-tight sm:text-6xl">
         {visibleFocus.title}
       </h1>
+      <RouteAccent className="mt-3 h-3 w-20 text-primary" />
       <p className="mt-6 max-w-lg text-muted-foreground leading-7">
         {visibleFocus.body}
       </p>
@@ -115,6 +117,7 @@ function WeeklyFocusCard({ focus, isLoading }: WeeklyFocusCardProps) {
             />
           ))}
         </div>
+      </div>
       </div>
     </section>
   );

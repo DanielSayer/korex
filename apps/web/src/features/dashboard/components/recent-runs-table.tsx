@@ -6,6 +6,7 @@ import {
   RouteIcon,
 } from "lucide-react";
 import { formatDistance, formatDurationClock } from "@/utils/formatters";
+import { SectionLabel, WaypointDot } from "@/components/brand";
 import { buildRoutePreviewPath } from "../utils/route-preview";
 
 type RecentRunsTableProps = {
@@ -17,9 +18,7 @@ function RecentRunsTable({ isLoading, runs }: RecentRunsTableProps) {
   return (
     <section className="relative">
       <div className="mb-3 flex items-center justify-between gap-4">
-        <h2 className="shrink-0 font-semibold text-primary text-xs uppercase">
-          Last 5 Runs
-        </h2>
+        <SectionLabel>Recent</SectionLabel>
       </div>
       <div className="relative overflow-hidden pl-8">
         <div className="absolute top-6 bottom-8 left-2.5 w-px bg-border" />
@@ -50,11 +49,11 @@ function RunRow({ run }: { run: RecentActivity }) {
       params={{ activityId: String(run.id) }}
       to="/activity/$activityId"
     >
-      <span className="absolute top-1/2 -left-7.5 size-3 -translate-y-1/2 rounded-full border border-primary bg-background ring-2 ring-background" />
+      <WaypointDot className="absolute top-1/2 -left-7.5 -translate-y-1/2 bg-background ring-4 ring-background" filled={false} />
       <MapPreview run={run} />
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">
-          <h3 className="truncate font-semibold font-serif">{run.name}</h3>
+          <h3 className="truncate font-display font-medium">{run.name}</h3>
           {run.noteCount > 0 ? (
             <span
               className="inline-flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-muted-foreground text-xs"
@@ -102,7 +101,7 @@ function RunRowMetric({
 
   return (
     <div className="min-w-0 overflow-hidden">
-      <p className="font-semibold font-serif text-lg tabular-nums">
+      <p className="font-display text-lg tabular-nums">
         {metricValue}
         <span className="ml-1 font-normal text-muted-foreground text-xs">
           {unit ?? metricUnit}

@@ -32,7 +32,7 @@ function DashboardMetrics({
   weeklyDistance,
 }: DashboardMetricsProps) {
   return (
-    <section className="grid grid-cols-2 gap-0 xl:grid-cols-4">
+    <section className="grid grid-cols-2 border-border/40 border-t lg:border-t-0">
       {buildStats({ thisWeek, weeklyDistance }).map((stat) => (
         <MetricCard isLoading={isLoading} key={stat.id} stat={stat} />
       ))}
@@ -51,12 +51,12 @@ function MetricCard({
     stat.deltaTone === "good" ? TrendingUpIcon : TrendingDownIcon;
 
   return (
-    <section className="border-border/70 border-t px-4 py-4 odd:border-r sm:px-6 sm:first:pl-0 xl:border-t-0 xl:border-r xl:last:border-r-0">
+    <section className="border-border/40 border-b px-4 py-4 odd:border-r">
       <div className="min-w-0">
-        <p className="font-semibold text-[11px] text-primary uppercase">
+        <p className="font-display text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
           {stat.label}
         </p>
-        <p className="mt-1 flex items-baseline gap-1 whitespace-nowrap font-semibold font-serif text-3xl tabular-nums">
+        <p className="mt-1 flex items-baseline gap-1 whitespace-nowrap font-display text-3xl tabular-nums">
           {isLoading ? "--" : stat.value}
           <span className="min-w-0 font-normal font-sans text-muted-foreground text-sm">
             {stat.unit}
@@ -67,17 +67,13 @@ function MetricCard({
         <TrendIcon
           className={cn(
             "size-3.5",
-            stat.deltaTone === "good"
-              ? "text-emerald-600 dark:text-emerald-300"
-              : "text-destructive",
+            stat.deltaTone === "good" ? "text-primary" : "text-foreground",
           )}
         />
         <span
           className={cn(
             "font-semibold",
-            stat.deltaTone === "good"
-              ? "text-emerald-600 dark:text-emerald-300"
-              : "text-destructive",
+            stat.deltaTone === "good" ? "text-primary" : "text-foreground",
           )}
         >
           {isLoading ? "--" : stat.delta}

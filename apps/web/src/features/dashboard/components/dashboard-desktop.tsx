@@ -5,6 +5,7 @@ import type {
   RecentActivity,
   TrainingStreak,
 } from "@korex/api/modules/activities/activities.types";
+import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { TrainingGoalsDashboardCard } from "@/features/training-goals/components/training-goals-dashboard-card";
 import { DashboardHeader } from "./dashboard-header";
@@ -48,66 +49,61 @@ function DashboardDesktop({
   weeklyDistance,
 }: DashboardDesktopProps) {
   return (
-    <div className="grid gap-5 p-0">
+    <div className="mx-auto flex max-w-7xl flex-col gap-10 px-6 py-8 lg:px-10 lg:py-10">
+      <header className="flex items-end justify-between gap-6">
+        <div>
+          <p className="font-display text-4xl lowercase leading-none tracking-tight">
+            Your trail
+          </p>
+          <p className="mt-2 text-muted-foreground text-sm">
+            Read the week. Choose the next move.
+          </p>
+        </div>
+        <DashboardHeader isSyncing={isSyncing} onSync={onSync} />
+      </header>
+
       {hasError ? (
         <ErrorMessage
-          className="m-4 md:m-6"
           message="Could not load dashboard data."
           variant="banner"
         />
       ) : null}
-      <section className="relative overflow-hidden border-border/70 border-b">
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-svh overflow-hidden lg:inset-0 lg:h-auto"
-        >
-          <img
-            alt=""
-            className="size-full object-cover object-center opacity-80 brightness-125 contrast-90 saturate-110 sepia-[0.16] dark:opacity-75"
-            src="/dashboard/hero_runner_wide_v2.png"
+
+      <section className="rounded-3xl bg-primary/5 px-8 py-9 lg:px-10 lg:py-10">
+        <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(24rem,0.65fr)]">
+          <WeeklyFocusCard
+            focus={thisWeek?.weeklyFocus}
+            isLoading={isSummaryLoading}
+          />
+          <DashboardMetrics
+            isLoading={isSummaryLoading}
+            thisWeek={thisWeek}
+            weeklyDistance={weeklyDistance}
           />
         </div>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_54%_34%,color-mix(in_oklch,var(--primary)_12%,transparent)_0,transparent_18rem),linear-gradient(90deg,var(--background)_0%,color-mix(in_oklch,var(--background)_80%,transparent)_32%,color-mix(in_oklch,var(--background)_22%,transparent)_60%,color-mix(in_oklch,var(--background)_54%,transparent)_100%),linear-gradient(180deg,color-mix(in_oklch,var(--background)_70%,transparent)_0%,transparent_30%,var(--background)_100%)]" />
-        <div className="absolute top-4 right-4 z-20">
-          <DashboardHeader isSyncing={isSyncing} onSync={onSync} />
+      </section>
+
+      <section className="grid gap-8 border-border/40 border-b pb-10 lg:grid-cols-2 lg:divide-x lg:divide-border/40">
+        <div className="lg:pr-8">
+          <TrainingStreakSection
+            currentWeek={currentWeek}
+            isError={streakHasError}
+            isLoading={streakLoading}
+            streak={streak}
+          />
         </div>
-        <div className="relative grid min-h-[clamp(620px,72svh,820px)] grid-cols-[repeat(auto-fit,minmax(min(100%,26rem),1fr))] items-end gap-8 px-6 pt-20 pb-8 sm:px-8 lg:px-10 xl:px-12">
-          <div className="flex max-w-3xl flex-col justify-between gap-10 self-stretch">
-            <div>
-              <WeeklyFocusCard
-                focus={thisWeek?.weeklyFocus}
-                isLoading={isSummaryLoading}
-              />
-            </div>
-            <DashboardMetrics
-              isLoading={isSummaryLoading}
-              thisWeek={thisWeek}
-              weeklyDistance={weeklyDistance}
-            />
-          </div>
-          <div className="relative z-10 grid w-full max-w-110 gap-5 self-end justify-self-end">
-            <TrainingStreakSection
-              currentWeek={currentWeek}
-              isError={streakHasError}
-              isLoading={streakLoading}
-              streak={streak}
-            />
-            <WeeklyDistanceSection weeklyDistance={weeklyDistance} />
-          </div>
+        <div className="lg:pl-8">
+          <WeeklyDistanceSection weeklyDistance={weeklyDistance} />
         </div>
       </section>
-      <div className="grid min-w-0 items-start gap-5 px-4 md:px-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(340px,0.65fr)]">
-        <main className="grid gap-5">
+
+      <div className="grid min-w-0 items-start gap-10 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,0.55fr)]">
+        <main className="min-w-0">
           <RecentRunsTable isLoading={recentRunsLoading} runs={recentRuns} />
-          <section className="grid gap-4 xl:hidden">
-            <TrainingGoalsDashboardCard />
-          </section>
         </main>
-        <aside className="grid min-w-0 content-start gap-5">
-          <section className="hidden gap-4 xl:grid">
-            <TrainingGoalsDashboardCard />
-          </section>
-          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
+        <aside className="grid min-w-0 content-start gap-8 xl:border-border/40 xl:border-l xl:pl-10">
+          <TrainingGoalsDashboardCard />
+          <section className="grid gap-8 divide-y divide-border/40">
             <ShoeMileageCard />
             <TrainingNotesCard />
           </section>
