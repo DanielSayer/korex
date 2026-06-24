@@ -5,8 +5,8 @@ import {
   MessageSquareTextIcon,
   RouteIcon,
 } from "lucide-react";
-import { formatDistance, formatDurationClock } from "@/utils/formatters";
 import { SectionLabel, WaypointDot } from "@/components/brand";
+import { formatDistance, formatDurationClock } from "@/utils/formatters";
 import { buildRoutePreviewPath } from "../utils/route-preview";
 
 type RecentRunsTableProps = {
@@ -49,7 +49,10 @@ function RunRow({ run }: { run: RecentActivity }) {
       params={{ activityId: String(run.id) }}
       to="/activity/$activityId"
     >
-      <WaypointDot className="absolute top-1/2 -left-7.5 -translate-y-1/2 bg-background ring-4 ring-background" filled={false} />
+      <WaypointDot
+        className="absolute top-1/2 -left-7.5 -translate-y-1/2 bg-background ring-4 ring-background"
+        filled={false}
+      />
       <MapPreview run={run} />
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">

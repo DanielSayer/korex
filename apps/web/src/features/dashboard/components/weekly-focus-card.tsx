@@ -80,44 +80,44 @@ function WeeklyFocusCard({ focus, isLoading }: WeeklyFocusCardProps) {
     <section className="relative max-w-2xl">
       <StrideTexture className="opacity-30" />
       <div className="relative">
-      <div className="flex items-center gap-2">
-        <SectionLabel>Weekly focus</SectionLabel>
-        <span
-          className={cn(
-            "h-1.5 w-1.5 rounded-full",
-            focusToneDotClass[visibleFocus.tone],
-          )}
-        />
-        <span className="font-medium text-muted-foreground text-xs">
-          {isLoading ? "Reading week" : formatStatus(visibleFocus.status)}
-        </span>
-      </div>
-
-      <h1 className="mt-5 max-w-130 font-display text-5xl leading-[0.94] tracking-tight sm:text-6xl">
-        {visibleFocus.title}
-      </h1>
-      <RouteAccent className="mt-3 h-3 w-20 text-primary" />
-      <p className="mt-6 max-w-lg text-muted-foreground leading-7">
-        {visibleFocus.body}
-      </p>
-
-      <div className="mt-8 grid max-w-xl gap-4 border-border/70 border-l pl-4 sm:grid-cols-[minmax(0,1fr)_minmax(13rem,0.9fr)] sm:pl-5">
-        <div className="min-w-0">
-          <p className="font-medium text-muted-foreground text-xs uppercase">
-            Next
-          </p>
-          <p className="mt-1 font-semibold text-xl">{visibleFocus.action}</p>
+        <div className="flex items-center gap-2">
+          <SectionLabel>Weekly focus</SectionLabel>
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              focusToneDotClass[visibleFocus.tone],
+            )}
+          />
+          <span className="font-medium text-muted-foreground text-xs">
+            {isLoading ? "Reading week" : formatStatus(visibleFocus.status)}
+          </span>
         </div>
 
-        <div className="grid gap-2">
-          {visibleFocus.reasons.map((reason) => (
-            <FocusReason
-              key={`${reason.kind}-${reason.label}`}
-              reason={reason}
-            />
-          ))}
+        <h1 className="mt-5 max-w-130 font-display text-5xl leading-[0.94] tracking-tight sm:text-6xl">
+          {visibleFocus.title}
+        </h1>
+        <RouteAccent className="mt-3 h-3 w-20 text-primary" />
+        <p className="mt-6 max-w-lg text-muted-foreground leading-7">
+          {visibleFocus.body}
+        </p>
+
+        <div className="mt-8 grid max-w-xl gap-4 border-border/70 border-l pl-4 sm:grid-cols-[minmax(0,1fr)_minmax(13rem,0.9fr)] sm:pl-5">
+          <div className="min-w-0">
+            <p className="font-medium text-muted-foreground text-xs uppercase">
+              Next
+            </p>
+            <p className="mt-1 font-semibold text-xl">{visibleFocus.action}</p>
+          </div>
+
+          <div className="grid gap-2">
+            {visibleFocus.reasons.map((reason) => (
+              <FocusReason
+                key={`${reason.kind}-${reason.label}`}
+                reason={reason}
+              />
+            ))}
+          </div>
         </div>
-      </div>
       </div>
     </section>
   );

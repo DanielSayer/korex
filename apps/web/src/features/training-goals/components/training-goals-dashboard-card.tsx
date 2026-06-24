@@ -16,7 +16,12 @@ function TrainingGoalsDashboardCard() {
     <div className="flex flex-col gap-3">
       <SectionLabel
         action={
-          <Button size="sm" variant="ghost" render={<Link to="/goals" />}>
+          <Button
+            nativeButton={false}
+            size="sm"
+            variant="ghost"
+            render={<Link to="/goals" />}
+          >
             Manage
             <ChevronRightIcon className="size-3.5" />
           </Button>
