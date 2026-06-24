@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "lucide-react";
+import { RouteAccent } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { orpc } from "@/utils/orpc";
@@ -33,9 +34,9 @@ function WeeklyTrainingSummaryDetailPage({
   });
 
   return (
-    <div className="grid gap-4 p-3 md:p-0">
+    <div className="grid gap-6 p-4 md:gap-4 md:p-0">
       <Link
-        className="inline-flex w-fit items-center gap-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
+        className="inline-flex w-fit items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground"
         to="/weekly-summaries"
       >
         <ArrowLeftIcon className="size-4" />
@@ -54,17 +55,18 @@ function WeeklyTrainingSummaryDetailPage({
         {(summary) =>
           summary ? (
             <>
-              <div className="flex items-start justify-between gap-3 border-border/70 border-b pb-4">
+              <div className="flex items-start justify-between gap-3 border-border/40 border-b pb-4">
                 <div className="min-w-0">
-                  <p className="font-semibold text-primary text-xs uppercase">
-                    Weekly Summary
+                  <p className="font-display text-[11px] text-primary uppercase tracking-[0.18em]">
+                    Weekly summary
                   </p>
-                  <h1 className="mt-1 font-semibold text-2xl tracking-tight">
+                  <h1 className="mt-1 font-display text-2xl tracking-tight">
                     {formatTrainingWeek(summary.weekStartAt, summary.weekEndAt)}
                   </h1>
-                  <p className="mt-1 text-muted-foreground text-sm">
+                  <p className="mt-1 text-muted-foreground text-xs">
                     Generated {formatGeneratedAt(summary.generatedAt)}
                   </p>
+                  <RouteAccent className="mt-2 h-3 w-16 text-primary" />
                 </div>
                 <WeeklySummaryActions
                   isRegenerating={isRegenerating}

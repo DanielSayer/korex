@@ -34,8 +34,8 @@ function WeeklyTrainingSummaryCard({
   summary: WeeklyTrainingSummaryListItem;
 }) {
   const cardClassName = cn(
-    "block rounded-md border p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:rounded-lg md:p-4",
-    isSelected && "border-primary/60 bg-primary/5 shadow-sm",
+    "block border-border/40 border-b p-3 text-left transition-colors last:border-b-0 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:rounded-lg md:border md:p-4 md:last:border",
+    isSelected && "md:border-primary/60 md:bg-primary/5",
   );
   const cardContent = <WeeklyTrainingSummaryCardContent summary={summary} />;
 
@@ -67,10 +67,10 @@ function WeeklyTrainingSummaryCardContent({
     <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-semibold text-base">
+          <h2 className="font-display text-base tracking-tight">
             {formatTrainingWeek(summary.weekStartAt, summary.weekEndAt)}
           </h2>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-xs">
             Generated {formatGeneratedAt(summary.generatedAt)}
           </p>
         </div>
@@ -79,25 +79,25 @@ function WeeklyTrainingSummaryCardContent({
         </DeltaBadge>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 md:gap-3">
+      <div className="mt-3 grid grid-cols-3 divide-x divide-border/30">
         <Metric
-          icon={<RouteIcon className="size-4" />}
+          icon={<RouteIcon className="size-3.5" />}
           label="Distance"
           value={formatDistance(summary.totalDistanceMeters)}
         />
         <Metric
-          icon={<ClockIcon className="size-4" />}
-          label="Moving time"
+          icon={<ClockIcon className="size-3.5" />}
+          label="Time"
           value={formatDurationCompact(summary.totalMovingTimeSeconds)}
         />
         <Metric
-          icon={<GaugeIcon className="size-4" />}
+          icon={<GaugeIcon className="size-3.5" />}
           label="Avg speed"
           value={formatSpeed(summary.averageSpeedMetersPerSecond)}
         />
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 border-t pt-3 text-muted-foreground text-sm md:gap-x-5">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-xs md:gap-x-5">
         <span>{summary.activityCount} activities</span>
         <span>
           {formatSignedNumber(summary.previousWeekActivityCountDelta)} vs
@@ -118,12 +118,12 @@ function Metric({
   value: string;
 }) {
   return (
-    <div className="min-w-0 rounded-md bg-muted/50 p-2 md:p-3">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+    <div className="min-w-0 px-2 first:pl-0 last:pr-0">
+      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
         {icon}
-        <span className="truncate">{label}</span>
+        <span className="truncate uppercase tracking-wider">{label}</span>
       </div>
-      <div className="mt-1 truncate font-semibold text-sm md:text-lg">
+      <div className="mt-1 truncate font-display text-sm tabular-nums tracking-tight md:text-lg">
         {value}
       </div>
     </div>
@@ -140,7 +140,7 @@ function DeltaBadge({
   const positive = value >= 0;
 
   return (
-    <span className="inline-flex w-fit items-center gap-1 rounded-md border px-2 py-1 font-medium text-sm">
+    <span className="inline-flex w-fit items-center gap-1 font-display text-sm tabular-nums">
       {positive ? (
         <TrendingUpIcon className="size-3.5 text-emerald-600" />
       ) : (

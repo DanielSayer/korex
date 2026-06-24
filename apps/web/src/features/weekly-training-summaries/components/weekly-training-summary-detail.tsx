@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import type React from "react";
+import { SectionLabel } from "@/components/brand";
 import {
   TrainingNotesSection,
   TrainingWeekActivityNotesSection,
@@ -32,11 +33,11 @@ import {
 function WeeklyTrainingSummaryDetailLoading() {
   return (
     <AnimatedPanelState>
-      <div className="space-y-3">
-        <div className="h-44 animate-pulse rounded-lg bg-muted" />
+      <div className="flex flex-col gap-4">
+        <div className="h-32 animate-pulse rounded-sm bg-muted/40" />
         <div className="grid grid-cols-2 gap-3">
-          <div className="h-24 animate-pulse rounded-lg bg-muted" />
-          <div className="h-24 animate-pulse rounded-lg bg-muted" />
+          <div className="h-20 animate-pulse rounded-sm bg-muted/30" />
+          <div className="h-20 animate-pulse rounded-sm bg-muted/30" />
         </div>
       </div>
     </AnimatedPanelState>
@@ -72,38 +73,21 @@ function WeeklyTrainingSummaryDetail({
       key={summary.id}
       transition={{ duration: 0.22 }}
     >
-      <section className="relative overflow-hidden rounded-md border bg-background p-4 sm:rounded-lg sm:p-5">
+      <section className="relative overflow-hidden p-4 sm:p-5">
         <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-emerald-500 to-sky-500" />
-        <motion.div
-          animate={{ x: [0, 8, 0], y: [0, -5, 0] }}
-          className="absolute top-5 right-6 hidden h-24 w-36 sm:block"
-          transition={{
-            duration: 7,
-            ease: "easeInOut",
-            repeat: Number.POSITIVE_INFINITY,
-          }}
-        >
-          <div className="absolute top-2 left-7 size-1.5 rounded-full bg-primary/70" />
-          <div className="absolute top-8 left-24 size-1 rounded-full bg-emerald-500/70" />
-          <div className="absolute top-16 left-14 size-1 rounded-full bg-sky-500/70" />
-          <div className="absolute top-5 left-8 h-px w-20 rotate-12 bg-primary/20" />
-          <div className="absolute top-12 left-16 h-px w-16 -rotate-35 bg-emerald-500/20" />
-        </motion.div>
 
         <div className="relative">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="font-medium text-muted-foreground text-xs uppercase">
-                Weekly shape
-              </p>
-              <h3 className="mt-1 font-semibold text-lg sm:text-xl">
+              <SectionLabel>Weekly shape</SectionLabel>
+              <h3 className="mt-2 font-display text-lg tracking-tight sm:text-xl">
                 {summary.activityCount} activities,{" "}
                 {formatDurationCompact(summary.totalMovingTimeSeconds)} moving
               </h3>
             </div>
-            <div className="w-fit rounded-md border bg-muted/30 px-3 py-1.5 font-medium text-sm">
+            <span className="w-fit font-display text-sm tabular-nums">
               {formatDistanceDelta(summary.previousWeekDistanceDeltaMeters)}
-            </div>
+            </span>
           </div>
 
           <div className="grid gap-5 lg:grid-cols-[1.15fr_1fr]">
@@ -112,7 +96,7 @@ function WeeklyTrainingSummaryDetail({
                 <RouteIcon className="size-4 text-primary" />
                 Total distance
               </div>
-              <div className="mt-2 whitespace-nowrap font-semibold text-4xl tracking-tight sm:text-6xl">
+              <div className="mt-2 whitespace-nowrap font-display text-4xl tabular-nums tracking-tight sm:text-6xl">
                 {formatDistance(summary.totalDistanceMeters)}
               </div>
               <DeltaLine value={summary.previousWeekDistanceDeltaMeters}>
@@ -121,7 +105,7 @@ function WeeklyTrainingSummaryDetail({
               </DeltaLine>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
               <HeroMetric
                 icon={<ClockIcon className="size-4" />}
                 label="Moving time"
@@ -143,18 +127,17 @@ function WeeklyTrainingSummaryDetail({
         </div>
       </section>
 
-      <section className="rounded-md border sm:rounded-lg">
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <h3 className="font-semibold">Week-over-week</h3>
+      <section>
+        <div className="flex items-center justify-between border-border/40 border-b py-3">
+          <SectionLabel>Week-over-week</SectionLabel>
           <span className="text-muted-foreground text-xs">
-            Compared with{" "}
             {formatTrainingWeek(
               new Date(previousWeek.weekStartAt),
               summary.weekStartAt,
             )}
           </span>
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-border/30">
           <ComparisonRow
             current={formatDistance(summary.totalDistanceMeters)}
             label="Distance"
@@ -192,19 +175,19 @@ function WeeklyTrainingSummaryDetail({
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2">
-        <div className="rounded-md border p-4 sm:rounded-lg sm:p-5">
+      <section className="grid gap-4 sm:grid-cols-2">
+        <div>
           <div className="mb-3 flex items-center gap-2">
             <MedalIcon className="size-4 text-primary" />
-            <h3 className="font-semibold">Longest effort</h3>
+            <SectionLabel>Longest effort</SectionLabel>
           </div>
           {longestActivity ? (
             <div>
               <p className="font-medium">{longestActivity.name}</p>
-              <p className="mt-1 text-muted-foreground text-sm">
+              <p className="mt-1 text-muted-foreground text-xs">
                 {formatActivityDate(longestActivity.startAt)}
               </p>
-              <p className="mt-4 whitespace-nowrap font-semibold text-2xl sm:text-3xl">
+              <p className="mt-4 whitespace-nowrap font-display text-2xl tabular-nums tracking-tight sm:text-3xl">
                 {formatDistance(longestActivity.distanceMeters)}
               </p>
             </div>
@@ -214,12 +197,12 @@ function WeeklyTrainingSummaryDetail({
             </p>
           )}
         </div>
-        <div className="rounded-md border p-4 sm:rounded-lg sm:p-5">
+        <div>
           <div className="mb-3 flex items-center gap-2">
             <ActivityIcon className="size-4 text-primary" />
-            <h3 className="font-semibold">Previous baseline</h3>
+            <SectionLabel>Previous baseline</SectionLabel>
           </div>
-          <div className="space-y-2 text-sm">
+          <div className="flex flex-col gap-0">
             <PanelRow
               label="Distance"
               value={formatDistance(
@@ -262,12 +245,12 @@ function HeroMetric({
   value: string;
 }) {
   return (
-    <div className="rounded-md border bg-muted/20 p-3 sm:rounded-lg sm:p-4">
+    <div className="border-border/40 border-t pt-3">
       <div className="flex items-center gap-2 text-muted-foreground text-xs">
         {icon}
         {label}
       </div>
-      <div className="mt-2 whitespace-nowrap font-semibold text-xl sm:text-2xl">
+      <div className="mt-2 whitespace-nowrap font-display text-xl tabular-nums tracking-tight sm:text-2xl">
         {value}
       </div>
       <div className="mt-1 text-muted-foreground text-xs">
@@ -348,9 +331,9 @@ function DeltaLine({
 
 function PanelRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b py-2 last:border-b-0">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+    <div className="flex items-center justify-between gap-3 border-border/40 border-b py-2 last:border-b-0">
+      <span className="text-muted-foreground text-sm">{label}</span>
+      <span className="font-display text-sm tabular-nums">{value}</span>
     </div>
   );
 }

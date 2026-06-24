@@ -18,12 +18,14 @@ function WeeklyTrainingSummaryList({
 
   if (summaries.length === 0) {
     return (
-      <div className="flex min-h-56 flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+      <div className="flex min-h-56 flex-col items-start justify-center py-8">
         <CalendarDaysIcon className="mb-3 size-8 text-muted-foreground" />
-        <h2 className="font-semibold text-lg">No weekly summaries yet</h2>
-        <p className="mt-1 max-w-md text-muted-foreground text-sm">
-          Completed training weeks will appear here after the worker generates
-          their summary.
+        <h2 className="font-display text-lg tracking-tight">
+          No weekly summaries yet
+        </h2>
+        <p className="mt-1 max-w-md text-muted-foreground text-sm leading-relaxed">
+          Completed training weeks will appear here once their summaries are
+          generated.
         </p>
       </div>
     );
@@ -31,7 +33,7 @@ function WeeklyTrainingSummaryList({
 
   return (
     <>
-      <div className="grid gap-2 md:gap-3 lg:grid-cols-2">
+      <div className="grid gap-3 md:gap-3 lg:grid-cols-2">
         {summaries.map((summary) => (
           <WeeklyTrainingSummaryCard
             isLink={isMobileViewport}
