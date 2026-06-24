@@ -2,13 +2,14 @@ import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import {
   BellIcon,
   ChevronLeftIcon,
-  CloudIcon,
   ClockIcon,
+  CloudIcon,
   MonitorIcon,
   PaletteIcon,
   ShieldIcon,
   UserIcon,
 } from "lucide-react";
+import { RouteAccent } from "@/components/brand";
 import { PageHeader, PageLayout } from "@/components/page-layout";
 import { cn } from "@/lib/utils";
 
@@ -17,18 +18,27 @@ function SettingsLayout() {
   const isSettingsHub = location.pathname === "/settings";
 
   return (
-    <PageLayout className="gap-5 p-3 md:gap-8 md:p-0">
+    <PageLayout className="gap-6 p-4 md:gap-8 md:p-0">
       {isSettingsHub ? (
         <Link
-          className="inline-flex w-fit items-center gap-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground md:hidden"
+          className="inline-flex w-fit items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground md:hidden"
           to="/more"
         >
           <ChevronLeftIcon className="size-4" />
           More
         </Link>
       ) : null}
+      <header className="md:hidden">
+        <h1 className="font-display text-3xl lowercase leading-none tracking-tight">
+          Settings
+        </h1>
+        <p className="mt-2 text-muted-foreground text-sm">
+          Account, display, training, and security.
+        </p>
+        <RouteAccent className="mt-3 h-3 w-16 text-primary" />
+      </header>
       <PageHeader
-        className="border-border/70 border-b pb-4 md:pb-6"
+        className="hidden border-border/70 border-b pb-4 md:flex md:pb-6"
         description="Manage account details, display preferences, training configuration, and connected app behavior."
         title="Settings"
       />
@@ -63,7 +73,7 @@ function SettingsLayout() {
 function MobileSettingsBackLink() {
   return (
     <Link
-      className="inline-flex w-fit items-center gap-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground md:hidden"
+      className="inline-flex w-fit items-center gap-1 text-muted-foreground text-sm transition-colors hover:text-foreground md:hidden"
       to="/settings"
     >
       <ChevronLeftIcon className="size-4" />

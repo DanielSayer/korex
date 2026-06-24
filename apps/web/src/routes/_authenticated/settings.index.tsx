@@ -10,19 +10,19 @@ export const Route = createFileRoute("/_authenticated/settings/")({
 function RouteComponent() {
   return (
     <>
-      <nav aria-label="Settings sections" className="grid gap-2 md:hidden">
+      <nav aria-label="Settings sections" className="flex flex-col md:hidden">
         {settingsTabs.map((tab) => (
           <Link
-            className="flex min-w-0 items-center gap-3 rounded-md border border-border/70 bg-card px-3 py-3 text-card-foreground transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
+            className="flex min-w-0 items-center gap-3 border-border/40 border-b py-4 transition-colors last:border-b-0 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
             key={tab.to}
             to={tab.to}
           >
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-foreground">
-              <tab.icon className="size-5" />
-            </span>
+            <tab.icon className="size-5 shrink-0 text-primary" />
             <span className="grid min-w-0 flex-1 gap-0.5">
-              <span className="truncate font-medium text-sm">{tab.label}</span>
-              <span className="line-clamp-2 text-muted-foreground text-sm">
+              <span className="truncate font-display text-base tracking-tight">
+                {tab.label}
+              </span>
+              <span className="line-clamp-2 text-muted-foreground text-xs leading-relaxed">
                 {tab.description}
               </span>
             </span>
