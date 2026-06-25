@@ -12,7 +12,7 @@ import {
   TargetIcon,
 } from "lucide-react";
 import type { ComponentType, SVGProps } from "react";
-import { RouteAccent, SectionLabel, StrideTexture } from "@/components/brand";
+import { RouteAccent, SectionLabel } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 type WeeklyFocusCardProps = {
@@ -78,7 +78,6 @@ function WeeklyFocusCard({ focus, isLoading }: WeeklyFocusCardProps) {
 
   return (
     <section className="relative max-w-2xl">
-      <StrideTexture className="opacity-30" />
       <div className="relative">
         <div className="flex items-center gap-2">
           <SectionLabel>Weekly focus</SectionLabel>
