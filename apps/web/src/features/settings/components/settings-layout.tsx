@@ -9,7 +9,7 @@ import {
   ShieldIcon,
   UserIcon,
 } from "lucide-react";
-import { RouteAccent } from "@/components/brand";
+import { RouteAccent, WaypointDot } from "@/components/brand";
 import { PageHeader, PageLayout } from "@/components/page-layout";
 import { cn } from "@/lib/utils";
 
@@ -39,25 +39,27 @@ function SettingsLayout() {
       </header>
       <PageHeader
         className="hidden border-border/70 border-b pb-4 md:flex md:pb-6"
-        description="Manage account details, display preferences, training configuration, and connected app behavior."
-        title="Settings"
+        description="Account, display, training, and security."
+        eyebrow="Settings"
+        title="Control center"
       />
 
       <div className="hidden overflow-x-auto md:block">
-        <nav className="flex min-w-max gap-1 border-border/70 border-b pb-2">
+        <nav className="flex min-w-max gap-1 border-border/40 border-b pb-2">
           {settingsTabs.map((tab) => (
             <Link
               activeOptions={{ exact: true }}
               activeProps={{
                 className:
-                  "border-border bg-muted/70 text-foreground shadow-xs dark:bg-muted/50",
+                  "active border-primary/40 bg-primary/5 text-foreground",
               }}
               className={cn(
-                "flex h-9 items-center gap-2 rounded-md border border-transparent px-3 font-medium text-muted-foreground text-sm transition-colors hover:bg-muted/70 hover:text-foreground dark:hover:bg-muted/50",
+                "group flex h-9 items-center gap-2 rounded-md border border-transparent px-3 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground",
               )}
               key={tab.to}
               to={tab.to}
             >
+              <WaypointDot className="hidden group-[.active]:inline-flex" />
               <tab.icon className="size-4" />
               <span>{tab.label}</span>
             </Link>
