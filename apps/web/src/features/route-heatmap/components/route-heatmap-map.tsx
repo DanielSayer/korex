@@ -19,7 +19,7 @@ function RouteHeatmapMap({
   displayMode: RouteHeatmapDisplayMode;
 }) {
   return (
-    <div className="relative min-h-0 flex-1 overflow-hidden rounded-lg border bg-background [&_.leaflet-control-attribution]:mb-14">
+    <div className="relative min-h-0 flex-1 overflow-hidden rounded-3xl border border-border/40 bg-background shadow-xs [&_.leaflet-control-attribution]:mb-14">
       <MapContainer
         center={routeHeatmapFallbackCenter}
         className={cn("h-[calc(100svh-13rem)] min-h-128 w-full", className)}

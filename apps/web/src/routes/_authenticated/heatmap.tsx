@@ -49,8 +49,9 @@ function HeatmapDesktop({
   return (
     <PageLayout>
       <PageHeader
-        title="Heatmap"
         description={getHeatmapDescription(displayMode)}
+        eyebrow="Heatmap"
+        title="Route heatmap"
         actions={
           <RouteHeatmapDisplayModeControl
             displayMode={displayMode}
@@ -118,7 +119,7 @@ function RouteHeatmapDisplayModeControl({
   return (
     <div
       className={cn(
-        "inline-grid h-9 grid-cols-2 rounded-md border bg-muted/30 p-0.5",
+        "inline-grid h-9 grid-cols-2 rounded-md border border-border/50 bg-background p-0.5 shadow-xs",
         className,
       )}
     >
@@ -129,7 +130,7 @@ function RouteHeatmapDisplayModeControl({
           onClick={() => onDisplayModeChange(mode)}
           size="sm"
           type="button"
-          variant={displayMode === mode ? "secondary" : "ghost"}
+          variant={displayMode === mode ? "default" : "ghost"}
         >
           {mode === "density" ? "Density" : "Visited"}
         </Button>

@@ -8,7 +8,7 @@ function RouteHeatmapLegend({
 }) {
   if (displayMode === "visited") {
     return (
-      <div className="absolute inset-x-0 bottom-0 z-1000 border-border/70 border-t bg-background/95 px-3 py-2 text-xs backdrop-blur-sm">
+      <div className="absolute inset-x-0 bottom-0 z-1000 border-border/50 border-t bg-background/95 px-4 py-3 text-xs backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <span
             className="size-3 rounded-sm border border-white/10"
@@ -21,7 +21,7 @@ function RouteHeatmapLegend({
   }
 
   return (
-    <div className="absolute inset-x-0 bottom-0 z-1000 border-border/70 border-t bg-background/95 px-3 py-2 text-xs backdrop-blur-sm">
+    <div className="absolute inset-x-0 bottom-0 z-1000 border-border/50 border-t bg-background/95 px-4 py-3 text-xs backdrop-blur-sm">
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="font-medium text-foreground">Route density</span>
       </div>
