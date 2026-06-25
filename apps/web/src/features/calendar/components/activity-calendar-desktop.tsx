@@ -17,8 +17,9 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
+import { SectionLabel, WaypointDot } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
-import { PageHeader, PageLayout } from "@/components/page-layout";
+import { PageLayout } from "@/components/page-layout";
 import {
   formatDistance,
   formatDurationClock,
@@ -100,10 +101,17 @@ function CalendarHeader({
   onToday: () => void;
 }) {
   return (
-    <PageHeader
-      description="Activities by training week."
-      title="Calendar"
-      actions={
+    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <SectionLabel>Calendar</SectionLabel>
+        <h1 className="mt-1 font-display text-4xl lowercase leading-none tracking-tight">
+          {monthLabel}
+        </h1>
+        <p className="mt-2 text-muted-foreground text-sm">
+          Activities by training week.
+        </p>
+      </div>
+      <div className="shrink-0">
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -130,8 +138,8 @@ function CalendarHeader({
             Today
           </Button>
         </div>
-      }
-    />
+      </div>
+    </header>
   );
 }
 
@@ -157,15 +165,15 @@ function MonthGrid({
   const weeks = useMemo(() => getCalendarWeeks(days), [days]);
 
   return (
-    <div className="overflow-x-auto rounded-lg border bg-background">
+    <div className="overflow-x-auto border-border/50 border-t">
       <div className="grid min-w-240 grid-cols-[minmax(220px,0.9fr)_repeat(7,minmax(120px,1fr))]">
-        <div className="border-border border-r border-b bg-muted/40 px-4 py-2 font-medium text-muted-foreground text-xs">
-          Summary
+        <div className="border-border/40 border-r border-b px-4 py-3">
+          <SectionLabel>Week</SectionLabel>
         </div>
         {weekDayLabels.map((day) => (
           <div
             key={day}
-            className="border-border border-r border-b bg-muted/40 px-2 py-2 text-center font-medium text-muted-foreground text-xs last:border-r-0"
+            className="border-border/40 border-r border-b px-2 py-3 text-center font-display text-muted-foreground text-xs uppercase tracking-[0.18em] last:border-r-0"
           >
             {day}
           </div>
@@ -212,22 +220,24 @@ function WeekRow({
 
 function WeekSummary({ summary }: { summary: ActivitySummary | undefined }) {
   if (!summary) {
-    return <section className="border-border border-r border-b bg-muted/20" />;
+    return (
+      <section className="border-border/40 border-r border-b bg-muted/15" />
+    );
   }
 
   const weekStartDate = new Date(summary.weekStartDate);
 
   return (
-    <section className="overflow-hidden border-border border-r border-b bg-background px-4 py-4">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h3 className="font-medium text-sm">
+    <section className="overflow-hidden border-border/40 border-r border-b px-4 py-4">
+      <div className="mb-4 flex items-baseline justify-between gap-3">
+        <h3 className="font-display text-lg leading-none">
           Week {format(weekStartDate, "I")}
         </h3>
-        <span className="text-muted-foreground text-xs">
+        <span className="font-display text-muted-foreground text-sm">
           {format(weekStartDate, "MMM d")}
         </span>
       </div>
-      <dl className="grid gap-3">
+      <dl className="grid gap-3 border-border/30 border-l pl-3">
         <SummaryMetric
           icon={<ClockIcon />}
           label="Total time"
@@ -258,12 +268,12 @@ function SummaryMetric({
   value: string;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <dt className="inline-flex min-w-0 items-center gap-2 text-muted-foreground text-xs">
-        <span className="[&>svg]:size-3.5">{icon}</span>
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="inline-flex min-w-0 items-center gap-2 text-[11px] text-muted-foreground uppercase tracking-wider">
+        <span className="[&>svg]:size-3">{icon}</span>
         <span className="truncate">{label}</span>
       </dt>
-      <dd className="shrink-0 font-semibold text-sm">{value}</dd>
+      <dd className="shrink-0 font-display text-sm tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -282,21 +292,21 @@ function CalendarCell({
   return (
     <div
       className={cn(
-        "min-h-32 overflow-hidden border-border border-r border-b p-2 last:border-r-0",
-        isOutsideMonth && "bg-muted/30 text-muted-foreground",
+        "min-h-32 overflow-hidden border-border/40 border-r border-b p-2 last:border-r-0",
+        isOutsideMonth && "bg-muted/15 text-muted-foreground",
       )}
     >
       <div className="mb-1 flex items-center justify-between">
         <span
           className={cn(
             "flex size-6 items-center justify-center rounded-full font-medium text-xs",
-            day.isToday && "bg-primary text-primary-foreground",
+            day.isToday && "bg-primary text-primary-foreground shadow-xs",
           )}
         >
           {day.dayLabel}
         </span>
       </div>
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {activities.map((activity) => (
           <ActivityCard activity={activity} key={activity.id} />
         ))}
@@ -310,11 +320,14 @@ function ActivityCard({ activity }: { activity: ActivityListItem }) {
     <Link
       to="/activity/$activityId"
       params={{ activityId: String(activity.id) }}
-      className="block rounded-md border bg-card px-2 py-1.5 text-card-foreground shadow-xs transition-colors hover:border-primary/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+      className="group block border-border/30 border-l py-1.5 pr-1 pl-2 transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
       <div className="flex items-start justify-between gap-2">
-        <h2 className="line-clamp-1 font-medium text-xs">{activity.name}</h2>
-        <span className="shrink-0 text-[11px] text-muted-foreground">
+        <h2 className="line-clamp-1 inline-flex min-w-0 items-center gap-1.5 font-medium text-xs">
+          <WaypointDot className="size-1.5 text-primary" filled />
+          {activity.name}
+        </h2>
+        <span className="shrink-0 font-display text-[11px] text-muted-foreground tabular-nums">
           {format(new Date(activity.startAt), "HH:mm")}
         </span>
       </div>
