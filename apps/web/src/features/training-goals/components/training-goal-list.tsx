@@ -134,27 +134,24 @@ function TrainingGoalRow({
   return (
     <div
       className={cn(
-        "rounded-md border border-border/70 p-4",
+        "border-border/40 border-b py-5",
         density === "mobile" && "bg-card p-3",
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="font-medium text-sm">{formatGoalTitle(goal)}</p>
+          <p className="font-display text-lg leading-none tracking-tight">
+            {formatGoalTitle(goal)}
+          </p>
           <p className="text-muted-foreground text-xs">
             {formatGoalPeriod(goal.period)}
-          </p>
-          <p className="text-muted-foreground text-xs tabular-nums">
-            {formatGoalProgress(goal)}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <span
             className={cn(
-              "rounded-md px-2 py-1 font-medium text-xs",
-              goal.achieved
-                ? "bg-primary/10 text-primary"
-                : "bg-muted text-muted-foreground",
+              "font-display text-sm tabular-nums",
+              goal.achieved ? "text-primary" : "text-muted-foreground",
             )}
           >
             {goal.achieved ? "Achieved" : `${Math.round(progress)}%`}
@@ -164,17 +161,7 @@ function TrainingGoalRow({
           ) : null}
         </div>
       </div>
-      <div
-        className={cn(
-          "overflow-hidden rounded-full bg-muted",
-          variant === "full" ? "mt-4 h-2" : "mt-3 h-1.5",
-        )}
-      >
-        <div
-          className="h-full rounded-full bg-primary"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+      <RouteProgress className="mt-4" value={progress} />
       {variant === "full" && density === "default" ? (
         <>
           <p className="mt-2 text-muted-foreground text-sm tabular-nums">

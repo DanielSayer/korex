@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { RouteAccent, SectionLabel } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 type PageLayoutProps = {
@@ -14,6 +15,7 @@ type PageHeaderProps = {
   actions?: ReactNode;
   className?: string;
   description?: ReactNode;
+  eyebrow?: ReactNode;
   title: ReactNode;
 };
 
@@ -21,23 +23,28 @@ function PageHeader({
   actions,
   className,
   description,
+  eyebrow,
   title,
 }: PageHeaderProps) {
   return (
-    <div
+    <header
       className={cn(
-        "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between",
+        "flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between",
         className,
       )}
     >
-      <div>
-        <h1 className="font-semibold text-2xl tracking-tight">{title}</h1>
+      <div className="min-w-0">
+        {eyebrow ? <SectionLabel>{eyebrow}</SectionLabel> : null}
+        <h1 className="mt-1 font-display text-4xl lowercase leading-none tracking-tight">
+          {title}
+        </h1>
         {description ? (
-          <p className="text-muted-foreground text-sm">{description}</p>
+          <p className="mt-2 text-muted-foreground text-sm">{description}</p>
         ) : null}
+        <RouteAccent className="mt-3 h-3 w-16 text-primary" />
       </div>
       {actions ? <div className="shrink-0">{actions}</div> : null}
-    </div>
+    </header>
   );
 }
 
