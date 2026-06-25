@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { RouteAccent, SectionLabel } from "@/components/brand";
+import { SectionLabel } from "@/components/brand";
 import { cn } from "@/lib/utils";
 
 type PageLayoutProps = {
@@ -41,7 +41,6 @@ function PageHeader({
         {description ? (
           <p className="mt-2 text-muted-foreground text-sm">{description}</p>
         ) : null}
-        <RouteAccent className="mt-3 h-3 w-16 text-primary" />
       </div>
       {actions ? <div className="shrink-0">{actions}</div> : null}
     </header>
