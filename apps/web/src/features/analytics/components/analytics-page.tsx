@@ -1,6 +1,6 @@
 import type { AnalyticsVolumeBucketMode } from "@korex/api/modules/activities/activities.types";
-import { RouteAccent } from "@/components/brand";
-import { PageHeader, PageLayout } from "@/components/page-layout";
+import { RouteAccent, SectionLabel } from "@/components/brand";
+import { PageLayout } from "@/components/page-layout";
 import { useIsMobileViewport } from "@/components/responsive";
 import { AnalyticsBestEffortsSection } from "./analytics-best-efforts-section";
 import {
@@ -32,19 +32,26 @@ function AnalyticsDesktop({
   year,
 }: AnalyticsPageProps) {
   return (
-    <PageLayout>
-      <PageHeader
-        title="Analytics"
-        description="Yearly training volume from current activities."
-        actions={
+    <PageLayout className="min-w-0">
+      <header className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <SectionLabel>Analytics</SectionLabel>
+          <h1 className="mt-1 font-display text-4xl lowercase leading-none tracking-tight">
+            Trends
+          </h1>
+          <p className="mt-2 text-muted-foreground text-sm">
+            Yearly volume and personal best efforts.
+          </p>
+        </div>
+        <div className="shrink-0">
           <AnalyticsVolumeControls
             bucketMode={bucketMode}
             onBucketModeChange={onBucketModeChange}
             onYearChange={onYearChange}
             year={year}
           />
-        }
-      />
+        </div>
+      </header>
       <AnalyticsVolumeSection bucketMode={bucketMode} year={year} />
       <AnalyticsBestEffortsSection year={year} />
     </PageLayout>

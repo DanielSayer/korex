@@ -23,13 +23,13 @@ function PersonalBestEffortGrid({
   );
 
   return (
-    <div className="border-border/30 border-t">
+    <div className="min-w-0 border-border/30 border-t">
       {bestEffortDistanceCodes.map((standardDistanceCode) => {
         const effort = effortsByDistance.get(standardDistanceCode);
 
         return (
           <div
-            className="grid min-h-14 grid-cols-[minmax(7rem,1fr)_auto] items-center gap-3 border-border/30 border-b py-2.5 xl:inline-grid xl:w-1/3 xl:border-r xl:nth-[3n]:border-r-0 xl:nth-last-[-n+3]:border-b-0"
+            className="grid min-h-14 min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-border/30 border-b py-2.5 xl:inline-grid xl:w-1/3 xl:border-r xl:nth-[3n]:border-r-0 xl:nth-last-[-n+3]:border-b-0"
             key={standardDistanceCode}
           >
             <div className="min-w-0">

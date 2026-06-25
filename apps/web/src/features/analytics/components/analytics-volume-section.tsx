@@ -40,7 +40,7 @@ function AnalyticsVolumeSection({
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <QueryRenderer
         error={<ErrorMessage message="Could not load analytics." />}
         loading={<AnalyticsVolumeSkeleton />}
@@ -134,7 +134,7 @@ function AnalyticsVolumePanel({ analytics }: { analytics: AnalyticsVolume }) {
   const summary = getAnalyticsVolumeSummary(analytics);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-w-0 flex-col gap-5">
       <div className="flex flex-col gap-1">
         <p className="font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em]">
           {analytics.year} total
@@ -170,7 +170,7 @@ function AnalyticsVolumePanel({ analytics }: { analytics: AnalyticsVolume }) {
           value={formatDistance(summary.averageWeeklyDistanceMeters)}
         />
       </div>
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid min-w-0 gap-5 lg:grid-cols-2">
         <BucketDistanceChart analytics={analytics} />
         <CumulativeDistanceChart analytics={analytics} />
       </div>
@@ -269,7 +269,7 @@ function toDate(value: Date | string) {
 
 function AnalyticsVolumeSkeleton() {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-w-0 flex-col gap-5">
       <div className="flex flex-col gap-1">
         <div className="h-3 w-20 animate-pulse rounded-sm bg-muted/60" />
         <div className="h-12 w-40 animate-pulse rounded-sm bg-muted/50" />

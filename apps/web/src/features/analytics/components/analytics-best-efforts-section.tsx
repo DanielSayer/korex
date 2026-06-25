@@ -50,7 +50,7 @@ function AnalyticsBestEffortsPanel({
       : selectedDistanceCode;
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex min-w-0 flex-col gap-4">
       <SectionLabel>Best efforts</SectionLabel>
       <p className="-mt-1 text-muted-foreground text-xs">
         All-time personal bests and monthly progression.
@@ -69,7 +69,7 @@ function AnalyticsBestEffortsPanel({
 
 function AnalyticsBestEffortsSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <div className="h-3 w-24 animate-pulse rounded-sm bg-muted/60" />
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {bestEffortSkeletonKeys.map((key) => (

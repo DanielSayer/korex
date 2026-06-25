@@ -31,10 +31,10 @@ function CumulativeDistanceChart({
   } satisfies ChartConfig;
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex min-w-0 flex-col gap-3 overflow-hidden">
       <SectionLabel>Cumulative distance</SectionLabel>
       <ChartContainer
-        className="aspect-auto h-64 w-full sm:h-80"
+        className="aspect-auto h-64 w-full min-w-0 max-w-full sm:h-80"
         config={chartConfig}
       >
         <LineChart

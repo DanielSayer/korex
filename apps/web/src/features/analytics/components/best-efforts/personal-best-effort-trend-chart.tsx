@@ -60,7 +60,7 @@ function PersonalBestEffortTrendChart({
   } satisfies ChartConfig;
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex min-w-0 flex-col gap-3 overflow-hidden">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <SectionLabel>Monthly best trend</SectionLabel>
         <BestEffortDistancePicker
@@ -73,7 +73,7 @@ function PersonalBestEffortTrendChart({
         Fastest effort by month end in {year}.
       </p>
       <ChartContainer
-        className="aspect-auto h-64 w-full sm:h-80"
+        className="aspect-auto h-64 w-full min-w-0 max-w-full sm:h-80"
         config={chartConfig}
       >
         <LineChart
