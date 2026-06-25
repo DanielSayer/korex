@@ -8,6 +8,7 @@ import {
   TrendingUpIcon,
 } from "lucide-react";
 import type React from "react";
+import { WaypointDot } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import {
   formatDistance,
@@ -34,8 +35,8 @@ function WeeklyTrainingSummaryCard({
   summary: WeeklyTrainingSummaryListItem;
 }) {
   const cardClassName = cn(
-    "block border-border/40 border-b p-3 text-left transition-colors last:border-b-0 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:rounded-lg md:border md:p-4 md:last:border",
-    isSelected && "md:border-primary/60 md:bg-primary/5",
+    "block border-border/40 border-b p-3 text-left transition-colors last:border-b-0 hover:border-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:p-4",
+    isSelected && "md:border-primary md:bg-primary/5",
   );
   const cardContent = <WeeklyTrainingSummaryCardContent summary={summary} />;
 
@@ -67,7 +68,8 @@ function WeeklyTrainingSummaryCardContent({
     <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="font-display text-base tracking-tight">
+          <h2 className="inline-flex items-center gap-2 font-display text-base tracking-tight">
+            <WaypointDot className="shrink-0" />
             {formatTrainingWeek(summary.weekStartAt, summary.weekEndAt)}
           </h2>
           <p className="text-muted-foreground text-xs">
@@ -142,7 +144,7 @@ function DeltaBadge({
   return (
     <span className="inline-flex w-fit items-center gap-1 font-display text-sm tabular-nums">
       {positive ? (
-        <TrendingUpIcon className="size-3.5 text-emerald-600" />
+        <TrendingUpIcon className="size-3.5 text-primary" />
       ) : (
         <TrendingDownIcon className="size-3.5 text-destructive" />
       )}

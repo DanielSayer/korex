@@ -74,7 +74,7 @@ function WeeklyTrainingSummaryDetail({
       transition={{ duration: 0.22 }}
     >
       <section className="relative overflow-hidden p-4 sm:p-5">
-        <div className="absolute inset-x-0 top-0 h-1 bg-linear-to-r from-primary via-emerald-500 to-sky-500" />
+        <div className="absolute inset-x-0 top-0 h-px bg-primary/50" />
 
         <div className="relative">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -290,7 +290,7 @@ function ComparisonRow({
         className={cn(
           "inline-flex w-fit items-center gap-1 justify-self-start rounded-md px-2 py-1 font-semibold sm:justify-self-end",
           positive
-            ? "bg-emerald-500/10 text-emerald-600"
+            ? "bg-primary/10 text-primary"
             : "bg-destructive/10 text-destructive",
         )}
       >
@@ -316,7 +316,7 @@ function DeltaLine({
     <div
       className={cn(
         "mt-3 flex items-center gap-1.5 font-medium text-sm",
-        value >= 0 ? "text-emerald-600" : "text-destructive",
+        value >= 0 ? "text-primary" : "text-destructive",
       )}
     >
       {value >= 0 ? (

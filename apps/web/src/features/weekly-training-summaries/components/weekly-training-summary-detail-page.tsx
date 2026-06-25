@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { ArrowLeftIcon } from "lucide-react";
-import { RouteAccent } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
+import { PageHeader } from "@/components/page-layout";
 import { QueryRenderer } from "@/components/query-renderer";
 import { orpc } from "@/utils/orpc";
 import {
@@ -55,24 +55,21 @@ function WeeklyTrainingSummaryDetailPage({
         {(summary) =>
           summary ? (
             <>
-              <div className="flex items-start justify-between gap-3 border-border/40 border-b pb-4">
-                <div className="min-w-0">
-                  <p className="font-display text-[11px] text-primary uppercase tracking-[0.18em]">
-                    Weekly summary
-                  </p>
-                  <h1 className="mt-1 font-display text-2xl tracking-tight">
-                    {formatTrainingWeek(summary.weekStartAt, summary.weekEndAt)}
-                  </h1>
-                  <p className="mt-1 text-muted-foreground text-xs">
-                    Generated {formatGeneratedAt(summary.generatedAt)}
-                  </p>
-                  <RouteAccent className="mt-2 h-3 w-16 text-primary" />
-                </div>
-                <WeeklySummaryActions
-                  isRegenerating={isRegenerating}
-                  onRegenerate={regenerate}
-                />
-              </div>
+              <PageHeader
+                actions={
+                  <WeeklySummaryActions
+                    isRegenerating={isRegenerating}
+                    onRegenerate={regenerate}
+                  />
+                }
+                className="border-border/40 border-b pb-4"
+                description={`Generated ${formatGeneratedAt(summary.generatedAt)}`}
+                eyebrow="Weekly summary"
+                title={formatTrainingWeek(
+                  summary.weekStartAt,
+                  summary.weekEndAt,
+                )}
+              />
               <WeeklyTrainingSummaryDetail summary={summary} />
             </>
           ) : (

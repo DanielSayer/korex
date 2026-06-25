@@ -30,7 +30,8 @@ function RouteComponent() {
       <PageHeader
         className="hidden border-border/70 border-b pb-4 md:flex md:border-b-0 md:pb-0"
         description="Replay your completed training weeks."
-        title="Weekly Summaries"
+        eyebrow="Weekly summaries"
+        title="Week replay"
       />
       <WeeklyTrainingSummariesSection />
     </PageLayout>
