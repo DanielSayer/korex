@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils";
 function SettingsLayout() {
   const location = useLocation();
   const isSettingsHub = location.pathname === "/settings";
+  const activeSettingsTab =
+    location.pathname === "/settings" ? "/settings/profile" : location.pathname;
 
   return (
     <PageLayout className="gap-6 p-4 md:gap-8 md:p-0">
@@ -48,13 +50,10 @@ function SettingsLayout() {
         <nav className="flex min-w-max gap-1 border-border/40 border-b pb-2">
           {settingsTabs.map((tab) => (
             <Link
-              activeOptions={{ exact: true }}
-              activeProps={{
-                className:
-                  "active border-primary/40 bg-primary/5 text-foreground",
-              }}
               className={cn(
                 "group flex h-9 items-center gap-2 rounded-md border border-transparent px-3 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground",
+                activeSettingsTab === tab.to &&
+                  "active border-primary/40 bg-primary/5 text-foreground",
               )}
               key={tab.to}
               to={tab.to}
