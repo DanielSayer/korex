@@ -9,17 +9,14 @@
     "start": "node dist/index.mjs"
   },
   "dependencies": {
+    "@hono/node-server": "catalog:",
     "@korex/api": "workspace:*",
     "@korex/auth": "workspace:*",
     "@korex/env": "workspace:*",
-    "@hono/node-server": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "dotenv": "catalog:",
-    "hono": "catalog:",
-    "pg": "catalog:",
-    "zod": "catalog:"
+    "hono": "catalog:"
   },
   "devDependencies": {
     "@korex/config": "workspace:*",
