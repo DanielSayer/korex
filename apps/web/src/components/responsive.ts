@@ -19,4 +19,4 @@ function useMediaQuery(query: string) {
   );
 }
 
-export { mobileViewportMediaQuery, useIsMobileViewport };
+export { useIsMobileViewport };

@@ -12,7 +12,6 @@
     "generate-pwa-assets": "pwa-assets-generator"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
     "@korex/api": "workspace:*",
     "@korex/env": "workspace:*",
     "@korex/ui": "workspace:*",
@@ -26,7 +25,6 @@
     "better-auth": "catalog:",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "dotenv": "catalog:",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.11.0",
     "motion": "^12.38.0",

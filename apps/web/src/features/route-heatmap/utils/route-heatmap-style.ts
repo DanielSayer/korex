@@ -1,4 +1,4 @@
-export function getRouteHeatmapRampColor(intensity: number) {
+function getRouteHeatmapRampColor(intensity: number) {
   const clamped = clamp(intensity, 0, 1);
 
   if (clamped < 0.35) {

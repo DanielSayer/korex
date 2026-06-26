@@ -39,7 +39,7 @@ export const defaultTheme: FetchedTheme = {
   url: DEFAULT_THEME_URL,
 };
 
-export function convertToThemePreset(externalTheme: unknown): ThemePreset {
+function convertToThemePreset(externalTheme: unknown): ThemePreset {
   if (
     typeof externalTheme === "object" &&
     externalTheme !== null &&
@@ -59,7 +59,7 @@ export function convertToThemePreset(externalTheme: unknown): ThemePreset {
   throw new Error("Unsupported theme format");
 }
 
-export function getThemeName(themeData: unknown): string {
+function getThemeName(themeData: unknown): string {
   if (
     typeof themeData === "object" &&
     themeData !== null &&

@@ -63,7 +63,7 @@ const THEME_VARIABLES = [
   "tracking-widest",
 ] as const;
 
-export function clearThemeFromElement(element: HTMLElement) {
+function clearThemeFromElement(element: HTMLElement) {
   for (const variable of THEME_VARIABLES) {
     element.style.removeProperty(`--${variable}`);
   }
