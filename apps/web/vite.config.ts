@@ -46,7 +46,6 @@ export default defineConfig({
         categories: ["health", "fitness", "sports"],
       },
       pwaAssets: { disabled: false, config: true },
-      devOptions: { enabled: true },
     }),
   ],
 });
