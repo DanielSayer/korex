@@ -55,11 +55,15 @@ function formatPaceFromSpeed(speedMetersPerSecond: number | null) {
     return "--";
   }
 
-  const roundedSeconds = Math.round(1000 / speedMetersPerSecond);
-  const minutes = Math.floor(roundedSeconds / 60);
-  const seconds = roundedSeconds % 60;
+  return formatPaceSeconds(1000 / speedMetersPerSecond);
+}
 
-  return `${minutes}:${padTime(seconds)}`;
+function formatPaceSeconds(seconds: number) {
+  const roundedSeconds = Math.round(seconds);
+  const minutes = Math.floor(roundedSeconds / 60);
+  const remainingSeconds = roundedSeconds % 60;
+
+  return `${minutes}:${padTime(remainingSeconds)}`;
 }
 
 function formatActivityDateTime(value: Date | string) {
@@ -108,6 +112,7 @@ export {
   formatDurationCompact,
   formatMeters,
   formatPaceFromSpeed,
+  formatPaceSeconds,
   formatShortDate,
   formatShortMonth,
   formatSignedNumber,

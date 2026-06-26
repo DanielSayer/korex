@@ -10,7 +10,7 @@ import {
   getTrainingNoteTagClassName,
   getTrainingNoteTagSwatchClassName,
   nextTrainingNoteTagColor,
-} from "./training-note-utils";
+} from "../utils/training-note-tag-styles";
 
 function TrainingNoteTagPicker({
   availableTags,

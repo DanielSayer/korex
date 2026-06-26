@@ -52,8 +52,13 @@ function getTrainingNoteTagSwatchClassName(color: TrainingNoteTagColor) {
   return trainingNoteTagSwatchClassNames[color];
 }
 
+function nextTrainingNoteTagColor(offset: number): TrainingNoteTagColor {
+  return trainingNoteTagColors[offset % trainingNoteTagColors.length];
+}
+
 export {
   getTrainingNoteTagClassName,
   getTrainingNoteTagSwatchClassName,
+  nextTrainingNoteTagColor,
   trainingNoteTagColors,
 };

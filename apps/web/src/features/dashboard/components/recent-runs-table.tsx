@@ -6,7 +6,11 @@ import {
   RouteIcon,
 } from "lucide-react";
 import { SectionLabel, WaypointDot } from "@/components/brand";
-import { formatDistance, formatDurationClock } from "@/utils/formatters";
+import {
+  formatDistance,
+  formatDurationClock,
+  formatPaceSeconds,
+} from "@/utils/formatters";
 import { buildRoutePreviewPath } from "../utils/route-preview";
 
 type RecentRunsTableProps = {
@@ -157,14 +161,6 @@ function getPace(run: RecentActivity) {
   }
 
   return formatPaceSeconds(run.durationSeconds / (run.distanceMeters / 1000));
-}
-
-function formatPaceSeconds(seconds: number) {
-  const rounded = Math.round(seconds);
-  const minutes = Math.floor(rounded / 60);
-  const remainder = rounded % 60;
-
-  return `${minutes}:${remainder.toString().padStart(2, "0")}`;
 }
 
 function formatRunDate(value: Date | string) {

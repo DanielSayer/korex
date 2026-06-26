@@ -8,6 +8,7 @@ import {
   formatDistance,
   formatDistanceValue,
   formatDurationClock,
+  formatPaceSeconds,
 } from "@/utils/formatters";
 
 type DashboardMetricsProps = {
@@ -134,14 +135,6 @@ function buildStats({
       value: averageHeartRate ? Math.round(averageHeartRate).toString() : "--",
     },
   ];
-}
-
-function formatPaceSeconds(seconds: number) {
-  const rounded = Math.round(seconds);
-  const minutes = Math.floor(rounded / 60);
-  const remainder = rounded % 60;
-
-  return `${minutes}:${remainder.toString().padStart(2, "0")}`;
 }
 
 function formatSignedDistance(distanceMeters: number) {

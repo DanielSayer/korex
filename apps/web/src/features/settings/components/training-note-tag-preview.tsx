@@ -1,6 +1,6 @@
 import type { TrainingNoteTagColor } from "@korex/api/modules/training-notes/training-notes.types";
+import { getTrainingNoteTagClassName } from "@/features/training-notes/utils/training-note-tag-styles";
 import { cn } from "@/lib/utils";
-import { getTrainingNoteTagClassName } from "./training-note-tags-styles";
 
 function TrainingNoteTagPreview({
   archived = false,

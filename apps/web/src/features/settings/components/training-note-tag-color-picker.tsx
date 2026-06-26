@@ -1,9 +1,9 @@
 import type { TrainingNoteTagColor } from "@korex/api/modules/training-notes/training-notes.types";
-import { cn } from "@/lib/utils";
 import {
   getTrainingNoteTagSwatchClassName,
   trainingNoteTagColors,
-} from "./training-note-tags-styles";
+} from "@/features/training-notes/utils/training-note-tag-styles";
+import { cn } from "@/lib/utils";
 
 function TrainingNoteTagColorPicker({
   color,
