@@ -1,5 +1,5 @@
 import type { ActivityDetailSummary } from "@korex/api/modules/activities/activities.types";
-import { Separator } from "@korex/ui/components/separator";
+import { SectionLabel } from "@/components/brand";
 import { QueryRenderer } from "@/components/query-renderer";
 import { TrainingNotesSection } from "@/features/training-notes/components/training-notes-section";
 import { useActivityStreams } from "../hooks/use-activity-streams";
@@ -25,33 +25,50 @@ function ActivityDetailDesktop({
   const streamsQuery = useActivityStreams(summary.activity.id);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <ActivityDetailHeader activity={summary.activity} />
 
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="min-h-96 lg:col-span-2">
-          <ActivityRouteMap map={summary.map} />
-        </div>
-        <div className="flex flex-col justify-between rounded-xl border bg-card p-6">
+      <section className="grid border-border/50 border-y lg:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.7fr)]">
+        <div className="py-8 lg:border-border/50 lg:border-r lg:pr-8">
           <ActivityStats summary={summary} />
-          <Separator className="my-6" />
-          <BestEffortsCard efforts={summary.bestEfforts} />
-          <Separator className="my-6" />
-          <ActivityEquipmentCard activityId={activityId} summary={summary} />
         </div>
-      </div>
+        <div className="border-border/50 border-t py-8 lg:border-t-0 lg:pl-8">
+          <SectionLabel>Activity map</SectionLabel>
+          <div className="mt-4 h-[30rem]">
+            <ActivityRouteMap desktop map={summary.map} />
+          </div>
+        </div>
+      </section>
 
-      <ActivityLapsCard laps={summary.laps} />
-      <TrainingNotesSection activityId={summary.activity.id} type="activity" />
-      <HeartRateZonesCard summary={summary} />
+      <section className="grid gap-8 border-border/50 border-b pb-10 lg:grid-cols-2 lg:divide-x lg:divide-border/50">
+        <div>
+          <BestEffortsCard desktop efforts={summary.bestEfforts} />
+        </div>
+        <div className="lg:pl-8">
+          <ActivityEquipmentCard
+            activityId={activityId}
+            desktop
+            summary={summary}
+          />
+        </div>
+      </section>
+
+      <ActivityLapsCard desktop laps={summary.laps} />
+      <section className="border-border/50 border-y py-8">
+        <TrainingNotesSection
+          activityId={summary.activity.id}
+          type="activity"
+        />
+      </section>
+      <HeartRateZonesCard desktop summary={summary} />
       <QueryRenderer
         error={null}
-        loading={<ActivityStreamChartsSkeleton />}
+        loading={<ActivityStreamChartsSkeleton desktop />}
         query={streamsQuery}
       >
         {(streams) =>
           streams ? (
-            <ActivityStreamCharts streams={streams} summary={summary} />
+            <ActivityStreamCharts desktop streams={streams} summary={summary} />
           ) : null
         }
       </QueryRenderer>

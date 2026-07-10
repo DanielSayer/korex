@@ -1,4 +1,5 @@
 import type { ActivityMapInput } from "@korex/api/modules/activities/activities.types";
+import { useTheme } from "next-themes";
 import { useEffect, useMemo } from "react";
 import { MapContainer, Polyline, TileLayer, useMap } from "react-leaflet";
 import { cn } from "@/lib/utils";
@@ -6,6 +7,7 @@ import { cn } from "@/lib/utils";
 type ActivityRouteMapProps = {
   className?: string;
   compactAttribution?: boolean;
+  desktop?: boolean;
   map: ActivityMapInput | null;
 };
 
@@ -14,8 +16,10 @@ const emptyCoordinates: ActivityMapInput["coordinates"] = [];
 function ActivityRouteMap({
   className,
   compactAttribution = false,
+  desktop = false,
   map,
 }: ActivityRouteMapProps) {
+  const { resolvedTheme } = useTheme();
   const coordinates = map?.coordinates ?? emptyCoordinates;
   const positions = useMemo(
     () =>
@@ -30,7 +34,8 @@ function ActivityRouteMap({
     return (
       <div
         className={cn(
-          "flex h-96 items-center justify-center rounded-lg border bg-muted text-muted-foreground text-sm",
+          "flex h-96 items-center justify-center bg-muted/30 text-muted-foreground text-sm",
+          !desktop && "rounded-lg border",
           className,
         )}
       >
@@ -43,7 +48,8 @@ function ActivityRouteMap({
   return (
     <div
       className={cn(
-        "relative h-full min-h-64 overflow-hidden rounded-lg border",
+        "relative h-full min-h-64 overflow-hidden",
+        !desktop && "rounded-lg border",
         className,
       )}
     >
@@ -59,10 +65,24 @@ function ActivityRouteMap({
       >
         <TileLayer
           attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png"
+          url={`https://tiles.stadiamaps.com/tiles/${desktop && resolvedTheme !== "dark" ? "alidade_smooth" : "alidade_smooth_dark"}/{z}/{x}/{y}{r}.png`}
         />
+        {desktop ? (
+          <Polyline
+            pathOptions={{
+              className: "stroke-foreground",
+              opacity: 0.72,
+              weight: 8,
+            }}
+            positions={positions}
+          />
+        ) : null}
         <Polyline
-          pathOptions={{ color: "#22c55e", opacity: 0.95, weight: 4 }}
+          pathOptions={{
+            className: desktop ? "stroke-journal-route" : "stroke-primary",
+            opacity: 0.95,
+            weight: 4,
+          }}
           positions={positions}
         />
         <FitActivityBounds bounds={map.bounds} positions={positions} />

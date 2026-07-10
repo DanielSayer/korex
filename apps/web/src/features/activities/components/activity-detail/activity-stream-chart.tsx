@@ -28,12 +28,14 @@ import {
 
 function ActivityStreamChart({
   averageValue,
+  desktop = false,
   metric,
   referenceLabel,
   series,
   xAxisMode,
 }: {
   averageValue?: number | null;
+  desktop?: boolean;
   metric: ChartMetric;
   referenceLabel?: string;
   series: ActivityStreamChartPoint[];
@@ -64,9 +66,15 @@ function ActivityStreamChart({
   const gradientId = `${metric}StreamFill`;
 
   return (
-    <div className="border-border border-t pt-4 first:border-t-0 first:pt-0 md:rounded-lg md:border md:p-5">
+    <div
+      className={
+        desktop
+          ? "border-border/50 border-t py-6 xl:even:border-l xl:even:pl-8 xl:odd:pr-8"
+          : "border-border border-t pt-4 first:border-t-0 first:pt-0 md:rounded-lg md:border md:p-5"
+      }
+    >
       <div className="mb-3 flex items-baseline justify-between gap-3">
-        <h3 className="flex min-w-0 items-center gap-2 font-medium text-base">
+        <h3 className="flex min-w-0 items-center gap-2 font-display text-base tracking-tight">
           <Icon className="size-4 shrink-0 text-muted-foreground" />
           <span className="truncate">{spec.label}</span>
         </h3>
@@ -100,7 +108,11 @@ function ActivityStreamChart({
               />
             </linearGradient>
           </defs>
-          <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" />
+          <CartesianGrid
+            stroke="var(--border)"
+            strokeDasharray="2 8"
+            vertical={false}
+          />
           <XAxis
             axisLine={false}
             dataKey="xValue"
@@ -143,7 +155,7 @@ function ActivityStreamChart({
             fill={`url(#${gradientId})`}
             fillOpacity={0.4}
             stroke="var(--color-value)"
-            strokeWidth={2}
+            strokeWidth={desktop ? 2.5 : 2}
             type="natural"
           />
         </AreaChart>

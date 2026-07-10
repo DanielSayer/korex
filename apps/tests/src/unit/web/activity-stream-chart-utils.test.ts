@@ -3,12 +3,21 @@ import {
   buildCompareChartData,
   formatTooltipXAxis,
   formatXAxisValue,
+  metricSpecs,
   normalizeValue,
   sampleChartPoints,
   toStreamChartPoint,
 } from "../../../../web/src/features/activities/components/activity-detail/activity-stream-chart-utils";
 
 describe("activity stream chart utils", () => {
+  it("derives every stream color from semantic theme tokens", () => {
+    for (const spec of Object.values(metricSpecs)) {
+      expect(spec.color).toMatch(
+        /^color-mix\(in oklch, var\(--chart-[1-5]\) 65%, var\(--foreground\)\)$/,
+      );
+    }
+  });
+
   describe("toStreamChartPoint", () => {
     it("uses distance for the x value when distance mode has distance data", () => {
       expect(

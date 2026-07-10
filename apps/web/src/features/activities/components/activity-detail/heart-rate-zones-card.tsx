@@ -3,10 +3,14 @@ import { SectionLabel } from "@/components/brand";
 import { formatDurationClock } from "@/utils/formatters";
 
 type HeartRateZonesCardProps = {
+  desktop?: boolean;
   summary: ActivityDetailSummary;
 };
 
-function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
+function HeartRateZonesCard({
+  desktop = false,
+  summary,
+}: HeartRateZonesCardProps) {
   if (
     summary.heartRateZoneSnapshots.length === 0 ||
     summary.heartRateZoneTimes.length === 0
@@ -23,7 +27,13 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
     <section className="flex flex-col gap-4">
       <SectionLabel>Heart rate zones</SectionLabel>
 
-      <div className="flex flex-col gap-3">
+      <div
+        className={
+          desktop
+            ? "grid gap-x-10 gap-y-5 lg:grid-cols-2"
+            : "flex flex-col gap-3"
+        }
+      >
         {summary.heartRateZoneSnapshots.map((zone) => {
           const zoneTime =
             summary.heartRateZoneTimes.find(
@@ -43,9 +53,17 @@ function HeartRateZonesCard({ summary }: HeartRateZonesCardProps) {
                   {formatDurationClock(zoneTime)}
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div
+                className={
+                  desktop
+                    ? "h-px bg-border/60"
+                    : "h-2 overflow-hidden rounded-full bg-muted"
+                }
+              >
                 <div
-                  className="h-full rounded-full"
+                  className={
+                    desktop ? "h-1 -translate-y-1/2" : "h-full rounded-full"
+                  }
                   style={{ backgroundColor: color, width: `${percentage}%` }}
                 />
               </div>
@@ -66,15 +84,17 @@ function formatZoneRange({
 
 function getZoneColor(position: number) {
   const zoneColors = [
-    "#7c3aed",
-    "#2563eb",
-    "#16a34a",
-    "#eab308",
-    "#f97316",
-    "#dc2626",
+    "color-mix(in oklch, var(--chart-1) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-2) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-3) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-4) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-5) 65%, var(--foreground))",
   ];
 
-  return zoneColors[position - 1] ?? zoneColors.at(-1) ?? "#dc2626";
+  return (
+    zoneColors[(position - 1) % zoneColors.length] ??
+    "color-mix(in oklch, var(--chart-1) 65%, var(--foreground))"
+  );
 }
 
 export { HeartRateZonesCard };

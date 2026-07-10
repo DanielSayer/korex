@@ -21,7 +21,7 @@ function Medal({ color, glow, label, ring }: MedalProps) {
       <defs>
         <radialGradient id={`bg-${uid}`} cx="40%" cy="35%" r="65%">
           <stop offset="0%" stopColor={color} stopOpacity="1" />
-          <stop offset="100%" stopColor={`${color}cc`} stopOpacity="1" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.78" />
         </radialGradient>
         <filter id={`glow-${uid}`} x="-30%" y="-30%" width="160%" height="160%">
           <feGaussianBlur result="blur" stdDeviation="2.5" />
@@ -38,6 +38,7 @@ function Medal({ color, glow, label, ring }: MedalProps) {
         r="37"
         fill="none"
         stroke={glow}
+        strokeOpacity="0.25"
         strokeWidth="6"
       />
       <circle
@@ -60,7 +61,7 @@ function Medal({ color, glow, label, ring }: MedalProps) {
       />
       <text
         dominantBaseline="middle"
-        fill="white"
+        fill="var(--background)"
         fontFamily="system-ui, sans-serif"
         fontSize={fontSize}
         fontWeight="800"
