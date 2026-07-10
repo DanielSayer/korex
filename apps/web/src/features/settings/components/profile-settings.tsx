@@ -43,8 +43,8 @@ function ProfileSettings() {
       title="Profile"
     >
       <form className="space-y-5" onSubmit={onSubmit}>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div className="space-y-2">
+        <div className="grid gap-5 sm:grid-cols-2 md:gap-0 md:border-border/40 md:border-y">
+          <div className="space-y-2 md:py-5 md:pr-5">
             <Label htmlFor="profile-name">Display name</Label>
             <Input
               id="profile-name"
@@ -54,7 +54,7 @@ function ProfileSettings() {
               value={name}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 md:border-border/40 md:border-l md:py-5 md:pl-5">
             <Label htmlFor="profile-email">Primary email</Label>
             <Input
               id="profile-email"
@@ -68,9 +68,7 @@ function ProfileSettings() {
         </div>
         <Button
           disabled={
-            isSaving ||
-            !name.trim() ||
-            name.trim() === session.data?.user.name
+            isSaving || !name.trim() || name.trim() === session.data?.user.name
           }
           type="submit"
         >
