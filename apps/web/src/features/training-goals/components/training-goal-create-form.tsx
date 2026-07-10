@@ -12,6 +12,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon, TargetIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { RouteAccent, SectionLabel } from "@/components/brand";
+import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
 type GoalMetric = "distance" | "activityCount";
@@ -54,6 +56,7 @@ function TrainingGoalCreateForm({
   const form = (
     <GoalCreateFormFields
       createMutationIsPending={createMutation.isPending}
+      density={density}
       metric={metric}
       onMetricChange={setMetric}
       onPeriodChange={setPeriod}
@@ -106,18 +109,25 @@ function TrainingGoalCreateForm({
   }
 
   return (
-    <section className="rounded-lg border p-5">
-      <div className="flex items-center gap-3">
-        <TargetIcon className="size-5 text-muted-foreground" />
-        <h2 className="font-semibold text-lg">Create goal</h2>
+    <section className="relative overflow-hidden rounded-2xl bg-muted/60 p-6">
+      <RouteAccent className="absolute top-6 right-5 h-4 w-24 text-journal-route opacity-70" />
+      <div className="relative">
+        <SectionLabel>Next marker</SectionLabel>
+        <h2 className="mt-3 max-w-52 font-display text-2xl leading-tight tracking-tight">
+          Set a recurring goal.
+        </h2>
+        <p className="mt-2 max-w-xs text-muted-foreground text-sm leading-relaxed">
+          Running progress updates from current Activities every week or month.
+        </p>
       </div>
-      <div className="mt-5">{form}</div>
+      <div className="relative mt-6 border-border/50 border-t pt-5">{form}</div>
     </section>
   );
 }
 
 function GoalCreateFormFields({
   createMutationIsPending,
+  density,
   metric,
   onMetricChange,
   onPeriodChange,
@@ -128,6 +138,7 @@ function GoalCreateFormFields({
   targetValue,
 }: {
   createMutationIsPending: boolean;
+  density: "default" | "mobile";
   metric: GoalMetric;
   onMetricChange: (metric: GoalMetric) => void;
   onPeriodChange: (period: GoalPeriod) => void;
@@ -139,13 +150,18 @@ function GoalCreateFormFields({
 }) {
   return (
     <form
-      className="grid gap-4"
+      className={cn("grid gap-4", density === "default" && "gap-5")}
       onSubmit={(event) => {
         event.preventDefault();
         onSubmit();
       }}
     >
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div
+        className={cn(
+          "grid gap-3 sm:grid-cols-2",
+          density === "default" && "sm:grid-cols-1",
+        )}
+      >
         <SegmentedControl
           label="Metric"
           onChange={onMetricChange}
@@ -165,7 +181,12 @@ function GoalCreateFormFields({
           value={period}
         />
       </div>
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div
+        className={cn(
+          "flex flex-col gap-3 sm:flex-row",
+          density === "default" && "sm:flex-col",
+        )}
+      >
         <div className="min-w-0 flex-1">
           <label
             className="mb-1.5 block font-medium text-muted-foreground text-xs"
@@ -184,7 +205,10 @@ function GoalCreateFormFields({
           />
         </div>
         <Button
-          className="w-full self-end sm:w-auto"
+          className={cn(
+            "w-full self-end sm:w-auto",
+            density === "default" && "sm:w-full",
+          )}
           disabled={targetValue === null}
           loading={createMutationIsPending}
           loadingText="Creating"

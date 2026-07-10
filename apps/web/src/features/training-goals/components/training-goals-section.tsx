@@ -23,10 +23,12 @@ function TrainingGoalsSection({
     <div
       className={cn(
         "grid",
-        isMobile ? "gap-3" : "gap-6 lg:grid-cols-[minmax(0,1fr)_360px]",
+        isMobile
+          ? "gap-3"
+          : "gap-8 border-border/60 border-y py-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] lg:divide-x lg:divide-border/50",
       )}
     >
-      <section>
+      <section className={cn(!isMobile && "min-w-0 lg:pr-8")}>
         <SectionLabel
           action={
             isMobile ? <TrainingGoalCreateForm density={density} /> : null
@@ -43,7 +45,7 @@ function TrainingGoalsSection({
                 variant="inline"
               />
             }
-            loading={<TrainingGoalsSkeleton />}
+            loading={<TrainingGoalsSkeleton density={density} />}
           >
             {(progress) => (
               <TrainingGoalList
@@ -56,16 +58,30 @@ function TrainingGoalsSection({
           </QueryRenderer>
         </div>
       </section>
-      {isMobile ? null : <TrainingGoalCreateForm density={density} />}
+      {isMobile ? null : (
+        <div className="min-w-0">
+          <TrainingGoalCreateForm density={density} />
+        </div>
+      )}
     </div>
   );
 }
 
-function TrainingGoalsSkeleton() {
+function TrainingGoalsSkeleton({ density }: { density: "default" | "mobile" }) {
   return (
     <div className="grid gap-4">
-      <div className="flex h-20 animate-pulse flex-col gap-2 rounded-lg bg-muted/40" />
-      <div className="flex h-20 animate-pulse flex-col gap-2 rounded-lg bg-muted/40" />
+      <div
+        className={cn(
+          "flex h-20 animate-pulse flex-col gap-2 bg-muted/40",
+          density === "mobile" ? "rounded-lg" : "border-border/50 border-y",
+        )}
+      />
+      <div
+        className={cn(
+          "flex h-20 animate-pulse flex-col gap-2 bg-muted/40",
+          density === "mobile" ? "rounded-lg" : "border-border/50 border-b",
+        )}
+      />
     </div>
   );
 }

@@ -45,11 +45,19 @@ function TrainingGoalList({
       <div
         className={cn(
           "text-muted-foreground text-sm",
-          variant === "full" ? "rounded-md border border-dashed p-4" : "py-3",
+          variant === "full" && density === "mobile"
+            ? "rounded-md border border-dashed p-4"
+            : "py-3",
+          variant === "full" && density === "default"
+            ? "border-border/50 border-y py-8"
+            : null,
           density === "mobile" && variant === "full" && "bg-card p-3",
         )}
       >
-        {empty}
+        <p>{empty}</p>
+        {variant === "full" && density === "default" ? (
+          <p className="mt-1 text-xs">Set the first marker for the trail.</p>
+        ) : null}
       </div>
     );
   }
@@ -59,6 +67,7 @@ function TrainingGoalList({
       className={cn(
         "grid",
         variant === "full" ? "gap-3" : "divide-y divide-border/70",
+        variant === "full" && density === "default" && "gap-0",
       )}
     >
       {goals.map((goal) => (
@@ -132,45 +141,34 @@ function TrainingGoalRow({
   }
 
   return (
-    <div
-      className={cn(
-        "border-border/40 border-b py-5",
-        density === "mobile" && "bg-card p-3",
-      )}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-display text-lg leading-none tracking-tight">
-            {formatGoalTitle(goal)}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            {formatGoalPeriod(goal.period)}
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <span
-            className={cn(
-              "font-display text-sm tabular-nums",
-              goal.achieved ? "text-primary" : "text-muted-foreground",
-            )}
-          >
-            {goal.achieved ? "Achieved" : `${Math.round(progress)}%`}
-          </span>
-          {density === "mobile" && variant === "full" ? (
-            <TrainingGoalMobileActions goal={goal} />
-          ) : null}
-        </div>
+    <article className="border-border/50 border-b py-6 first:border-t">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
+          {formatGoalPeriod(goal.period)}
+        </p>
+        <span
+          className={cn(
+            "flex items-center gap-1.5 font-display text-sm tabular-nums",
+            goal.achieved ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          {goal.achieved ? <CheckIcon className="size-3.5" /> : null}
+          {goal.achieved ? "Achieved" : `${Math.round(progress)}% traced`}
+        </span>
       </div>
-      <RouteProgress className="mt-4" value={progress} />
-      {variant === "full" && density === "default" ? (
-        <>
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="font-display text-2xl leading-none tracking-tight">
+            {formatGoalTitle(goal)}
+          </h3>
           <p className="mt-2 text-muted-foreground text-sm tabular-nums">
             {formatGoalProgress(goal)}
           </p>
-          <TrainingGoalActions goal={goal} />
-        </>
-      ) : null}
-    </div>
+        </div>
+      </div>
+      <RouteProgress className="mt-4" value={progress} />
+      <TrainingGoalActions goal={goal} />
+    </article>
   );
 }
 
@@ -209,7 +207,7 @@ function TrainingGoalActions({ goal }: { goal: TrainingGoalProgress }) {
 
   return (
     <form
-      className="mt-4 flex flex-col gap-3 border-t pt-4 sm:flex-row"
+      className="mt-5 flex flex-col gap-3 rounded-lg bg-muted/50 p-4 sm:flex-row"
       onSubmit={(event) => {
         event.preventDefault();
 
