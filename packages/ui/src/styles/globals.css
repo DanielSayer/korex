@@ -41,6 +41,10 @@
   --sidebar-accent-foreground: oklch(0.28 0.03 145);
   --sidebar-border: oklch(0.76 0.025 120 / 58%);
   --sidebar-ring: oklch(0.56 0.075 142 / 70%);
+  --journal-hero: oklch(0.28 0.04 145);
+  --journal-hero-foreground: oklch(0.96 0.015 90);
+  --journal-plan: oklch(0.67 0.12 35);
+  --journal-plan-foreground: oklch(0.18 0.014 66.2);
   --journal-route: oklch(0.87 0.17 118);
   --font-sans: "Inter Variable", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -108,6 +112,10 @@
   --sidebar-accent-foreground: oklch(0.96 0.015 90);
   --sidebar-border: oklch(0.72 0.025 110 / 15%);
   --sidebar-ring: oklch(0.72 0.12 112 / 72%);
+  --journal-hero: oklch(0.2 0.03 150);
+  --journal-hero-foreground: oklch(0.96 0.015 90);
+  --journal-plan: oklch(0.72 0.12 38);
+  --journal-plan-foreground: oklch(0.16 0.014 67.5);
   --journal-route: oklch(0.84 0.16 118);
   --font-sans: "Inter Variable", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -168,6 +176,10 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-journal-hero: var(--journal-hero);
+  --color-journal-hero-foreground: var(--journal-hero-foreground);
+  --color-journal-plan: var(--journal-plan);
+  --color-journal-plan-foreground: var(--journal-plan-foreground);
   --color-journal-route: var(--journal-route);
 
   --font-sans: var(--font-sans);

@@ -4,7 +4,7 @@ const weekDaySkeletonKeys = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
 
 function TrainingStreakSkeleton() {
   return (
-    <div className="space-y-4 border-y py-5">
+    <div className="min-h-72 space-y-4 py-1">
       <Skeleton className="h-5 w-24" />
       <div className="flex items-end gap-5">
         <Skeleton className="h-20 w-14" />

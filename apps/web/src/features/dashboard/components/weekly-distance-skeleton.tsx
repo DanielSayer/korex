@@ -2,7 +2,7 @@ import { Skeleton } from "@korex/ui/components/skeleton";
 
 function WeeklyDistanceSkeleton() {
   return (
-    <section className="rounded-lg border p-4 sm:p-5">
+    <section className="py-1">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-end">
         <div className="grid gap-4 lg:w-52 lg:shrink-0">
           <div className="space-y-2">
