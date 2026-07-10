@@ -50,7 +50,10 @@ function TrainingNotesEditor({
     }),
   );
   const filterTags = getTagsUsedByNotes(notes);
-  const filteredNotes = filterNotesByTags(notes, filterTagIds);
+  const visibleFilterTagIds = filterTagIds.filter((tagId) =>
+    filterTags.some((tag) => tag.id === tagId),
+  );
+  const filteredNotes = filterNotesByTags(notes, visibleFilterTagIds);
 
   return (
     <div className="min-w-0 space-y-3 md:space-y-4">
@@ -142,7 +145,7 @@ function TrainingNotesEditor({
         {filterTags.length > 0 ? (
           <TrainingNoteTagFilter
             onChange={setFilterTagIds}
-            selectedTagIds={filterTagIds}
+            selectedTagIds={visibleFilterTagIds}
             tags={filterTags}
           />
         ) : null}

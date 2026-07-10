@@ -35,10 +35,10 @@ function TrainingNotesSection(props: TrainingNotesSectionProps) {
   const tagsQuery = useQuery(orpc.trainingNotes.tags.queryOptions());
 
   return (
-    <section className={cn("space-y-3", props.className)}>
+    <section className={cn("min-w-0 space-y-3", props.className)}>
       <QueryRenderer
         error={
-          <div className="rounded-md border p-3">
+          <div className="rounded-md border p-3 md:rounded-none md:border-border/40 md:border-x-0 md:px-0">
             <ErrorMessage
               message="Could not load Training Notes."
               variant="banner"
@@ -48,21 +48,38 @@ function TrainingNotesSection(props: TrainingNotesSectionProps) {
         loading={<TrainingNotesLoading />}
         query={notesQuery}
       >
-        {(notes) => (
-          <TrainingNotesEditor
-            availableTags={(tagsQuery.data ?? []).filter(
-              (tag) => tag.archivedAt === null,
-            )}
-            notes={notes}
-            queryKey={queryOptions.queryKey}
-            target={
-              props.type === "activity"
-                ? { activityId: props.activityId }
-                : { weekStartAt: props.weekStartAt }
-            }
-            title={props.title ?? "Training Notes"}
-          />
-        )}
+        {(notes) => {
+          if (tagsQuery.isPending) {
+            return <TrainingNotesLoading />;
+          }
+
+          if (tagsQuery.isError) {
+            return (
+              <div className="rounded-md border p-3 md:rounded-none md:border-border/40 md:border-x-0 md:px-0">
+                <ErrorMessage
+                  message="Could not load Training Note Tags."
+                  variant="banner"
+                />
+              </div>
+            );
+          }
+
+          return (
+            <TrainingNotesEditor
+              availableTags={tagsQuery.data.filter(
+                (tag) => tag.archivedAt === null,
+              )}
+              notes={notes}
+              queryKey={queryOptions.queryKey}
+              target={
+                props.type === "activity"
+                  ? { activityId: props.activityId }
+                  : { weekStartAt: props.weekStartAt }
+              }
+              title={props.title ?? "Training Notes"}
+            />
+          );
+        }}
       </QueryRenderer>
     </section>
   );

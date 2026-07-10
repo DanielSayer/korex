@@ -1,9 +1,5 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import type {
-  TrainingNote,
-  TrainingNoteTag,
-} from "@korex/api/modules/training-notes/training-notes.types";
 import {
   filterNotesByTags,
   getTagsUsedByNotes,
@@ -44,10 +40,10 @@ describe("Training Note tag filtering", () => {
   });
 });
 
-function note(id: number, tags: TrainingNoteTag[]) {
-  return { id, tags } as TrainingNote;
+function note(id, tags) {
+  return { id, tags };
 }
 
-function tag(id: number, name: string, archivedAt: string | null = null) {
-  return { archivedAt, id, name } as TrainingNoteTag;
+function tag(id, name, archivedAt = null) {
+  return { archivedAt, id, name };
 }
