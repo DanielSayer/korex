@@ -32,7 +32,7 @@ function TrainingNotesTimeline({
   readOnly?: boolean;
 }) {
   return (
-    <>
+    <div className="space-y-3 md:space-y-0 md:border-border/40 md:border-t">
       {notes.map((note) => (
         <TrainingNoteItem
           availableTags={availableTags}
@@ -42,7 +42,7 @@ function TrainingNotesTimeline({
           readOnly={readOnly}
         />
       ))}
-    </>
+    </div>
   );
 }
 
@@ -106,11 +106,17 @@ function TrainingNoteItem({
         <div>
           <TrainingNoteTagPicker
             availableTags={availableTags}
-            lockedTags={note.tags.filter((tag) => tag.archivedAt !== null)}
+            assignedArchivedTags={note.tags.filter(
+              (tag) => tag.archivedAt !== null,
+            )}
             onChange={setDraftTagIds}
             selectedTagIds={draftTagIds}
           />
-          <TrainingNoteTextarea onChange={setDraft} value={draft} />
+          <TrainingNoteTextarea
+            focusOnMount
+            onChange={setDraft}
+            value={draft}
+          />
           <div className="mt-3 flex justify-end gap-2">
             <Button
               onClick={() => {

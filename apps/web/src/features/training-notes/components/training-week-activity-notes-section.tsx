@@ -3,10 +3,13 @@ import { MessageSquareTextIcon } from "lucide-react";
 import { useState } from "react";
 import { QueryRenderer } from "@/components/query-renderer";
 import { orpc } from "@/utils/orpc";
+import {
+  filterNotesByTags,
+  getTagsUsedByNotes,
+} from "./training-note-filter-utils";
 import { TrainingNotesTimeline } from "./training-note-item";
 import { TrainingNotesLoading } from "./training-note-loading";
 import { TrainingNoteTagFilter } from "./training-note-tags";
-import { filterNotesByTags, getTagsUsedByNotes } from "./training-note-utils";
 
 function TrainingWeekActivityNotesSection({
   weekStartAt,

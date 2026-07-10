@@ -8,17 +8,17 @@ import { MessageSquareTextIcon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { orpc } from "@/utils/orpc";
+import {
+  filterNotesByTags,
+  getTagsUsedByNotes,
+} from "./training-note-filter-utils";
 import { TrainingNotesTimeline } from "./training-note-item";
 import {
   TrainingNoteTagFilter,
   TrainingNoteTagPicker,
 } from "./training-note-tags";
 import { TrainingNoteTextarea } from "./training-note-textarea";
-import {
-  filterNotesByTags,
-  getTagsUsedByNotes,
-  invalidateTrainingNoteQueries,
-} from "./training-note-utils";
+import { invalidateTrainingNoteQueries } from "./training-note-utils";
 
 function TrainingNotesEditor({
   availableTags,
@@ -53,14 +53,22 @@ function TrainingNotesEditor({
   const filteredNotes = filterNotesByTags(notes, filterTagIds);
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-3">
+    <div className="min-w-0 space-y-3 md:space-y-4">
+      <div className="flex min-w-0 items-center justify-between gap-3">
         <div className="inline-flex items-center gap-2 text-muted-foreground text-sm">
-          <MessageSquareTextIcon className="size-4 text-primary" />
-          <h2 className="font-medium">{title}</h2>
-          {notes.length > 0 ? <span>{notes.length}</span> : null}
+          <MessageSquareTextIcon className="size-4 text-primary md:text-journal-route" />
+          <h2 className="font-medium md:font-display md:text-[11px] md:uppercase md:tracking-[0.18em]">
+            {title}
+          </h2>
+          {notes.length > 0 ? (
+            <span>
+              {notes.length}
+              <span className="sr-only"> Training Notes</span>
+            </span>
+          ) : null}
         </div>
         <Button
+          disabled={isAdding}
           onClick={() => setIsAdding(true)}
           size="sm"
           type="button"
@@ -70,22 +78,27 @@ function TrainingNotesEditor({
           Add
         </Button>
       </div>
-      <div className="relative space-y-3 border-l pl-4">
+      <div className="relative space-y-3 border-l pl-4 md:space-y-0 md:border-l-0 md:pl-0">
         {notes.length === 0 && !isAdding ? (
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground text-sm md:border-border/40 md:border-t md:py-6">
             No Training Notes yet.
+            <span className="hidden md:inline">
+              {" "}
+              Add the first observation for this training context.
+            </span>
           </p>
         ) : null}
         {isAdding ? (
           <div className="relative">
-            <span className="absolute top-3 -left-5.25 size-2 rounded-full bg-primary" />
-            <div className="rounded-md border bg-card p-3">
+            <span className="absolute top-3 -left-5.25 size-2 rounded-full bg-primary md:hidden" />
+            <div className="rounded-md border bg-card p-3 md:rounded-none md:border-border/40 md:border-x-0 md:bg-transparent md:px-0 md:py-5">
               <TrainingNoteTagPicker
                 availableTags={availableTags}
                 onChange={setDraftTagIds}
                 selectedTagIds={draftTagIds}
               />
               <TrainingNoteTextarea
+                focusOnMount
                 onChange={setDraft}
                 placeholder="Add detail..."
                 value={draft}
@@ -94,6 +107,7 @@ function TrainingNotesEditor({
                 <Button
                   onClick={() => {
                     setDraft("");
+                    setDraftTagIds([]);
                     setIsAdding(false);
                   }}
                   size="sm"
@@ -132,11 +146,18 @@ function TrainingNotesEditor({
             tags={filterTags}
           />
         ) : null}
-        <TrainingNotesTimeline
-          availableTags={availableTags}
-          notes={filteredNotes}
-          queryKey={queryKey}
-        />
+        {notes.length > 0 && filteredNotes.length === 0 ? (
+          <p className="py-5 text-muted-foreground text-sm">
+            No Training Notes match these tags.
+          </p>
+        ) : null}
+        {filteredNotes.length > 0 ? (
+          <TrainingNotesTimeline
+            availableTags={availableTags}
+            notes={filteredNotes}
+            queryKey={queryKey}
+          />
+        ) : null}
       </div>
     </div>
   );
