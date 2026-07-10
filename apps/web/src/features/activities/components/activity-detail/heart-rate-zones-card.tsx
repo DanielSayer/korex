@@ -84,14 +84,17 @@ function formatZoneRange({
 
 function getZoneColor(position: number) {
   const zoneColors = [
-    "var(--chart-1)",
-    "var(--chart-2)",
-    "var(--chart-3)",
-    "var(--chart-4)",
-    "var(--chart-5)",
+    "color-mix(in oklch, var(--chart-1) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-2) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-3) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-4) 65%, var(--foreground))",
+    "color-mix(in oklch, var(--chart-5) 65%, var(--foreground))",
   ];
 
-  return zoneColors[(position - 1) % zoneColors.length] ?? "var(--chart-1)";
+  return (
+    zoneColors[(position - 1) % zoneColors.length] ??
+    "color-mix(in oklch, var(--chart-1) 65%, var(--foreground))"
+  );
 }
 
 export { HeartRateZonesCard };

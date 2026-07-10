@@ -42,28 +42,28 @@ const maxComparePointsPerMetric = 240;
 
 const metricSpecs = {
   altitude: {
-    color: "var(--chart-5)",
+    color: "color-mix(in oklch, var(--chart-5) 65%, var(--foreground))",
     formatAxisValue: (value: number) => `${Math.round(value)} m`,
     formatTooltipValue: (value: number) => `${Math.round(value)} m`,
     icon: MountainIcon,
     label: "Elevation",
   },
   cadence: {
-    color: "var(--chart-2)",
+    color: "color-mix(in oklch, var(--chart-2) 65%, var(--foreground))",
     formatAxisValue: (value: number) => Math.round(value).toString(),
     formatTooltipValue: (value: number) => `${Math.round(value)} spm`,
     icon: FootprintsIcon,
     label: "Cadence",
   },
   heartRate: {
-    color: "var(--chart-3)",
+    color: "color-mix(in oklch, var(--chart-3) 65%, var(--foreground))",
     formatAxisValue: (value: number) => Math.round(value).toString(),
     formatTooltipValue: (value: number) => `${Math.round(value)} bpm`,
     icon: HeartPulseIcon,
     label: "Heart Rate",
   },
   velocity: {
-    color: "var(--chart-4)",
+    color: "color-mix(in oklch, var(--chart-4) 65%, var(--foreground))",
     formatAxisValue: (value: number) => formatPaceFromSpeed(value),
     formatTooltipValue: (value: number) => `${formatPaceFromSpeed(value)} /km`,
     icon: GaugeIcon,

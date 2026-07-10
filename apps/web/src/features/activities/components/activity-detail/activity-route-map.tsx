@@ -67,6 +67,16 @@ function ActivityRouteMap({
           attribution='&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url={`https://tiles.stadiamaps.com/tiles/${desktop && resolvedTheme !== "dark" ? "alidade_smooth" : "alidade_smooth_dark"}/{z}/{x}/{y}{r}.png`}
         />
+        {desktop ? (
+          <Polyline
+            pathOptions={{
+              className: "stroke-foreground",
+              opacity: 0.72,
+              weight: 8,
+            }}
+            positions={positions}
+          />
+        ) : null}
         <Polyline
           pathOptions={{
             className: desktop ? "stroke-journal-route" : "stroke-primary",

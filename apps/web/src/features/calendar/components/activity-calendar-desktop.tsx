@@ -350,7 +350,10 @@ function ActivityCard({ activity }: { activity: ActivityListItem }) {
     >
       <div className="flex items-start justify-between gap-2">
         <h2 className="line-clamp-1 inline-flex min-w-0 items-center gap-1.5 font-medium text-xs">
-          <WaypointDot className="size-1.5 bg-journal-route" filled />
+          <WaypointDot
+            className="size-1.5 bg-journal-route ring-1 ring-foreground/60"
+            filled
+          />
           {activity.name}
         </h2>
         <span className="shrink-0 font-display text-[11px] text-muted-foreground tabular-nums">

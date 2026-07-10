@@ -25,67 +25,71 @@ const DISTANCE_CONFIG: Record<
   "400m": {
     short: "400m",
     long: "400 Meters",
-    color: "var(--chart-1)",
+    color: chartColor(1),
     ring: "var(--border)",
-    glow: "var(--chart-1)",
+    glow: chartColor(1),
   },
   "800m": {
     short: "800m",
     long: "800 Meters",
-    color: "var(--chart-2)",
+    color: chartColor(2),
     ring: "var(--border)",
-    glow: "var(--chart-2)",
+    glow: chartColor(2),
   },
   "1000m": {
     short: "1K",
     long: "1 Kilometer",
-    color: "var(--chart-3)",
+    color: chartColor(3),
     ring: "var(--border)",
-    glow: "var(--chart-3)",
+    glow: chartColor(3),
   },
   "1mi": {
     short: "1MI",
     long: "1 Mile",
-    color: "var(--chart-4)",
+    color: chartColor(4),
     ring: "var(--border)",
-    glow: "var(--chart-4)",
+    glow: chartColor(4),
   },
   "3000m": {
     short: "3K",
     long: "3 Kilometers",
-    color: "var(--chart-5)",
+    color: chartColor(5),
     ring: "var(--border)",
-    glow: "var(--chart-5)",
+    glow: chartColor(5),
   },
   "5k": {
     short: "5K",
     long: "5 Kilometers",
-    color: "var(--chart-1)",
+    color: chartColor(1),
     ring: "var(--border)",
-    glow: "var(--chart-1)",
+    glow: chartColor(1),
   },
   "10k": {
     short: "10K",
     long: "10 Kilometers",
-    color: "var(--chart-2)",
+    color: chartColor(2),
     ring: "var(--border)",
-    glow: "var(--chart-2)",
+    glow: chartColor(2),
   },
   half_marathon: {
     short: "HM",
     long: "Half Marathon",
-    color: "var(--chart-3)",
+    color: chartColor(3),
     ring: "var(--border)",
-    glow: "var(--chart-3)",
+    glow: chartColor(3),
   },
   marathon: {
     short: "FM",
     long: "Marathon",
-    color: "var(--chart-4)",
+    color: chartColor(4),
     ring: "var(--border)",
-    glow: "var(--chart-4)",
+    glow: chartColor(4),
   },
 };
+
+function chartColor(index: number) {
+  return `color-mix(in oklch, var(--chart-${index}) 65%, var(--foreground))`;
+}
 
 function formatPace(distanceMeters: number, durationSeconds: number) {
   if (distanceMeters <= 0 || durationSeconds <= 0) {

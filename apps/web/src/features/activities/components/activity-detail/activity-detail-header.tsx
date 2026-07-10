@@ -38,7 +38,7 @@ function ActivityDetailHeader({ activity }: ActivityDetailHeaderProps) {
           </span>
         ) : null}
         <span className="inline-flex h-7 items-center gap-2 rounded-full bg-secondary px-3 font-medium text-secondary-foreground text-xs uppercase tracking-wider">
-          <WaypointDot className="size-1.5 bg-journal-route" />
+          <WaypointDot className="size-1.5 bg-journal-route ring-1 ring-foreground/60" />
           {activity.sportType}
         </span>
       </div>
