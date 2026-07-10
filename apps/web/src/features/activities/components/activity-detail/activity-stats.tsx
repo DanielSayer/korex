@@ -1,5 +1,5 @@
 import type { ActivityDetailSummary } from "@korex/api/modules/activities/activities.types";
-import { Separator } from "@korex/ui/components/separator";
+import { SectionLabel } from "@/components/brand";
 import {
   formatDistanceValue,
   formatDurationClock,
@@ -18,64 +18,62 @@ function ActivityStats({ summary }: ActivityStatsProps) {
     activity.movingTimeSeconds ?? activity.elapsedTimeSeconds;
 
   return (
-    <div className="space-y-4 md:space-y-6">
+    <div>
+      <SectionLabel>Activity summary</SectionLabel>
       <div>
-        <p className="mb-1 font-medium text-muted-foreground text-xs uppercase">
+        <p className="mt-5 font-display text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
           Distance
         </p>
         <MetricValue
           unit="km"
           value={formatDistanceValue(activity.distanceMeters)}
-          valueClassName="font-black text-5xl leading-none md:text-6xl"
+          valueClassName="font-display text-7xl tabular-nums leading-[0.85] tracking-tight"
         />
       </div>
 
-      <Separator />
-
-      <StatGroup
-        items={[
-          {
-            label: "Time",
-            value: formatDurationClock(durationSeconds),
-          },
-          {
-            label: "Avg Pace",
-            unit: "/km",
-            value: formatPaceFromSpeed(activity.averageSpeedMetersPerSecond),
-          },
-          {
-            label: "Avg HR",
-            unit: "bpm",
-            value: formatBpmValue(activity.averageHeartRateBeatsPerMinute),
-          },
-        ]}
-      />
-
-      <Separator />
-
-      <StatGroup
-        items={[
-          {
-            label: "Elevation",
-            unit: "m",
-            value: formatRoundedValue(activity.totalElevationGainMeters),
-          },
-          {
-            label: "Cadence",
-            unit: "spm",
-            value: activity.averageCadenceStepsPerMinute
-              ? Math.round(activity.averageCadenceStepsPerMinute).toString()
-              : "--",
-          },
-          {
-            label: "Calories",
-            unit: "kcal",
-            value: activity.energyKilocalories
-              ? Math.round(activity.energyKilocalories).toString()
-              : "--",
-          },
-        ]}
-      />
+      <div className="mt-8 space-y-5 border-border/50 border-t pt-6">
+        <StatGroup
+          items={[
+            {
+              label: "Time",
+              value: formatDurationClock(durationSeconds),
+            },
+            {
+              label: "Avg Pace",
+              unit: "/km",
+              value: formatPaceFromSpeed(activity.averageSpeedMetersPerSecond),
+            },
+            {
+              label: "Avg HR",
+              unit: "bpm",
+              value: formatBpmValue(activity.averageHeartRateBeatsPerMinute),
+            },
+          ]}
+        />
+        <StatGroup
+          items={[
+            {
+              label: "Elevation",
+              unit: "m",
+              value: formatRoundedValue(activity.totalElevationGainMeters),
+            },
+            {
+              label: "Cadence",
+              unit: "spm",
+              value: activity.averageCadenceStepsPerMinute
+                ? Math.round(activity.averageCadenceStepsPerMinute).toString()
+                : "--",
+            },
+            {
+              label: "Calories",
+              unit: "kcal",
+              value: activity.energyKilocalories
+                ? Math.round(activity.energyKilocalories).toString()
+                : "--",
+            },
+          ]}
+        />
+      </div>
     </div>
   );
 }
