@@ -7,8 +7,8 @@ import {
   SheetTitle,
 } from "@korex/ui/components/sheet";
 import { useQuery } from "@tanstack/react-query";
-import { MountainSnowIcon } from "lucide-react";
 import { AnimatePresence } from "motion/react";
+import { WaypointDot } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { orpc } from "@/utils/orpc";
@@ -53,26 +53,28 @@ function WeeklyTrainingSummaryDetailPanel({
       <SheetContent className="w-full overflow-y-auto p-0 data-[side=right]:sm:w-190 data-[side=right]:sm:max-w-190">
         {summary ? (
           <>
-            <SheetHeader className="border-b bg-background p-4 sm:p-6">
+            <SheetHeader className="border-b bg-background p-6">
               <div className="flex items-start justify-between gap-3 pr-10">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-md border bg-muted/40 sm:size-11 sm:rounded-lg">
-                    <MountainSnowIcon className="size-5 text-primary" />
-                  </div>
+                  <WaypointDot className="mt-2.5 shrink-0 bg-journal-route" />
                   <div className="min-w-0">
-                    <SheetTitle className="text-lg sm:text-xl">
+                    <p className="font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em]">
+                      Weekly summary
+                    </p>
+                    <SheetTitle className="mt-1 font-display text-2xl lowercase tracking-tight">
                       {formatTrainingWeek(
                         summary.weekStartAt,
                         summary.weekEndAt,
                       )}
                     </SheetTitle>
                     <SheetDescription>
-                      Weekly Training Summary generated{" "}
+                      Stored snapshot · generated{" "}
                       {formatGeneratedAt(summary.generatedAt)}
                     </SheetDescription>
                   </div>
                 </div>
                 <WeeklySummaryActions
+                  desktop
                   isRegenerating={isRegenerating}
                   onRegenerate={regenerate}
                 />
@@ -95,7 +97,7 @@ function WeeklyTrainingSummaryDetailPanel({
                 >
                   {(detail) =>
                     detail ? (
-                      <WeeklyTrainingSummaryDetail summary={detail} />
+                      <WeeklyTrainingSummaryDetail desktop summary={detail} />
                     ) : (
                       <AnimatedPanelState key="empty">
                         <ErrorMessage

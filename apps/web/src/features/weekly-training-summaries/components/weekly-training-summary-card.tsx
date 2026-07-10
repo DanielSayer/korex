@@ -202,9 +202,9 @@ function DeltaBadge({
   return (
     <span className="inline-flex w-fit items-center gap-1 font-display text-sm tabular-nums">
       {positive ? (
-        <TrendingUpIcon className="size-3.5 text-primary" />
+        <TrendingUpIcon className="size-3.5 text-muted-foreground" />
       ) : (
-        <TrendingDownIcon className="size-3.5 text-destructive" />
+        <TrendingDownIcon className="size-3.5 text-muted-foreground" />
       )}
       {children}
     </span>

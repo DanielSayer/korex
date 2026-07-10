@@ -48,12 +48,31 @@ function useWeeklySummaryRegeneration({
 }
 
 function WeeklySummaryActions({
+  desktop = false,
   isRegenerating,
   onRegenerate,
 }: {
+  desktop?: boolean;
   isRegenerating: boolean;
   onRegenerate: () => void;
 }) {
+  if (desktop) {
+    return (
+      <Button
+        disabled={isRegenerating}
+        onClick={onRegenerate}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        <RefreshCwIcon
+          className={cn("size-4", isRegenerating && "animate-spin")}
+        />
+        {isRegenerating ? "Regenerating" : "Regenerate snapshot"}
+      </Button>
+    );
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
