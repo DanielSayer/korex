@@ -2,10 +2,10 @@ const skeletonRows = ["latest-week", "previous-week", "third-week"];
 
 function WeeklyTrainingSummaryListSkeleton() {
   return (
-    <div className="grid gap-3 lg:grid-cols-2">
+    <div className="grid gap-3 md:gap-0 md:border-border/50 md:border-t">
       {skeletonRows.map((row) => (
         <div
-          className="border-border/40 border-b p-3 last:border-b-0 md:rounded-lg md:border md:last:border"
+          className="border-border/40 border-b p-3 last:border-b-0 md:px-4 md:py-5"
           key={row}
         >
           <div className="flex items-start justify-between gap-4">

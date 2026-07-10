@@ -57,8 +57,10 @@ function AnimatedPanelState({ children }: { children: React.ReactNode }) {
 }
 
 function WeeklyTrainingSummaryDetail({
+  desktop = false,
   summary,
 }: {
+  desktop?: boolean;
   summary: WeeklyTrainingSummaryDetailType;
 }) {
   const longestActivity = summary.payload.highlights.longestActivity;
@@ -73,8 +75,15 @@ function WeeklyTrainingSummaryDetail({
       key={summary.id}
       transition={{ duration: 0.22 }}
     >
-      <section className="relative overflow-hidden p-4 sm:p-5">
-        <div className="absolute inset-x-0 top-0 h-px bg-primary/50" />
+      <section
+        className={cn(
+          "relative overflow-hidden",
+          desktop ? "border-border/50 border-y py-6" : "p-4 sm:p-5",
+        )}
+      >
+        {desktop ? null : (
+          <div className="absolute inset-x-0 top-0 h-px bg-primary/50" />
+        )}
 
         <div className="relative">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -96,7 +105,12 @@ function WeeklyTrainingSummaryDetail({
                 <RouteIcon className="size-4 text-primary" />
                 Total distance
               </div>
-              <div className="mt-2 whitespace-nowrap font-display text-4xl tabular-nums tracking-tight sm:text-6xl">
+              <div
+                className={cn(
+                  "mt-2 whitespace-nowrap font-display tabular-nums tracking-tight",
+                  desktop ? "text-7xl" : "text-4xl sm:text-6xl",
+                )}
+              >
                 {formatDistance(summary.totalDistanceMeters)}
               </div>
               <DeltaLine value={summary.previousWeekDistanceDeltaMeters}>
@@ -105,7 +119,12 @@ function WeeklyTrainingSummaryDetail({
               </DeltaLine>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <div
+              className={cn(
+                "grid gap-4 sm:grid-cols-2 lg:grid-cols-1",
+                desktop && "border-border/40 border-l pl-6",
+              )}
+            >
               <HeroMetric
                 icon={<ClockIcon className="size-4" />}
                 label="Moving time"
@@ -286,14 +305,7 @@ function ComparisonRow({
         <p className="text-muted-foreground text-xs">Previous</p>
         <p className="whitespace-nowrap text-muted-foreground">{previous}</p>
       </div>
-      <div
-        className={cn(
-          "inline-flex w-fit items-center gap-1 justify-self-start rounded-md px-2 py-1 font-semibold sm:justify-self-end",
-          positive
-            ? "bg-primary/10 text-primary"
-            : "bg-destructive/10 text-destructive",
-        )}
-      >
+      <div className="inline-flex w-fit items-center gap-1 justify-self-start rounded-md bg-muted/50 px-2 py-1 font-semibold text-foreground sm:justify-self-end">
         {positive ? (
           <TrendingUpIcon className="size-3.5" />
         ) : (
@@ -313,12 +325,7 @@ function DeltaLine({
   value: number;
 }) {
   return (
-    <div
-      className={cn(
-        "mt-3 flex items-center gap-1.5 font-medium text-sm",
-        value >= 0 ? "text-primary" : "text-destructive",
-      )}
-    >
+    <div className="mt-3 flex items-center gap-1.5 font-medium text-foreground text-sm">
       {value >= 0 ? (
         <TrendingUpIcon className="size-4" />
       ) : (

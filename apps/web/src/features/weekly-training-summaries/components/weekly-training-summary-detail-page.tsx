@@ -4,6 +4,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { ErrorMessage } from "@/components/error-message";
 import { PageHeader } from "@/components/page-layout";
 import { QueryRenderer } from "@/components/query-renderer";
+import { useIsMobileViewport } from "@/components/responsive";
 import { orpc } from "@/utils/orpc";
 import {
   useWeeklySummaryRegeneration,
@@ -23,6 +24,7 @@ function WeeklyTrainingSummaryDetailPage({
 }: {
   weekStartAt: Date;
 }) {
+  const isMobileViewport = useIsMobileViewport();
   const detailQueryOptions =
     orpc.activities.getWeeklyTrainingSummary.queryOptions({
       input: { weekStartAt },
@@ -58,6 +60,7 @@ function WeeklyTrainingSummaryDetailPage({
               <PageHeader
                 actions={
                   <WeeklySummaryActions
+                    desktop={!isMobileViewport}
                     isRegenerating={isRegenerating}
                     onRegenerate={regenerate}
                   />
@@ -70,7 +73,10 @@ function WeeklyTrainingSummaryDetailPage({
                   summary.weekEndAt,
                 )}
               />
-              <WeeklyTrainingSummaryDetail summary={summary} />
+              <WeeklyTrainingSummaryDetail
+                desktop={!isMobileViewport}
+                summary={summary}
+              />
             </>
           ) : (
             <ErrorMessage

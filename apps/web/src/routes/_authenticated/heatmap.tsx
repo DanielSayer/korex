@@ -59,7 +59,7 @@ function HeatmapDesktop({
           />
         }
       />
-      <RouteHeatmapMap displayMode={displayMode} />
+      <RouteHeatmapMap displayMode={displayMode} journal />
     </PageLayout>
   );
 }
@@ -125,6 +125,7 @@ function RouteHeatmapDisplayModeControl({
     >
       {(["density", "visited"] as const).map((mode) => (
         <Button
+          aria-pressed={displayMode === mode}
           className="h-7 min-w-0"
           key={mode}
           onClick={() => onDisplayModeChange(mode)}
