@@ -20,10 +20,12 @@ import {
 
 function ActivityStreamCompareChart({
   availableMetrics,
+  desktop = false,
   streams,
   xAxisMode,
 }: {
   availableMetrics: ChartMetric[];
+  desktop?: boolean;
   streams: ActivityStreamsChartData;
   xAxisMode: XAxisMode;
 }) {
@@ -71,10 +73,18 @@ function ActivityStreamCompareChart({
   }
 
   return (
-    <div className="md:rounded-lg md:border md:p-5">
+    <div
+      className={
+        desktop
+          ? "border-border/50 border-y py-6"
+          : "md:rounded-lg md:border md:p-5"
+      }
+    >
       <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
-          <h3 className="font-medium text-base">Compare Streams</h3>
+          <h3 className="font-display text-lg tracking-tight">
+            Compare Activity streams
+          </h3>
           <p className="text-muted-foreground text-sm">
             Relative scale, normalized per stream.
           </p>
@@ -105,7 +115,11 @@ function ActivityStreamCompareChart({
           data={chartData}
           margin={{ bottom: 8, left: -12, right: 0, top: 12 }}
         >
-          <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" />
+          <CartesianGrid
+            stroke="var(--border)"
+            strokeDasharray="2 8"
+            vertical={false}
+          />
           <XAxis
             axisLine={false}
             dataKey="xValue"
@@ -133,7 +147,7 @@ function ActivityStreamCompareChart({
               dot={false}
               key={metric}
               stroke={`var(--color-${metric})`}
-              strokeWidth={2}
+              strokeWidth={desktop ? 2.5 : 2}
               type="monotone"
             />
           ))}

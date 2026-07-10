@@ -42,29 +42,33 @@ function ActivityDetailDesktop({
 
       <section className="grid gap-8 border-border/50 border-b pb-10 lg:grid-cols-2 lg:divide-x lg:divide-border/50">
         <div>
-          <BestEffortsCard efforts={summary.bestEfforts} />
+          <BestEffortsCard desktop efforts={summary.bestEfforts} />
         </div>
         <div className="lg:pl-8">
-          <ActivityEquipmentCard activityId={activityId} summary={summary} />
+          <ActivityEquipmentCard
+            activityId={activityId}
+            desktop
+            summary={summary}
+          />
         </div>
       </section>
 
-      <ActivityLapsCard laps={summary.laps} />
+      <ActivityLapsCard desktop laps={summary.laps} />
       <section className="border-border/50 border-y py-8">
         <TrainingNotesSection
           activityId={summary.activity.id}
           type="activity"
         />
       </section>
-      <HeartRateZonesCard summary={summary} />
+      <HeartRateZonesCard desktop summary={summary} />
       <QueryRenderer
         error={null}
-        loading={<ActivityStreamChartsSkeleton />}
+        loading={<ActivityStreamChartsSkeleton desktop />}
         query={streamsQuery}
       >
         {(streams) =>
           streams ? (
-            <ActivityStreamCharts streams={streams} summary={summary} />
+            <ActivityStreamCharts desktop streams={streams} summary={summary} />
           ) : null
         }
       </QueryRenderer>

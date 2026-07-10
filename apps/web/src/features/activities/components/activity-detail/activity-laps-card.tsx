@@ -6,11 +6,13 @@ import { MetricValue } from "./metric-value";
 
 type ActivityLapsCardProps = {
   compactMobile?: boolean;
+  desktop?: boolean;
   laps: ActivityLapSummary[];
 };
 
 function ActivityLapsCard({
   compactMobile = false,
+  desktop = false,
   laps,
 }: ActivityLapsCardProps) {
   if (laps.length === 0) {
@@ -25,28 +27,50 @@ function ActivityLapsCard({
 
       <MobileLapsTable laps={laps} />
 
-      <div className="hidden overflow-x-auto border-y md:block">
+      <div
+        className={cn(
+          "hidden overflow-x-auto border-y md:block",
+          desktop && "border-border/50",
+        )}
+      >
         <table className="w-full min-w-280 text-sm">
-          <thead>
+          <thead className={cn(desktop && "text-muted-foreground")}>
             <tr className="border-b text-muted-foreground">
-              <th className="px-3 py-2 text-left font-medium">Lap</th>
-              <th className="px-3 py-2 text-right font-medium">Distance</th>
-              <th className="px-3 py-2 text-right font-medium">Moving</th>
-              <th className="px-3 py-2 text-right font-medium">Elapsed</th>
-              <th className="px-3 py-2 text-right font-medium">Start</th>
-              <th className="px-3 py-2 text-right font-medium">End</th>
-              <th className="px-3 py-2 text-right font-medium">Avg Speed</th>
-              <th className="px-3 py-2 text-right font-medium">Max Speed</th>
-              <th className="px-3 py-2 text-right font-medium">Avg HR</th>
-              <th className="px-3 py-2 text-right font-medium">Max HR</th>
-              <th className="px-3 py-2 text-right font-medium">Cadence</th>
-              <th className="px-3 py-2 text-right font-medium">Stride</th>
-              <th className="px-3 py-2 text-right font-medium">Elevation</th>
+              {[
+                ["Lap", "text-left"],
+                ["Distance", "text-right"],
+                ["Moving", "text-right"],
+                ["Elapsed", "text-right"],
+                ["Start", "text-right"],
+                ["End", "text-right"],
+                ["Avg Speed", "text-right"],
+                ["Max Speed", "text-right"],
+                ["Avg HR", "text-right"],
+                ["Max HR", "text-right"],
+                ["Cadence", "text-right"],
+                ["Stride", "text-right"],
+                ["Elevation", "text-right"],
+              ].map(([label, alignment]) => (
+                <th
+                  className={cn(
+                    "px-3 py-3 font-medium",
+                    alignment,
+                    desktop &&
+                      "font-display text-[10px] uppercase tracking-[0.14em]",
+                  )}
+                  key={label}
+                >
+                  {label}
+                </th>
+              ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className={cn(desktop && "font-display tabular-nums")}>
             {laps.map((lap) => (
-              <tr key={lap.id} className="border-b last:border-0">
+              <tr
+                key={lap.id}
+                className="border-border/40 border-b last:border-0"
+              >
                 <td className="px-3 py-2 font-medium">{lap.index + 1}</td>
                 <td className="px-3 py-2 text-right">
                   <MetricValue

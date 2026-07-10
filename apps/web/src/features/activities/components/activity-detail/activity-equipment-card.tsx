@@ -12,11 +12,13 @@ import { orpc } from "@/utils/orpc";
 
 type ActivityEquipmentCardProps = {
   activityId: string;
+  desktop?: boolean;
   summary: ActivityDetailSummary;
 };
 
 function ActivityEquipmentCard({
   activityId,
+  desktop = false,
   summary,
 }: ActivityEquipmentCardProps) {
   const equipmentQuery = useQuery(orpc.equipment.list.queryOptions());
@@ -32,6 +34,7 @@ function ActivityEquipmentCard({
       {(equipment) => (
         <ActivityEquipmentEditor
           activityId={activityId}
+          desktop={desktop}
           equipment={equipment}
           summary={summary}
         />
@@ -42,10 +45,12 @@ function ActivityEquipmentCard({
 
 function ActivityEquipmentEditor({
   activityId,
+  desktop,
   equipment,
   summary,
 }: {
   activityId: string;
+  desktop: boolean;
   equipment: Equipment[];
   summary: ActivityDetailSummary;
 }) {
@@ -165,12 +170,16 @@ function ActivityEquipmentEditor({
         Equipment
       </SectionLabel>
 
-      <div className="mt-3 space-y-2">
+      <div className={desktop ? "mt-5 space-y-3" : "mt-3 space-y-2"}>
         <Label className="sr-only" htmlFor="activity-shoes">
           Shoes
         </Label>
         <select
-          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
+          className={
+            desktop
+              ? "flex h-10 w-full border-input border-b bg-transparent px-0 py-1 font-display text-base outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-60"
+              : "flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60"
+          }
           disabled={isMutating}
           id="activity-shoes"
           onChange={(event) => {
