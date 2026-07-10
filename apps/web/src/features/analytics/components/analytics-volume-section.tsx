@@ -12,6 +12,7 @@ import {
 } from "@korex/ui/components/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, ChevronDownIcon } from "lucide-react";
+import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { cn } from "@/lib/utils";
@@ -26,11 +27,13 @@ import { CumulativeDistanceChart } from "./cumulative-distance-chart";
 
 type AnalyticsVolumeSectionProps = {
   bucketMode: AnalyticsVolumeBucketMode;
+  density?: "default" | "mobile";
   year: number;
 };
 
 function AnalyticsVolumeSection({
   bucketMode,
+  density = "default",
   year,
 }: AnalyticsVolumeSectionProps) {
   const analyticsQuery = useQuery(
@@ -46,7 +49,13 @@ function AnalyticsVolumeSection({
         loading={<AnalyticsVolumeSkeleton />}
         query={analyticsQuery}
       >
-        {(analytics) => <AnalyticsVolumePanel analytics={analytics} />}
+        {(analytics) =>
+          density === "mobile" ? (
+            <AnalyticsVolumeMobilePanel analytics={analytics} />
+          ) : (
+            <AnalyticsVolumeDesktopPanel analytics={analytics} />
+          )
+        }
       </QueryRenderer>
     </div>
   );
@@ -130,7 +139,65 @@ function YearPicker({
   );
 }
 
-function AnalyticsVolumePanel({ analytics }: { analytics: AnalyticsVolume }) {
+function AnalyticsVolumeDesktopPanel({
+  analytics,
+}: {
+  analytics: AnalyticsVolume;
+}) {
+  const summary = getAnalyticsVolumeSummary(analytics);
+
+  return (
+    <section className="min-w-0 border-border/60 border-y py-7">
+      <div className="grid min-w-0 gap-8 xl:grid-cols-[minmax(260px,0.72fr)_minmax(0,1.8fr)] xl:gap-10">
+        <div className="flex min-w-0 flex-col">
+          <SectionLabel>{analytics.year} field total</SectionLabel>
+          <p className="mt-5 font-display text-[clamp(4rem,7vw,6.5rem)] tabular-nums leading-[0.78] tracking-[-0.06em]">
+            {formatDistanceValue(analytics.totalDistanceMeters)}
+          </p>
+          <p className="mt-3 font-display text-muted-foreground text-xl">
+            kilometres on the trail
+          </p>
+          <p className="mt-4 max-w-xs text-muted-foreground text-sm tabular-nums leading-relaxed">
+            {formatDurationCompact(analytics.totalDurationSeconds)} across{" "}
+            {analytics.totalActivityCount} Activities.
+          </p>
+
+          <div className="mt-8 grid grid-cols-3 border-border/50 border-t xl:grid-cols-1 xl:divide-y xl:divide-border/50">
+            <StatBlock
+              className="pt-4 xl:px-0"
+              detail={formatDurationCompact(summary.weekDurationSeconds)}
+              label="This week"
+              value={formatDistance(summary.weekDistanceMeters)}
+            />
+            <StatBlock
+              className="pt-4 xl:px-0"
+              detail={formatDurationCompact(summary.monthDurationSeconds)}
+              label="This month"
+              value={formatDistance(summary.monthDistanceMeters)}
+            />
+            <StatBlock
+              className="pt-4 xl:px-0"
+              detail={`${summary.monthActivityCount} Activities this month`}
+              label="Average / week"
+              value={formatDistance(summary.averageWeeklyDistanceMeters)}
+            />
+          </div>
+        </div>
+
+        <div className="grid min-w-0 gap-7 lg:grid-cols-2 lg:divide-x lg:divide-border/50">
+          <BucketDistanceChart analytics={analytics} />
+          <CumulativeDistanceChart analytics={analytics} className="lg:pl-7" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function AnalyticsVolumeMobilePanel({
+  analytics,
+}: {
+  analytics: AnalyticsVolume;
+}) {
   const summary = getAnalyticsVolumeSummary(analytics);
 
   return (

@@ -87,7 +87,11 @@ function AnalyticsMobile({
           year={year}
         />
       </header>
-      <AnalyticsVolumeSection bucketMode={bucketMode} year={year} />
+      <AnalyticsVolumeSection
+        bucketMode={bucketMode}
+        density="mobile"
+        year={year}
+      />
       <AnalyticsBestEffortsSection year={year} />
     </PageLayout>
   );
