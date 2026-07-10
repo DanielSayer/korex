@@ -33,7 +33,7 @@ type WeeklyDistanceChartPoint = {
 
 const chartConfig = {
   distanceKilometers: {
-    color: "var(--chart-1)",
+    color: "var(--color-journal-route)",
     label: "Weekly distance",
   },
 } satisfies ChartConfig;
@@ -46,56 +46,50 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
       isCurrentWeek: index === weeklyDistance.weeklyDistanceBuckets.length - 1,
     }),
   );
-  const deltaClassName =
-    weeklyDistance.distanceDeltaMeters >= 0
-      ? "text-primary"
-      : "text-foreground";
+  const currentWeekActivityCount =
+    weeklyDistance.weeklyDistanceBuckets.at(-1)?.activityCount ?? 0;
 
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <SectionLabel>This week trend</SectionLabel>
-        <p className="text-muted-foreground text-xs">
-          {formatWeekRange(weeklyDistance.weekStartAt)}
-        </p>
+      <div className="flex items-end justify-between gap-6">
+        <div>
+          <SectionLabel>Weekly distance</SectionLabel>
+          <h2 className="mt-2 font-display font-medium text-2xl">
+            Your recent rhythm
+          </h2>
+        </div>
+        <div className="text-right">
+          <p className="flex items-baseline justify-end gap-2">
+            <span className="font-display font-medium text-4xl tabular-nums tracking-tight">
+              {formatDistanceValue(weeklyDistance.thisWeekDistanceMeters)}
+            </span>
+            <span className="text-muted-foreground text-sm">km this week</span>
+          </p>
+          <p className="mt-1 text-muted-foreground text-xs">
+            {formatWeekRange(weeklyDistance.weekStartAt)}
+          </p>
+        </div>
       </div>
-      <div className="grid gap-5">
-        <div className="grid gap-4">
-          <div>
-            <p className="font-medium text-muted-foreground text-xs uppercase">
-              This week
-            </p>
-            <p className="mt-1 flex items-baseline gap-2">
-              <span className="font-display text-5xl tracking-tight">
-                {formatDistanceValue(weeklyDistance.thisWeekDistanceMeters)}
-              </span>
-              <span className="text-muted-foreground text-sm">km</span>
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="font-medium text-muted-foreground text-xs uppercase">
-                Vs last week
-              </p>
-              <p className={`font-semibold text-sm ${deltaClassName}`}>
-                {formatSignedDistance(weeklyDistance.distanceDeltaMeters)}
-              </p>
-            </div>
-            <div>
-              <p className="font-medium text-muted-foreground text-xs uppercase">
-                Avg/week
-              </p>
-              <p className="font-semibold text-sm">
-                {formatDistance(weeklyDistance.averageWeeklyDistanceMeters)}
-              </p>
-            </div>
-          </div>
+      <div className="mt-5 grid grid-cols-[10rem_minmax(0,1fr)] gap-5">
+        <div className="flex flex-col justify-center divide-y divide-border">
+          <DistanceStat
+            label="Vs last week"
+            value={formatSignedDistance(weeklyDistance.distanceDeltaMeters)}
+          />
+          <DistanceStat
+            label="Average / week"
+            value={formatDistance(weeklyDistance.averageWeeklyDistanceMeters)}
+          />
+          <DistanceStat
+            label="Activities"
+            value={String(currentWeekActivityCount)}
+          />
         </div>
         <div className="min-w-0 flex-1">
           <ChartContainer
-            className="aspect-auto h-44 w-full"
+            className="aspect-auto h-56 w-full"
             config={chartConfig}
-            initialDimension={{ width: 520, height: 176 }}
+            initialDimension={{ height: 224, width: 620 }}
           >
             <AreaChart
               accessibilityLayer
@@ -113,7 +107,7 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
                   <stop
                     offset="5%"
                     stopColor="var(--color-distanceKilometers)"
-                    stopOpacity={0.5}
+                    stopOpacity={0.35}
                   />
                   <stop
                     offset="95%"
@@ -122,15 +116,19 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
                   />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" />
+              <CartesianGrid
+                stroke="var(--border)"
+                strokeDasharray="2 7"
+                vertical={false}
+              />
               <XAxis
                 axisLine={false}
                 dataKey="dateLabel"
-                interval={2}
-                minTickGap={16}
+                interval={1}
+                minTickGap={12}
                 tick={{
                   fill: "var(--muted-foreground)",
-                  fontSize: 11,
+                  fontSize: 9,
                 }}
                 tickLine={false}
                 tickMargin={8}
@@ -139,7 +137,7 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
                 axisLine={false}
                 tick={{
                   fill: "var(--muted-foreground)",
-                  fontSize: 11,
+                  fontSize: 9,
                 }}
                 tickFormatter={(value) => `${value}`}
                 tickLine={false}
@@ -156,7 +154,7 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
                 fill="url(#weeklyDistanceFill)"
                 fillOpacity={1}
                 stroke="var(--color-distanceKilometers)"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 type="monotone"
               />
             </AreaChart>
@@ -164,6 +162,19 @@ function WeeklyDistanceWidget({ weeklyDistance }: WeeklyDistanceWidgetProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+function DistanceStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="py-3 first:pt-0 last:pb-0">
+      <p className="text-[9px] text-muted-foreground uppercase tracking-[0.12em]">
+        {label}
+      </p>
+      <p className="mt-1 font-display font-medium text-lg tabular-nums">
+        {value}
+      </p>
+    </div>
   );
 }
 

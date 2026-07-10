@@ -5,7 +5,7 @@ import {
   MessageSquareTextIcon,
   RouteIcon,
 } from "lucide-react";
-import { SectionLabel, WaypointDot } from "@/components/brand";
+import { SectionLabel } from "@/components/brand";
 import {
   formatDistance,
   formatDurationClock,
@@ -20,43 +20,43 @@ type RecentRunsTableProps = {
 
 function RecentRunsTable({ isLoading, runs }: RecentRunsTableProps) {
   return (
-    <section className="relative">
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <SectionLabel>Recent</SectionLabel>
+    <section>
+      <div className="flex items-end justify-between gap-4 border-border border-b pb-4">
+        <div>
+          <SectionLabel>Recent field notes</SectionLabel>
+          <h2 className="mt-2 font-display font-medium text-2xl">
+            Your latest runs
+          </h2>
+        </div>
+        <Link
+          className="inline-flex items-center gap-1 text-muted-foreground text-xs underline underline-offset-4 transition-colors hover:text-foreground"
+          to="/calendar"
+        >
+          View all Activities <ChevronRightIcon className="size-3.5" />
+        </Link>
       </div>
-      <div className="relative overflow-hidden pl-8">
-        <div className="absolute top-6 bottom-8 left-2.5 w-px bg-border" />
+      <div>
         {isLoading ? (
-          <EmptyPanel label="Loading recent runs..." />
+          <EmptyPanel label="Reading recent Activities…" />
         ) : runs.length === 0 ? (
-          <EmptyPanel label="No recent runs yet." />
+          <EmptyPanel label="Your next Activity will start the field notes." />
         ) : (
-          runs.slice(0, 5).map((run) => <RunRow key={run.id} run={run} />)
+          runs.slice(0, 5).map((run) => <ActivityRow key={run.id} run={run} />)
         )}
       </div>
-      <Link
-        className="mt-5 inline-flex w-full items-center justify-center gap-1 font-medium text-primary text-sm"
-        to="/calendar"
-      >
-        View all runs <ChevronRightIcon className="size-4" />
-      </Link>
     </section>
   );
 }
 
-function RunRow({ run }: { run: RecentActivity }) {
+function ActivityRow({ run }: { run: RecentActivity }) {
   const pace = getPace(run);
 
   return (
     <Link
-      className="relative grid gap-3 border-border/70 border-b py-3 transition-colors last:border-b-0 hover:bg-muted/20 lg:grid-cols-[92px_minmax(160px,1fr)_repeat(4,minmax(76px,0.48fr))] lg:items-center"
+      className="group grid gap-4 border-border border-b py-4 transition-colors last:border-b-0 hover:bg-muted/25 lg:grid-cols-[5rem_minmax(10rem,1fr)_repeat(4,minmax(4.75rem,0.48fr))_1.5rem] lg:items-center"
       params={{ activityId: String(run.id) }}
       to="/activity/$activityId"
     >
-      <WaypointDot
-        className="absolute top-1/2 -left-7.5 -translate-y-1/2 bg-background ring-4 ring-background"
-        filled={false}
-      />
       <MapPreview run={run} />
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">
@@ -91,6 +91,7 @@ function RunRow({ run }: { run: RecentActivity }) {
           value={run.averageHeartRateBeatsPerMinute?.toFixed(0) ?? "--"}
         />
       </div>
+      <ChevronRightIcon className="hidden size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5 lg:block" />
     </Link>
   );
 }
@@ -123,7 +124,7 @@ function MapPreview({ run }: { run: RecentActivity }) {
   const path = buildRoutePreviewPath(run.map?.coordinates);
 
   return (
-    <div className="relative h-16 overflow-hidden rounded-md border border-border/70 bg-muted/20">
+    <div className="relative h-14 overflow-hidden rounded-xl bg-muted/60 text-journal-route">
       <div className="absolute inset-0 bg-[linear-gradient(var(--border)_1px,transparent_1px),linear-gradient(90deg,var(--border)_1px,transparent_1px)] bg-size-[18px_18px] opacity-35" />
       <svg
         aria-hidden="true"
@@ -134,13 +135,13 @@ function MapPreview({ run }: { run: RecentActivity }) {
           <path
             d={path}
             fill="none"
-            stroke="var(--primary)"
+            stroke="currentColor"
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="2.5"
           />
         ) : (
-          <RouteIcon className="translate-x-8 translate-y-5 text-muted-foreground" />
+          <RouteIcon className="translate-x-7 translate-y-4 text-muted-foreground" />
         )}
       </svg>
     </div>

@@ -33,53 +33,79 @@ function TrainingStreakWidget({
   });
 
   return (
-    <section>
-      <div className="grid gap-5">
-        <div className="flex items-end justify-between gap-4 border-border/70 border-b pb-4">
-          <div>
-            <SectionLabel>Your streak</SectionLabel>
-            <p className="mt-1 font-semibold text-muted-foreground text-xs uppercase">
-              Weeks
-            </p>
-          </div>
-          <p className="font-display text-6xl text-primary tabular-nums leading-none">
+    <section className="flex h-full min-h-72 flex-col">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <SectionLabel>Training streak</SectionLabel>
+          <h2 className="mt-2 font-display font-medium text-2xl">
+            Keep the trail alive
+          </h2>
+        </div>
+        <div className="text-right">
+          <p className="font-display font-medium text-6xl tabular-nums leading-none tracking-tighter">
             {currentStreak}
           </p>
+          <p className="mt-1 text-[9px] text-muted-foreground uppercase tracking-[0.14em]">
+            weeks
+          </p>
         </div>
-        <div className="grid min-w-0 grid-cols-7 gap-1.5 sm:gap-3">
+      </div>
+
+      <div className="relative mt-10">
+        <div
+          aria-hidden="true"
+          className="absolute top-[18px] right-[7%] left-[7%] h-px bg-border"
+        />
+        <ol className="relative grid grid-cols-7 gap-2">
           {days.map((day) => (
-            <div
-              className="flex min-w-0 flex-col items-center gap-2"
+            <li
+              className="flex min-w-0 flex-col items-center"
               key={day.date.toISOString()}
             >
-              <span className="font-medium text-muted-foreground text-sm">
-                {day.dayLabel}
-              </span>
-              <div
+              <span
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-full border text-sm tabular-nums sm:size-10",
+                  "grid size-9 place-items-center rounded-full border",
                   day.hasActivity
-                    ? "border-primary/20 bg-foreground text-background dark:bg-foreground dark:text-background"
-                    : "border-border bg-background/40 text-foreground",
+                    ? "border-journal-hero bg-journal-hero text-journal-route"
+                    : "border-border bg-background text-muted-foreground",
                 )}
                 title={
                   day.hasActivity
-                    ? "Qualifying activity logged"
-                    : "No qualifying activity logged"
+                    ? "Qualifying Activity logged"
+                    : "No qualifying Activity logged"
                 }
               >
                 {day.hasActivity ? (
                   <FlameIcon
-                    className="size-5 fill-destructive text-destructive"
-                    strokeWidth={2.25}
+                    aria-hidden="true"
+                    className="size-4 fill-current"
                   />
                 ) : (
-                  day.valueLabel
+                  <span className="text-[10px] tabular-nums">
+                    {day.valueLabel}
+                  </span>
                 )}
-              </div>
-            </div>
+              </span>
+              <span className="mt-3 text-[9px] text-muted-foreground uppercase">
+                {day.dayLabel}
+              </span>
+            </li>
           ))}
+        </ol>
+      </div>
+
+      <div className="mt-auto flex items-end justify-between gap-4 border-border border-t pt-5">
+        <div>
+          <p className="text-[9px] text-muted-foreground uppercase tracking-[0.12em]">
+            Longest streak
+          </p>
+          <p className="mt-1 font-display font-medium text-xl tabular-nums">
+            {streak?.maxStreak ?? 0} weeks
+          </p>
         </div>
+        <p className="max-w-44 text-right text-[10px] text-muted-foreground leading-relaxed">
+          One qualifying Activity keeps this week moving.
+        </p>
       </div>
     </section>
   );
