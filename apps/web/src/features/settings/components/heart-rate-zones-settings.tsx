@@ -74,8 +74,10 @@ function HeartRateZonesEditor({ zones }: { zones: HeartRateZone[] }) {
       id="training"
     >
       <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <div>
-          <h2 className="font-semibold text-xl tracking-tight">Training</h2>
+        <div className="md:border-border/30 md:border-l md:pl-4">
+          <h2 className="font-semibold text-xl tracking-tight md:font-display md:font-normal md:text-[11px] md:text-muted-foreground md:uppercase md:tracking-[0.18em]">
+            Training
+          </h2>
           <p className="mt-2 text-muted-foreground text-sm leading-6">
             Manage active heart rate zone names and BPM ranges used in activity
             analysis.
@@ -85,7 +87,9 @@ function HeartRateZonesEditor({ zones }: { zones: HeartRateZone[] }) {
         <div className="min-w-0 space-y-5">
           <div className="flex flex-col gap-3 border-border/70 border-b pb-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h3 className="font-semibold text-base">Heart Rate Zones</h3>
+              <h3 className="font-semibold text-base md:font-display md:text-lg md:tracking-tight">
+                Heart Rate Zones
+              </h3>
               <p className="text-muted-foreground text-sm">
                 Ordered zones with non-overlapping minimum and maximum BPM.
               </p>
@@ -280,7 +284,7 @@ function HeartRateZonesSettingsSkeleton() {
   return (
     <section className="border-border/70 border-b pb-10">
       <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <div>
+        <div className="md:border-border/30 md:border-l md:pl-4">
           <div className="h-7 w-28 animate-pulse bg-muted" />
           <div className="mt-3 h-16 w-full animate-pulse bg-muted" />
         </div>

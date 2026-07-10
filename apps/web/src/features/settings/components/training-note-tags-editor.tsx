@@ -53,7 +53,9 @@ function TrainingNoteTagsEditor({ tags }: { tags: TrainingNoteTag[] }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between gap-3 border-border/70 border-b pb-3">
           <div>
-            <h3 className="font-semibold text-base">Active tags</h3>
+            <h3 className="font-semibold text-base md:font-display md:text-lg md:tracking-tight">
+              Active tags
+            </h3>
             <p className="text-muted-foreground text-sm">
               {activeTags.length} available for new Training Notes.
             </p>
