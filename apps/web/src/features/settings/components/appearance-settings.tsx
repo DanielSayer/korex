@@ -90,6 +90,7 @@ function AppearanceSettings() {
             <div className="relative flex-1">
               <SearchIcon className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
+                aria-label="Search themes"
                 className="bg-muted/20 pl-9 focus:bg-background"
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search themes..."
@@ -110,7 +111,10 @@ function AppearanceSettings() {
           </div>
 
           {isLoading ? (
-            <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground text-sm">
+            <div
+              className="flex items-center justify-center gap-2 py-12 text-muted-foreground text-sm"
+              role="status"
+            >
               <Loader2Icon className="size-4 animate-spin" />
               Loading themes...
             </div>
@@ -129,7 +133,10 @@ function AppearanceSettings() {
           )}
 
           {filteredThemes.length === 0 && searchQuery && !isLoading ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div
+              className="flex flex-col items-center justify-center py-12 text-center"
+              role="status"
+            >
               <EyeIcon className="mb-3 size-8 text-muted-foreground" />
               <h4 className="font-medium text-foreground">No themes found</h4>
               <p className="mt-1 text-muted-foreground text-sm">

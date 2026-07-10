@@ -1,4 +1,3 @@
-import { Card } from "@korex/ui/components/card";
 import { CheckCircleIcon } from "lucide-react";
 import { extractThemeColors, type FetchedTheme } from "@/lib/theme-utils";
 import { cn } from "@/lib/utils";
@@ -21,16 +20,17 @@ function ThemeCard({
     : extractThemeColors(theme.preset, currentMode);
 
   return (
-    <Card
+    <div
       className={cn(
-        "group relative overflow-hidden p-0",
+        "group relative overflow-hidden rounded-xl border border-border/60 bg-card/55 text-card-foreground text-sm shadow-black/5 shadow-md backdrop-blur transition-colors md:rounded-lg md:bg-card md:shadow-none md:backdrop-blur-none",
         isSelected
-          ? "bg-primary/5 ring-1 ring-primary/20"
-          : "hover:ring-1 hover:ring-border",
+          ? "bg-primary/5 ring-1 ring-primary/20 md:bg-accent md:text-accent-foreground md:ring-ring/30"
+          : "hover:ring-1 hover:ring-border md:hover:bg-accent/30",
         theme.error && "cursor-not-allowed opacity-50",
       )}
     >
       <button
+        aria-pressed={isSelected}
         className="flex w-full items-center justify-between p-4 pb-0 text-left"
         disabled={Boolean(theme.error)}
         onClick={() => onSelect(theme)}
@@ -38,11 +38,11 @@ function ThemeCard({
       >
         <div className="min-w-0 flex-1">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h4 className="truncate font-medium text-foreground text-sm">
+            <h4 className="truncate font-medium text-foreground text-sm md:text-inherit">
               {theme.name}
             </h4>
             {isSelected ? (
-              <CheckCircleIcon className="size-4 flex-shrink-0 text-primary" />
+              <CheckCircleIcon className="size-4 flex-shrink-0 text-primary md:text-journal-route" />
             ) : null}
           </div>
 
@@ -65,7 +65,7 @@ function ThemeCard({
           ) : null}
         </div>
       </button>
-    </Card>
+    </div>
   );
 }
 

@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArchiveIcon, RotateCcwIcon, SaveIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
+import { RouteProgress } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { QueryRenderer } from "@/components/query-renderer";
 import { formatDistance } from "@/utils/formatters";
@@ -25,8 +26,8 @@ function EquipmentSettings() {
   return (
     <section className="border-border/70 border-b pb-6 md:pb-10">
       <div className="grid gap-4 md:gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <div>
-          <h2 className="font-semibold text-lg tracking-tight md:text-xl">
+        <div className="md:border-border/30 md:border-l md:pl-4">
+          <h2 className="font-semibold text-lg tracking-tight md:font-display md:font-normal md:text-[11px] md:text-muted-foreground md:uppercase md:tracking-[0.18em]">
             Equipment
           </h2>
           <p className="mt-2 text-muted-foreground text-sm leading-6">
@@ -120,7 +121,9 @@ function CreateEquipmentForm() {
       }}
     >
       <div>
-        <h3 className="font-semibold text-base">Add Shoes</h3>
+        <h3 className="font-semibold text-base md:font-display md:text-lg md:tracking-tight">
+          Add Shoes
+        </h3>
         <p className="text-muted-foreground text-sm">
           Starting distance covers usage before Korex assignments begin.
         </p>
@@ -175,7 +178,9 @@ function DefaultEquipmentSettings({
   return (
     <div className="space-y-4 border-border/70 border-b pb-6">
       <div>
-        <h3 className="font-semibold text-base">Default Shoes</h3>
+        <h3 className="font-semibold text-base md:font-display md:text-lg md:tracking-tight">
+          Default Shoes
+        </h3>
         <p className="text-muted-foreground text-sm">
           Defaults apply to newly imported Activities and never overwrite manual
           assignments.
@@ -279,7 +284,9 @@ function EquipmentList({ equipment }: { equipment: Equipment[] }) {
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="font-semibold text-base">Shoes</h3>
+        <h3 className="font-semibold text-base md:font-display md:text-lg md:tracking-tight">
+          Shoes
+        </h3>
         <p className="text-muted-foreground text-sm">
           Usage combines starting distance and assigned Activity distance.
         </p>
@@ -350,12 +357,18 @@ function EquipmentRow({ item }: { item: Equipment }) {
           {item.activityCount} assigned Activities
         </p>
         {retirementPercent !== null ? (
-          <div className="mt-3 h-2 overflow-hidden rounded bg-muted">
-            <div
-              className="h-full bg-primary"
-              style={{ width: `${retirementPercent}%` }}
+          <>
+            <div className="mt-3 h-2 overflow-hidden rounded bg-muted md:hidden">
+              <div
+                className="h-full bg-primary"
+                style={{ width: `${retirementPercent}%` }}
+              />
+            </div>
+            <RouteProgress
+              className="mt-3 hidden md:block"
+              value={retirementPercent}
             />
-          </div>
+          </>
         ) : null}
       </div>
       <Metric label="Usage" value={formatDistance(item.usageDistanceMeters)} />
@@ -392,7 +405,9 @@ function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <div className="text-muted-foreground text-xs">{label}</div>
-      <div className="font-medium text-sm">{value}</div>
+      <div className="font-medium text-sm md:font-display md:tabular-nums">
+        {value}
+      </div>
     </div>
   );
 }

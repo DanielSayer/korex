@@ -11,8 +11,8 @@ function TrainingNoteTagsSettings() {
   return (
     <section className="border-border/70 border-b pt-2 pb-10">
       <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)]">
-        <div>
-          <h2 className="font-semibold text-xl tracking-tight">
+        <div className="md:border-border/30 md:border-l md:pl-4">
+          <h2 className="font-semibold text-xl tracking-tight md:font-display md:font-normal md:text-[11px] md:text-muted-foreground md:uppercase md:tracking-[0.18em]">
             Training Note Tags
           </h2>
           <p className="mt-2 text-muted-foreground text-sm leading-6">

@@ -16,8 +16,7 @@ import { cn } from "@/lib/utils";
 function SettingsLayout() {
   const location = useLocation();
   const isSettingsHub = location.pathname === "/settings";
-  const activeSettingsTab =
-    location.pathname === "/settings" ? "/settings/profile" : location.pathname;
+  const activeSettingsTab = location.pathname;
 
   return (
     <PageLayout className="gap-6 p-4 md:gap-8 md:p-0">
@@ -46,14 +45,22 @@ function SettingsLayout() {
         title="Control center"
       />
 
-      <div className="hidden overflow-x-auto md:block">
-        <nav className="flex min-w-max gap-1 border-border/40 border-b pb-2">
+      <div
+        className={cn(
+          "hidden overflow-x-auto md:block",
+          isSettingsHub && "md:hidden",
+        )}
+      >
+        <nav
+          aria-label="Settings sections"
+          className="flex min-w-max gap-1 border-border/40 border-b pb-2"
+        >
           {settingsTabs.map((tab) => (
             <Link
               className={cn(
-                "group flex h-9 items-center gap-2 rounded-md border border-transparent px-3 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground",
+                "group flex h-9 items-center gap-2 rounded-md border border-transparent px-3 font-medium text-muted-foreground text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                 activeSettingsTab === tab.to &&
-                  "active border-primary/40 bg-primary/5 text-foreground",
+                  "active border-border bg-accent text-accent-foreground",
               )}
               key={tab.to}
               to={tab.to}
