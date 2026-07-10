@@ -81,7 +81,7 @@ function SignUpConnectStep({
         <p className="hidden font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em] lg:block">
           Provider connection
         </p>
-        <h1 className="font-bold text-3xl tracking-tight lg:mt-2 lg:font-display lg:font-normal lg:lowercase lg:leading-none lg:text-4xl">
+        <h1 className="font-bold text-3xl tracking-tight lg:mt-2 lg:font-display lg:font-normal lg:text-4xl lg:lowercase lg:leading-none">
           Connect your API key
         </h1>
         <p className="text-muted-foreground text-sm">
