@@ -1,6 +1,5 @@
-import { Button } from "@korex/ui/components/button";
-import { createLazyFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createLazyFileRoute } from "@tanstack/react-router";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { SignIn } from "@/components/auth/sign-in";
 
 export const Route = createLazyFileRoute("/auth/sign-in")({
@@ -9,34 +8,12 @@ export const Route = createLazyFileRoute("/auth/sign-in")({
 
 function RouteComponent() {
   return (
-    <main className="grid min-h-screen grid-cols-1 lg:grid-cols-3">
-      {/* Left side - Auth Content */}
-      <div className="relative flex flex-col items-center justify-center gap-4 p-4 sm:p-6 md:p-8">
-        <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
-          <Link to="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
-            </Button>
-          </Link>
-        </div>
-        <div className="flex w-full max-w-sm items-center justify-center gap-4 sm:max-w-md lg:max-w-lg">
-          <SignIn />
-        </div>
-      </div>
-
-      <div className="col-span-2 hidden overflow-hidden bg-black lg:block">
-        <img
-          src="/auth/auth-signup-run-route.png"
-          alt=""
-          aria-hidden="true"
-          className="h-full w-full object-cover"
-        />
-      </div>
-    </main>
+    <AuthShell
+      imageSrc="/auth/auth-signup-run-route.png"
+      visualTitle="Pick up the trail."
+      visualDescription="Return to your Activities, weekly rhythm, and the field notes that make the work yours."
+    >
+      <SignIn />
+    </AuthShell>
   );
 }

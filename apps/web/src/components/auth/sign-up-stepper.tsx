@@ -13,7 +13,10 @@ function SignUpStepper({ currentStep }: { currentStep: number }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <RouteProgress value={progress} />
+      <RouteProgress
+        value={progress}
+        className="lg:[&>div]:bg-journal-route lg:[&>span]:bg-journal-route"
+      />
       <div className="grid grid-cols-3 gap-2">
         {steps.map((step, index) => {
           const isComplete = index < currentStep;
@@ -24,7 +27,7 @@ function SignUpStepper({ currentStep }: { currentStep: number }) {
               key={step.label}
               className={cn(
                 "border-border/40 border-b px-1 py-2 text-xs",
-                isCurrent && "border-primary",
+                isCurrent && "border-primary lg:border-journal-route",
               )}
             >
               <div className="flex items-center gap-2 font-display lowercase tracking-tight">

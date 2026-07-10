@@ -56,7 +56,10 @@ function SignUpAccountStep({ onComplete }: { onComplete: () => void }) {
       className="flex flex-col gap-6"
     >
       <div>
-        <h1 className="font-display text-3xl lowercase leading-none tracking-tight">
+        <p className="hidden font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em] lg:block">
+          Create account
+        </p>
+        <h1 className="font-display text-3xl lowercase leading-none tracking-tight lg:mt-2 lg:text-4xl">
           Welcome
         </h1>
         <p className="mt-2 text-muted-foreground text-sm">
@@ -82,12 +85,25 @@ function SignUpAccountStep({ onComplete }: { onComplete: () => void }) {
                 name={field.name}
                 placeholder="Test User"
                 value={field.state.value}
+                aria-invalid={field.state.meta.errors.length > 0}
+                aria-describedby={
+                  field.state.meta.errors.length > 0
+                    ? `${field.name}-error`
+                    : undefined
+                }
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}
               />
-              {field.state.meta.errors.map((error) => (
-                <ErrorMessage key={error?.message} message={error?.message} />
-              ))}
+              {field.state.meta.errors.length > 0 ? (
+                <div id={`${field.name}-error`}>
+                  {field.state.meta.errors.map((error) => (
+                    <ErrorMessage
+                      key={error?.message}
+                      message={error?.message}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
           )}
         </form.Field>
@@ -102,12 +118,25 @@ function SignUpAccountStep({ onComplete }: { onComplete: () => void }) {
                 type="email"
                 placeholder="hello@korex.com"
                 value={field.state.value}
+                aria-invalid={field.state.meta.errors.length > 0}
+                aria-describedby={
+                  field.state.meta.errors.length > 0
+                    ? `${field.name}-error`
+                    : undefined
+                }
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}
               />
-              {field.state.meta.errors.map((error) => (
-                <ErrorMessage key={error?.message} message={error?.message} />
-              ))}
+              {field.state.meta.errors.length > 0 ? (
+                <div id={`${field.name}-error`}>
+                  {field.state.meta.errors.map((error) => (
+                    <ErrorMessage
+                      key={error?.message}
+                      message={error?.message}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
           )}
         </form.Field>
@@ -122,12 +151,25 @@ function SignUpAccountStep({ onComplete }: { onComplete: () => void }) {
                 type="password"
                 placeholder="Enter at least 8 characters"
                 value={field.state.value}
+                aria-invalid={field.state.meta.errors.length > 0}
+                aria-describedby={
+                  field.state.meta.errors.length > 0
+                    ? `${field.name}-error`
+                    : undefined
+                }
                 onBlur={field.handleBlur}
                 onChange={(event) => field.handleChange(event.target.value)}
               />
-              {field.state.meta.errors.map((error) => (
-                <ErrorMessage key={error?.message} message={error?.message} />
-              ))}
+              {field.state.meta.errors.length > 0 ? (
+                <div id={`${field.name}-error`}>
+                  {field.state.meta.errors.map((error) => (
+                    <ErrorMessage
+                      key={error?.message}
+                      message={error?.message}
+                    />
+                  ))}
+                </div>
+              ) : null}
             </div>
           )}
         </form.Field>

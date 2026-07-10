@@ -10,11 +10,7 @@ type SyncResult = {
   status: string;
 };
 
-function SignUpSyncStep({
-  onGoToDashboard,
-}: {
-  onGoToDashboard: () => void;
-}) {
+function SignUpSyncStep({ onGoToDashboard }: { onGoToDashboard: () => void }) {
   const initialSyncMutation = useMutation(
     orpc.syncs.initial.mutationOptions({
       onError: (error) => {
@@ -39,7 +35,12 @@ function SignUpSyncStep({
       className="flex flex-col gap-6"
     >
       <div>
-        <h1 className="font-bold text-3xl tracking-tight">Ready to sync</h1>
+        <p className="hidden font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em] lg:block">
+          Initial import
+        </p>
+        <h1 className="font-bold text-3xl tracking-tight lg:mt-2 lg:font-display lg:font-normal lg:text-4xl lg:lowercase lg:leading-none">
+          Ready to sync
+        </h1>
         <p className="text-muted-foreground text-sm">
           Your Intervals key is connected.
         </p>
@@ -155,7 +156,10 @@ function SignUpSyncLoader() {
         />
         <motion.div
           className="relative flex size-20 items-center justify-center rounded-2xl border bg-muted/30 shadow-sm"
-          animate={{ y: [0, -4, 0], borderColor: "hsl(var(--primary) / 0.35)" }}
+          animate={{
+            y: [0, -4, 0],
+            borderColor: "hsl(var(--primary) / 0.35)",
+          }}
           transition={{
             duration: 1.6,
             ease: "easeInOut",
