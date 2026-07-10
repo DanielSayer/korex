@@ -35,10 +35,13 @@ function WeeklyTrainingSummaryCard({
   summary: WeeklyTrainingSummaryListItem;
 }) {
   const cardClassName = cn(
-    "block border-border/40 border-b p-3 text-left transition-colors last:border-b-0 hover:border-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:p-4",
-    isSelected && "md:border-primary md:bg-primary/5",
+    "block w-full border-border/40 border-b p-3 text-left transition-colors last:border-b-0 hover:border-journal-route focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+    !isLink && "px-3 py-5 md:px-4",
+    isSelected && "border-journal-route bg-accent/50",
   );
-  const cardContent = <WeeklyTrainingSummaryCardContent summary={summary} />;
+  const cardContent = (
+    <WeeklyTrainingSummaryCardContent desktop={!isLink} summary={summary} />
+  );
 
   if (isLink) {
     return (
@@ -60,10 +63,16 @@ function WeeklyTrainingSummaryCard({
 }
 
 function WeeklyTrainingSummaryCardContent({
+  desktop,
   summary,
 }: {
+  desktop: boolean;
   summary: WeeklyTrainingSummaryListItem;
 }) {
+  if (desktop) {
+    return <WeeklyTrainingSummaryDesktopCardContent summary={summary} />;
+  }
+
   return (
     <>
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -107,6 +116,55 @@ function WeeklyTrainingSummaryCardContent({
         </span>
       </div>
     </>
+  );
+}
+
+function WeeklyTrainingSummaryDesktopCardContent({
+  summary,
+}: {
+  summary: WeeklyTrainingSummaryListItem;
+}) {
+  return (
+    <div className="grid items-center gap-5 lg:grid-cols-[minmax(13rem,1.1fr)_minmax(19rem,1.5fr)_auto]">
+      <div className="min-w-0">
+        <h2 className="inline-flex items-center gap-2 font-display text-lg tracking-tight">
+          <WaypointDot className="shrink-0 text-journal-route" />
+          {formatTrainingWeek(summary.weekStartAt, summary.weekEndAt)}
+        </h2>
+        <p className="mt-1 text-muted-foreground text-xs">
+          Snapshot generated {formatGeneratedAt(summary.generatedAt)}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-[1.2fr_1fr_1fr] divide-x divide-border/40">
+        <Metric
+          icon={<RouteIcon className="size-3.5" />}
+          label="Distance"
+          value={formatDistance(summary.totalDistanceMeters)}
+        />
+        <Metric
+          icon={<ClockIcon className="size-3.5" />}
+          label="Moving time"
+          value={formatDurationCompact(summary.totalMovingTimeSeconds)}
+        />
+        <Metric
+          icon={<GaugeIcon className="size-3.5" />}
+          label="Average speed"
+          value={formatSpeed(summary.averageSpeedMetersPerSecond)}
+        />
+      </div>
+
+      <div className="flex min-w-32 flex-col items-start gap-1 lg:items-end">
+        <DeltaBadge value={summary.previousWeekDistanceDeltaMeters}>
+          {formatDistanceDelta(summary.previousWeekDistanceDeltaMeters)}
+        </DeltaBadge>
+        <span className="text-muted-foreground text-xs">
+          {summary.activityCount} activities ·{" "}
+          {formatSignedNumber(summary.previousWeekActivityCountDelta)} vs
+          previous
+        </span>
+      </div>
+    </div>
   );
 }
 
