@@ -13,9 +13,9 @@ function TrainingGoalsDesktop() {
   return (
     <PageLayout>
       <PageHeader
-        description="Set the next mark. Track live progress."
+        description="Set a recurring mark. Progress stays live as Activities change."
         eyebrow="Goals"
-        title="Targets"
+        title="Training goals"
       />
       <TrainingGoalsSection />
     </PageLayout>

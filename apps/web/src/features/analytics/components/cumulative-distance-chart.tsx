@@ -7,20 +7,25 @@ import {
 } from "@korex/ui/components/chart";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { SectionLabel } from "@/components/brand";
+import { cn } from "@/lib/utils";
 import {
   chartAxisTick,
   formatKilometers,
   getBucketLabel,
+  getFullBucketLabel,
   getXAxisInterval,
 } from "./analytics-chart-utils";
 
 function CumulativeDistanceChart({
   analytics,
+  className,
 }: {
   analytics: AnalyticsVolume;
+  className?: string;
 }) {
   const chartData = analytics.buckets.map((bucket) => ({
     cumulativeDistanceKilometers: bucket.cumulativeDistanceMeters / 1000,
+    fullLabel: getFullBucketLabel(bucket, analytics.bucketMode),
     label: getBucketLabel(bucket, analytics.bucketMode),
   }));
   const chartConfig = {
@@ -31,7 +36,9 @@ function CumulativeDistanceChart({
   } satisfies ChartConfig;
 
   return (
-    <section className="flex min-w-0 flex-col gap-3 overflow-hidden">
+    <section
+      className={cn("flex min-w-0 flex-col gap-3 overflow-hidden", className)}
+    >
       <SectionLabel>Cumulative distance</SectionLabel>
       <ChartContainer
         className="aspect-auto h-64 w-full min-w-0 max-w-full sm:h-80"
@@ -42,7 +49,11 @@ function CumulativeDistanceChart({
           data={chartData}
           margin={{ bottom: 8, left: 4, right: 0, top: 12 }}
         >
-          <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" />
+          <CartesianGrid
+            stroke="var(--border)"
+            strokeDasharray="2 8"
+            vertical={false}
+          />
           <XAxis
             axisLine={false}
             dataKey="label"
@@ -63,12 +74,14 @@ function CumulativeDistanceChart({
             content={
               <ChartTooltipContent
                 formatter={(value) => formatKilometers(value)}
+                labelFormatter={(_, payload) => payload[0]?.payload.fullLabel}
               />
             }
             cursor={{ stroke: "var(--muted-foreground)" }}
           />
           <Line
             dataKey="cumulativeDistanceKilometers"
+            activeDot={{ r: 4 }}
             dot={false}
             name="Cumulative distance"
             stroke="var(--color-cumulativeDistanceKilometers)"

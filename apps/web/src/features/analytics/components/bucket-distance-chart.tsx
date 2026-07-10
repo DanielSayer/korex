@@ -11,6 +11,7 @@ import {
   chartAxisTick,
   formatKilometers,
   getBucketLabel,
+  getFullBucketLabel,
   getXAxisInterval,
 } from "./analytics-chart-utils";
 
@@ -20,6 +21,7 @@ function BucketDistanceChart({ analytics }: { analytics: AnalyticsVolume }) {
   const chartData = analytics.buckets.map((bucket) => ({
     activityCount: bucket.activityCount,
     distanceKilometers: bucket.distanceMeters / 1000,
+    fullLabel: getFullBucketLabel(bucket, analytics.bucketMode),
     label: getBucketLabel(bucket, analytics.bucketMode),
   }));
   const chartConfig = {
@@ -41,7 +43,11 @@ function BucketDistanceChart({ analytics }: { analytics: AnalyticsVolume }) {
           data={chartData}
           margin={{ bottom: 8, left: 4, right: 0, top: 12 }}
         >
-          <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" />
+          <CartesianGrid
+            stroke="var(--border)"
+            strokeDasharray="2 8"
+            vertical={false}
+          />
           <XAxis
             axisLine={false}
             dataKey="label"
@@ -61,7 +67,23 @@ function BucketDistanceChart({ analytics }: { analytics: AnalyticsVolume }) {
           <ChartTooltip
             content={
               <ChartTooltipContent
-                formatter={(value) => formatKilometers(value)}
+                formatter={(value, _name, item) => (
+                  <div className="grid flex-1 gap-1.5">
+                    <div className="flex justify-between gap-6">
+                      <span className="text-muted-foreground">Distance</span>
+                      <span className="font-medium font-mono tabular-nums">
+                        {formatKilometers(value)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between gap-6">
+                      <span className="text-muted-foreground">Activities</span>
+                      <span className="font-medium font-mono tabular-nums">
+                        {item.payload.activityCount}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                labelFormatter={(_, payload) => payload[0]?.payload.fullLabel}
               />
             }
             cursor={{ fill: "var(--muted)" }}

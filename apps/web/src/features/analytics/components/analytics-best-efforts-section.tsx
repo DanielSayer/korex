@@ -12,7 +12,13 @@ import { bestEffortSkeletonKeys } from "./best-efforts/best-effort-distance-opti
 import { PersonalBestEffortGrid } from "./best-efforts/personal-best-effort-grid";
 import { PersonalBestEffortTrendChart } from "./best-efforts/personal-best-effort-trend-chart";
 
-function AnalyticsBestEffortsSection({ year }: { year: number }) {
+function AnalyticsBestEffortsSection({
+  density = "default",
+  year,
+}: {
+  density?: "default" | "mobile";
+  year: number;
+}) {
   const bestEffortsQuery = useQuery(
     orpc.activities.analyticsBestEfforts.queryOptions({
       input: { year },
@@ -26,7 +32,11 @@ function AnalyticsBestEffortsSection({ year }: { year: number }) {
       query={bestEffortsQuery}
     >
       {(analytics) => (
-        <AnalyticsBestEffortsPanel analytics={analytics} year={year} />
+        <AnalyticsBestEffortsPanel
+          analytics={analytics}
+          density={density}
+          year={year}
+        />
       )}
     </QueryRenderer>
   );
@@ -34,9 +44,11 @@ function AnalyticsBestEffortsSection({ year }: { year: number }) {
 
 function AnalyticsBestEffortsPanel({
   analytics,
+  density,
   year,
 }: {
   analytics: AnalyticsBestEfforts;
+  density: "default" | "mobile";
   year: number;
 }) {
   const availableDistanceCodes = analytics.allTime.map(
@@ -49,20 +61,56 @@ function AnalyticsBestEffortsPanel({
       ? (availableDistanceCodes[0] ?? "5k")
       : selectedDistanceCode;
 
+  const trendChart = (
+    <PersonalBestEffortTrendChart
+      analytics={analytics}
+      availableDistanceCodes={availableDistanceCodes}
+      onDistanceCodeChange={setSelectedDistanceCode}
+      selectedDistanceCode={chartDistanceCode}
+      year={year}
+    />
+  );
+
+  if (density === "mobile") {
+    return (
+      <section className="flex min-w-0 flex-col gap-4">
+        <SectionLabel>Best efforts</SectionLabel>
+        <p className="-mt-1 text-muted-foreground text-xs">
+          All-time personal bests and monthly progression.
+        </p>
+        <PersonalBestEffortGrid efforts={analytics.allTime} />
+        {trendChart}
+      </section>
+    );
+  }
+
   return (
-    <section className="flex min-w-0 flex-col gap-4">
-      <SectionLabel>Best efforts</SectionLabel>
-      <p className="-mt-1 text-muted-foreground text-xs">
-        All-time personal bests and monthly progression.
-      </p>
-      <PersonalBestEffortGrid efforts={analytics.allTime} />
-      <PersonalBestEffortTrendChart
-        analytics={analytics}
-        availableDistanceCodes={availableDistanceCodes}
-        onDistanceCodeChange={setSelectedDistanceCode}
-        selectedDistanceCode={chartDistanceCode}
-        year={year}
-      />
+    <section className="min-w-0 pb-3">
+      <header className="border-border/60 border-b pb-5">
+        <SectionLabel>Personal Best Efforts</SectionLabel>
+        <div className="mt-2 flex items-end justify-between gap-6">
+          <div>
+            <h2 className="font-display text-2xl tracking-tight">
+              Marks worth keeping.
+            </h2>
+            <p className="mt-1 text-muted-foreground text-sm">
+              All-time records beside their month-end progression trail.
+            </p>
+          </div>
+          <p className="hidden text-muted-foreground text-xs xl:block">
+            Fastest known contiguous efforts from current Activities
+          </p>
+        </div>
+      </header>
+      <div className="mt-7 grid min-w-0 gap-8 xl:grid-cols-[minmax(320px,0.8fr)_minmax(0,1.2fr)] xl:divide-x xl:divide-border/50">
+        <div className="min-w-0">
+          <SectionLabel>All-time ledger</SectionLabel>
+          <div className="mt-3">
+            <PersonalBestEffortGrid efforts={analytics.allTime} />
+          </div>
+        </div>
+        <div className="min-w-0 xl:pl-8">{trendChart}</div>
+      </div>
     </section>
   );
 }
