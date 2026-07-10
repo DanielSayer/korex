@@ -81,9 +81,9 @@ function DashboardDesktop({
       </section>
 
       <div className="mt-8 grid min-w-0 items-start gap-10 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.6fr)]">
-        <main className="min-w-0">
+        <div className="min-w-0">
           <RecentRunsTable isLoading={recentRunsLoading} runs={recentRuns} />
-        </main>
+        </div>
         <aside className="grid min-w-0 content-start gap-8 xl:border-border xl:border-l xl:pl-10">
           <TrainingGoalsDashboardCard />
           <section className="grid gap-8 divide-y divide-border">
