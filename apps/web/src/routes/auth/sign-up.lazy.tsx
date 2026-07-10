@@ -1,7 +1,6 @@
-import { Button } from "@korex/ui/components/button";
-import { createLazyFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft } from "lucide-react";
+import { createLazyFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { AuthShell } from "@/components/auth/auth-shell";
 import { SignUp } from "@/components/auth/sign-up";
 
 export const Route = createLazyFileRoute("/auth/sign-up")({
@@ -10,40 +9,35 @@ export const Route = createLazyFileRoute("/auth/sign-up")({
 
 function RouteComponent() {
   const [step, setStep] = useState(0);
-  const authImages = [
-    "/auth/auth-signup-profile.png",
-    "/auth/auth-signup-goals.png",
-    "/auth/auth-signup-route.png",
+  const authVisuals = [
+    {
+      imageSrc: "/auth/auth-signup-profile.png",
+      title: "Make the trail yours.",
+      description:
+        "Start with an account for the Activities, goals, and training history you own.",
+    },
+    {
+      imageSrc: "/auth/auth-signup-goals.png",
+      title: "Bring your training with you.",
+      description:
+        "Connect Intervals.icu so Korex can translate your provider data into your field journal.",
+    },
+    {
+      imageSrc: "/auth/auth-signup-route.png",
+      title: "Turn history into field notes.",
+      description:
+        "Import this year's Activities and begin with a clear view of the trail behind you.",
+    },
   ] as const;
+  const visual = authVisuals[step] ?? authVisuals[0];
 
   return (
-    <main className="grid min-h-screen grid-cols-1 lg:grid-cols-3">
-      <div className="relative flex flex-col items-center justify-center gap-4 p-4 sm:p-6 md:p-8">
-        <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
-          <Link to="/">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">Back</span>
-            </Button>
-          </Link>
-        </div>
-        <div className="flex w-full max-w-sm items-center justify-center gap-4 sm:max-w-md lg:max-w-lg">
-          <SignUp step={step} setStep={setStep} />
-        </div>
-      </div>
-
-      <div className="col-span-2 hidden overflow-hidden bg-background lg:flex lg:items-center lg:justify-center">
-        <img
-          src={authImages[step]}
-          alt=""
-          aria-hidden="true"
-          className="h-full w-full object-cover"
-        />
-      </div>
-    </main>
+    <AuthShell
+      imageSrc={visual.imageSrc}
+      visualTitle={visual.title}
+      visualDescription={visual.description}
+    >
+      <SignUp step={step} setStep={setStep} />
+    </AuthShell>
   );
 }

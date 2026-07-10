@@ -78,7 +78,10 @@ function SignUpConnectStep({
       className="flex flex-col gap-6"
     >
       <div>
-        <h1 className="font-bold text-3xl tracking-tight">
+        <p className="hidden font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em] lg:block">
+          Provider connection
+        </p>
+        <h1 className="font-bold text-3xl tracking-tight lg:mt-2 lg:font-display lg:font-normal lg:lowercase lg:leading-none lg:text-4xl">
           Connect your API key
         </h1>
         <p className="text-muted-foreground text-sm">
@@ -131,9 +134,10 @@ function SignUpConnectStep({
                 key={provider.id}
                 type="button"
                 disabled={!provider.enabled}
+                aria-pressed={provider.enabled ? isSelected : undefined}
                 onClick={() => setSelectedProvider(provider.id)}
                 className={cn(
-                  "flex items-center justify-center gap-2 rounded-lg border bg-muted/20 p-2 text-center text-sm transition-all",
+                  "flex items-center justify-center gap-2 rounded-lg border bg-muted/20 p-2 text-center text-sm transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
                   isSelected
                     ? "border-primary shadow-md shadow-primary/10 ring-2 ring-primary/15"
                     : "border-border hover:border-foreground/30",
