@@ -43,6 +43,10 @@ function PersonalBestEffortTrendChart({
         )
         .map((bucket) => ({
           durationSeconds: bucket.durationSeconds,
+          fullLabel: new Intl.DateTimeFormat(undefined, {
+            month: "long",
+            year: "numeric",
+          }).format(new Date(bucket.bucketStartAt)),
           label: formatShortMonth(bucket.bucketStartAt),
         })),
     [analytics.monthlyTrendBuckets, selectedDistanceCode, year],
@@ -81,7 +85,11 @@ function PersonalBestEffortTrendChart({
           data={chartData}
           margin={{ bottom: 8, left: 4, right: 28, top: 12 }}
         >
-          <CartesianGrid stroke="var(--border)" strokeDasharray="4 6" />
+          <CartesianGrid
+            stroke="var(--border)"
+            strokeDasharray="2 8"
+            vertical={false}
+          />
           <XAxis
             axisLine={false}
             dataKey="label"
@@ -113,6 +121,7 @@ function PersonalBestEffortTrendChart({
                     </span>
                   </div>
                 )}
+                labelFormatter={(_, payload) => payload[0]?.payload.fullLabel}
               />
             }
             cursor={{ stroke: "var(--muted-foreground)" }}

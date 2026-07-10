@@ -92,7 +92,7 @@ function AnalyticsMobile({
         density="mobile"
         year={year}
       />
-      <AnalyticsBestEffortsSection year={year} />
+      <AnalyticsBestEffortsSection density="mobile" year={year} />
     </PageLayout>
   );
 }
