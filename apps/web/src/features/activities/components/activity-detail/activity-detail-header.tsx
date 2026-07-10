@@ -15,6 +15,7 @@ function ActivityDetailHeader({ activity }: ActivityDetailHeaderProps) {
       <div className="min-w-0">
         <Button
           className="mb-5 px-0 text-muted-foreground hover:text-foreground"
+          nativeButton={false}
           variant="ghost"
           size="sm"
           render={<Link to="/dashboard" />}

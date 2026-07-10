@@ -117,6 +117,7 @@ function JournalHeader({
         <DashboardHeader isSyncing={isSyncing} onSync={onSync} />
         <Button
           className="rounded-full"
+          nativeButton={false}
           render={<Link to="/settings/profile" />}
           variant="outline"
         >
