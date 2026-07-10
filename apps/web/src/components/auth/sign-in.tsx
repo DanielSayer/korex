@@ -63,7 +63,10 @@ function SignIn() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
           >
-            <h1 className="font-display text-4xl lowercase leading-none tracking-tight">
+            <p className="hidden font-display text-[11px] text-muted-foreground uppercase tracking-[0.18em] lg:block">
+              Account access
+            </p>
+            <h1 className="font-display text-4xl lowercase leading-none tracking-tight lg:mt-2 lg:text-5xl">
               Welcome back
             </h1>
             <p className="mt-2 text-muted-foreground text-sm">
@@ -96,15 +99,25 @@ function SignIn() {
                       type="email"
                       placeholder="hello@korex.com"
                       value={field.state.value}
+                      aria-invalid={field.state.meta.errors.length > 0}
+                      aria-describedby={
+                        field.state.meta.errors.length > 0
+                          ? `${field.name}-error`
+                          : undefined
+                      }
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                     />
-                    {field.state.meta.errors.map((error) => (
-                      <ErrorMessage
-                        key={error?.message}
-                        message={error?.message}
-                      />
-                    ))}
+                    {field.state.meta.errors.length > 0 ? (
+                      <div id={`${field.name}-error`}>
+                        {field.state.meta.errors.map((error) => (
+                          <ErrorMessage
+                            key={error?.message}
+                            message={error?.message}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </form.Field>
@@ -124,15 +137,25 @@ function SignIn() {
                       type="password"
                       placeholder="••••••••••••"
                       value={field.state.value}
+                      aria-invalid={field.state.meta.errors.length > 0}
+                      aria-describedby={
+                        field.state.meta.errors.length > 0
+                          ? `${field.name}-error`
+                          : undefined
+                      }
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                     />
-                    {field.state.meta.errors.map((error) => (
-                      <ErrorMessage
-                        key={error?.message}
-                        message={error?.message}
-                      />
-                    ))}
+                    {field.state.meta.errors.length > 0 ? (
+                      <div id={`${field.name}-error`}>
+                        {field.state.meta.errors.map((error) => (
+                          <ErrorMessage
+                            key={error?.message}
+                            message={error?.message}
+                          />
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </form.Field>
