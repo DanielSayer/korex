@@ -14,34 +14,29 @@ const trainingNoteTagColors: TrainingNoteTagColor[] = [
 ];
 
 const trainingNoteTagClassNames: Record<TrainingNoteTagColor, string> = {
-  amber:
-    "border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  blue: "border-blue-500/35 bg-blue-500/10 text-blue-700 dark:text-blue-300",
-  green:
-    "border-green-500/35 bg-green-500/10 text-green-700 dark:text-green-300",
-  orange:
-    "border-orange-500/35 bg-orange-500/10 text-orange-700 dark:text-orange-300",
-  pink: "border-pink-500/35 bg-pink-500/10 text-pink-700 dark:text-pink-300",
-  red: "border-red-500/35 bg-red-500/10 text-red-700 dark:text-red-300",
-  sky: "border-sky-500/35 bg-sky-500/10 text-sky-700 dark:text-sky-300",
-  slate:
-    "border-slate-500/35 bg-slate-500/10 text-slate-700 dark:text-slate-300",
-  teal: "border-teal-500/35 bg-teal-500/10 text-teal-700 dark:text-teal-300",
-  violet:
-    "border-violet-500/35 bg-violet-500/10 text-violet-700 dark:text-violet-300",
+  amber: "border-chart-3/50 bg-chart-3/15 text-foreground",
+  blue: "border-primary/50 bg-primary/10 text-foreground",
+  green: "border-chart-4/50 bg-chart-4/15 text-foreground",
+  orange: "border-chart-2/50 bg-chart-2/15 text-foreground",
+  pink: "border-chart-1/30 bg-chart-1/10 text-foreground",
+  red: "border-chart-1/50 bg-chart-1/15 text-foreground",
+  sky: "border-chart-3/30 bg-chart-3/10 text-foreground",
+  slate: "border-border bg-muted text-foreground",
+  teal: "border-chart-5/50 bg-chart-5/15 text-foreground",
+  violet: "border-chart-5/30 bg-chart-5/10 text-foreground",
 };
 
 const trainingNoteTagSwatchClassNames: Record<TrainingNoteTagColor, string> = {
-  amber: "bg-amber-500",
-  blue: "bg-blue-500",
-  green: "bg-green-500",
-  orange: "bg-orange-500",
-  pink: "bg-pink-500",
-  red: "bg-red-500",
-  sky: "bg-sky-500",
-  slate: "bg-slate-500",
-  teal: "bg-teal-500",
-  violet: "bg-violet-500",
+  amber: "bg-chart-3",
+  blue: "bg-primary",
+  green: "bg-chart-4",
+  orange: "bg-chart-2",
+  pink: "bg-chart-1/70",
+  red: "bg-chart-1",
+  sky: "bg-chart-3/70",
+  slate: "bg-muted-foreground",
+  teal: "bg-chart-5",
+  violet: "bg-chart-5/70",
 };
 
 function getTrainingNoteTagClassName(color: TrainingNoteTagColor) {

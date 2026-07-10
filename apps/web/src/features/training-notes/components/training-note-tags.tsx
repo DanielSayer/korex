@@ -299,7 +299,7 @@ function TrainingNoteTagList({
       {tags.map((tag) => (
         <span
           className={cn(
-            "rounded-full border px-2 py-0.5 font-medium text-xs",
+            "rounded-full border px-2 py-0.5 font-medium text-xs md:px-1.5 md:text-[11px]",
             getTrainingNoteTagClassName(tag.color),
             tag.archivedAt && "border-dashed opacity-80",
           )}
