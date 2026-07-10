@@ -24,9 +24,13 @@ function RecentTrainingNotesCard() {
               </p>
             }
             loading={
-              <div className="mt-4 space-y-3">
-                <div className="h-12 animate-pulse rounded-md bg-muted" />
-                <div className="h-12 animate-pulse rounded-md bg-muted" />
+              <div
+                aria-label="Loading recent Training Notes"
+                className="mt-4 divide-y divide-border/40"
+                role="status"
+              >
+                <div className="h-16 animate-pulse bg-muted/50" />
+                <div className="h-16 animate-pulse bg-muted/50" />
               </div>
             }
             query={notesQuery}
@@ -38,7 +42,7 @@ function RecentTrainingNotesCard() {
                   an Activity or Training Week.
                 </p>
               ) : (
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 divide-y divide-border/40 border-border/40 border-t">
                   {notes.slice(0, 3).map((note) => (
                     <RecentTrainingNoteItem key={note.id} note={note} />
                   ))}
@@ -69,7 +73,7 @@ function RecentTrainingNoteItem({ note }: { note: TrainingNote }) {
     );
 
   return (
-    <div className="border-border/40 border-b py-3 last:border-b-0">
+    <article className="min-w-0 py-4">
       <div className="mb-1 text-xs">{target}</div>
       {note.tags.length > 0 ? (
         <TrainingNoteTagList className="mb-2" tags={note.tags} />
@@ -80,7 +84,7 @@ function RecentTrainingNoteItem({ note }: { note: TrainingNote }) {
       <p className="mt-2 text-muted-foreground text-xs">
         {formatNoteTimestamp(note.createdAt)}
       </p>
-    </div>
+    </article>
   );
 }
 

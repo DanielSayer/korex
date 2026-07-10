@@ -2,7 +2,7 @@ import type { TrainingNoteTag } from "@korex/api/modules/training-notes/training
 import { Button } from "@korex/ui/components/button";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { CheckIcon, CirclePlusIcon, SearchIcon, XIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
@@ -13,13 +13,13 @@ import {
 } from "../utils/training-note-tag-styles";
 
 function TrainingNoteTagPicker({
+  assignedArchivedTags = [],
   availableTags,
-  lockedTags = [],
   onChange,
   selectedTagIds,
 }: {
+  assignedArchivedTags?: TrainingNoteTag[];
   availableTags: TrainingNoteTag[];
-  lockedTags?: TrainingNoteTag[];
   onChange: (tagIds: number[]) => void;
   selectedTagIds: number[];
 }) {
@@ -28,10 +28,10 @@ function TrainingNoteTagPicker({
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const selectedTagIdSet = new Set(selectedTagIds);
-  const selectedLockedTags = lockedTags.filter((tag) =>
+  const selectedArchivedTags = assignedArchivedTags.filter((tag) =>
     selectedTagIdSet.has(tag.id),
   );
-  const selectableTags = [...selectedLockedTags, ...availableTags];
+  const selectableTags = [...selectedArchivedTags, ...availableTags];
   const selectedTags = selectableTags.filter((tag) =>
     selectedTagIdSet.has(tag.id),
   );
@@ -54,7 +54,10 @@ function TrainingNoteTagPicker({
       onSuccess: (tag) => {
         queryClient.setQueryData<TrainingNoteTag[]>(
           tagsQueryOptions.queryKey,
-          (current) => (current ? [...current, tag] : [tag]),
+          (current) =>
+            [...(current ?? []), tag].sort((left, right) =>
+              left.name.localeCompare(right.name),
+            ),
         );
         onChange([...selectedTagIds, tag.id]);
         setQuery("");
@@ -63,7 +66,7 @@ function TrainingNoteTagPicker({
     }),
   );
 
-  if (availableTags.length === 0 && selectedLockedTags.length === 0) {
+  if (availableTags.length === 0 && selectedArchivedTags.length === 0) {
     return (
       <TrainingNoteTagSearchShell
         canCreateTag={canCreateTag}
@@ -140,51 +143,66 @@ function TrainingNoteTagSearchShell({
   selectedTags: TrainingNoteTag[];
   toggleTag: (tag: TrainingNoteTag) => void;
 }) {
+  const listboxId = useId();
+
   return (
     <div className="relative mb-3">
       <div className="flex min-h-7 flex-wrap items-center gap-1.5">
         <span className="text-muted-foreground text-xs">Tags</span>
         {selectedTags.map((tag) => (
           <button
+            aria-label={`Remove ${tag.name}${tag.archivedAt ? " (archived)" : ""}`}
             className={cn(
-              "inline-flex h-6 items-center gap-1 rounded-full border px-1.5 font-medium text-[11px]",
+              "inline-flex h-6 items-center gap-1 rounded-full border px-1.5 font-medium text-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               getTrainingNoteTagClassName(tag.color),
               tag.archivedAt && "border-dashed opacity-80",
             )}
             key={tag.id}
-            onClick={() => {
-              if (tag.archivedAt === null) {
-                toggleTag(tag);
-              }
-            }}
+            onClick={() => toggleTag(tag)}
             type="button"
           >
             {tag.name}
-            {tag.archivedAt === null ? <XIcon className="size-3" /> : null}
+            <XIcon className="size-3" />
           </button>
         ))}
         <div className="inline-flex h-7 min-w-44 flex-1 items-center gap-1.5 rounded-full border bg-background px-2">
           <SearchIcon className="size-3.5 text-muted-foreground" />
           <input
+            aria-controls={listboxId}
+            aria-expanded={isOpen}
+            aria-label="Find or create a Training Note Tag"
+            aria-haspopup="dialog"
             className="min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
             onChange={(event) => {
               onQueryChange(event.target.value);
               onOpenChange(true);
             }}
             onFocus={() => onOpenChange(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                onOpenChange(false);
+              }
+            }}
             placeholder="tag..."
+            role="combobox"
             value={query}
           />
         </div>
       </div>
       {isOpen ? (
-        <div className="absolute top-full left-0 z-20 mt-1 w-full rounded-md border bg-popover p-1 shadow-md">
+        <div
+          className="absolute top-full left-0 z-20 mt-1 w-full rounded-md border bg-popover p-1 shadow-md"
+          id={listboxId}
+          aria-label="Training Note Tag options"
+          role="dialog"
+        >
           {filteredTags.slice(0, 6).map((tag) => {
             const selected = selectedTagIdSet.has(tag.id);
 
             return (
               <button
-                className="flex h-8 w-full items-center justify-between gap-3 rounded-sm px-2 text-left text-xs hover:bg-muted"
+                aria-pressed={selected}
+                className="flex h-8 w-full items-center justify-between gap-3 rounded-sm px-2 text-left text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 key={tag.id}
                 onClick={() => toggleTag(tag)}
                 type="button"
@@ -206,13 +224,13 @@ function TrainingNoteTagSearchShell({
           })}
           {canCreateTag ? (
             <button
-              className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-left text-primary text-xs hover:bg-muted"
+              className="flex h-8 w-full items-center gap-2 rounded-sm px-2 text-left text-primary text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               disabled={createTagMutationIsPending}
               onClick={onCreateTag}
               type="button"
             >
               <CirclePlusIcon className="size-3.5" />
-              Create "{query.trim().toLowerCase()}"
+              Create "{query.trim()}"
             </button>
           ) : null}
           {filteredTags.length === 0 && !canCreateTag ? (
@@ -221,7 +239,7 @@ function TrainingNoteTagSearchShell({
             </div>
           ) : null}
           <button
-            className="h-7 w-full rounded-sm px-2 text-left text-muted-foreground text-xs hover:bg-muted"
+            className="h-7 w-full rounded-sm px-2 text-left text-muted-foreground text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             onClick={() => onOpenChange(false)}
             type="button"
           >
@@ -247,18 +265,20 @@ function TrainingNoteTagFilter({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b pb-3">
+    <div className="flex flex-wrap items-center gap-2 border-b pb-3 md:border-border/40 md:py-3">
       <span className="text-muted-foreground text-xs">Filter</span>
       {tags.map((tag) => {
         const selected = selectedTagIds.includes(tag.id);
 
         return (
           <button
+            aria-pressed={selected}
             className={cn(
-              "rounded-full border px-2 py-1 font-medium text-xs",
+              "rounded-full border px-2 py-1 font-medium text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               selected
                 ? getTrainingNoteTagClassName(tag.color)
                 : "bg-background text-muted-foreground hover:bg-muted",
+              tag.archivedAt && "border-dashed",
             )}
             key={tag.id}
             onClick={() =>
@@ -269,6 +289,9 @@ function TrainingNoteTagFilter({
             type="button"
           >
             {tag.name}
+            {tag.archivedAt ? (
+              <span className="sr-only"> (archived)</span>
+            ) : null}
           </button>
         );
       })}
@@ -299,13 +322,14 @@ function TrainingNoteTagList({
       {tags.map((tag) => (
         <span
           className={cn(
-            "rounded-full border px-2 py-0.5 font-medium text-xs",
+            "rounded-full border px-2 py-0.5 font-medium text-xs md:px-1.5 md:text-[11px]",
             getTrainingNoteTagClassName(tag.color),
             tag.archivedAt && "border-dashed opacity-80",
           )}
           key={tag.id}
         >
           {tag.name}
+          {tag.archivedAt ? <span className="sr-only"> (archived)</span> : null}
         </span>
       ))}
     </div>

@@ -32,7 +32,7 @@ function TrainingNotesTimeline({
   readOnly?: boolean;
 }) {
   return (
-    <>
+    <div className="space-y-3 md:space-y-0 md:border-border/40 md:border-t">
       {notes.map((note) => (
         <TrainingNoteItem
           availableTags={availableTags}
@@ -42,7 +42,7 @@ function TrainingNotesTimeline({
           readOnly={readOnly}
         />
       ))}
-    </>
+    </div>
   );
 }
 
@@ -86,8 +86,8 @@ function TrainingNoteItem({
   );
 
   return (
-    <article className="group relative rounded-md bg-muted/30 px-3 py-2 text-sm">
-      <span className="absolute top-3 -left-[21px] size-2 rounded-full bg-primary" />
+    <article className="group relative rounded-md bg-muted/30 px-3 py-2 text-sm md:rounded-none md:border-border/40 md:border-b md:bg-transparent md:px-0 md:py-5 md:last:border-b-0">
+      <span className="absolute top-3 -left-[21px] size-2 rounded-full bg-primary md:top-6 md:bg-journal-route" />
       {note.targetType === "activity" && note.targetLabel ? (
         <Link
           className="mb-2 inline-flex max-w-full text-muted-foreground text-xs hover:text-primary"
@@ -106,11 +106,17 @@ function TrainingNoteItem({
         <div>
           <TrainingNoteTagPicker
             availableTags={availableTags}
-            lockedTags={note.tags.filter((tag) => tag.archivedAt !== null)}
+            assignedArchivedTags={note.tags.filter(
+              (tag) => tag.archivedAt !== null,
+            )}
             onChange={setDraftTagIds}
             selectedTagIds={draftTagIds}
           />
-          <TrainingNoteTextarea onChange={setDraft} value={draft} />
+          <TrainingNoteTextarea
+            focusOnMount
+            onChange={setDraft}
+            value={draft}
+          />
           <div className="mt-3 flex justify-end gap-2">
             <Button
               onClick={() => {
@@ -155,7 +161,7 @@ function TrainingNoteItem({
               {note.text}
             </p>
           ) : null}
-          <div className="mt-3 flex items-center justify-between gap-3">
+          <div className="mt-3 flex min-w-0 items-center justify-between gap-3">
             <span className="text-muted-foreground text-xs">
               {formatNoteTimestamp(note.createdAt)}
             </span>
