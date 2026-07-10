@@ -15,7 +15,6 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedWeeklySummariesRouteImport } from './routes/_authenticated/weekly-summaries'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedNewDashboardRouteImport } from './routes/_authenticated/new-dashboard'
 import { Route as AuthenticatedMoreRouteImport } from './routes/_authenticated/more'
 import { Route as AuthenticatedHeatmapRouteImport } from './routes/_authenticated/heatmap'
 import { Route as AuthenticatedGoalsRouteImport } from './routes/_authenticated/goals'
@@ -67,12 +66,6 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthenticatedNewDashboardRoute =
-  AuthenticatedNewDashboardRouteImport.update({
-    id: '/new-dashboard',
-    path: '/new-dashboard',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedMoreRoute = AuthenticatedMoreRouteImport.update({
   id: '/more',
   path: '/more',
@@ -178,7 +171,6 @@ export interface FileRoutesByFullPath {
   '/goals': typeof AuthenticatedGoalsRoute
   '/heatmap': typeof AuthenticatedHeatmapRoute
   '/more': typeof AuthenticatedMoreRoute
-  '/new-dashboard': typeof AuthenticatedNewDashboardRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/weekly-summaries': typeof AuthenticatedWeeklySummariesRouteWithChildren
   '/auth/sign-in': typeof AuthSignInLazyRoute
@@ -203,7 +195,6 @@ export interface FileRoutesByTo {
   '/goals': typeof AuthenticatedGoalsRoute
   '/heatmap': typeof AuthenticatedHeatmapRoute
   '/more': typeof AuthenticatedMoreRoute
-  '/new-dashboard': typeof AuthenticatedNewDashboardRoute
   '/auth/sign-in': typeof AuthSignInLazyRoute
   '/auth/sign-up': typeof AuthSignUpLazyRoute
   '/activity/$activityId': typeof AuthenticatedActivityActivityIdRoute
@@ -228,7 +219,6 @@ export interface FileRoutesById {
   '/_authenticated/goals': typeof AuthenticatedGoalsRoute
   '/_authenticated/heatmap': typeof AuthenticatedHeatmapRoute
   '/_authenticated/more': typeof AuthenticatedMoreRoute
-  '/_authenticated/new-dashboard': typeof AuthenticatedNewDashboardRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/weekly-summaries': typeof AuthenticatedWeeklySummariesRouteWithChildren
   '/auth/sign-in': typeof AuthSignInLazyRoute
@@ -255,7 +245,6 @@ export interface FileRouteTypes {
     | '/goals'
     | '/heatmap'
     | '/more'
-    | '/new-dashboard'
     | '/settings'
     | '/weekly-summaries'
     | '/auth/sign-in'
@@ -280,7 +269,6 @@ export interface FileRouteTypes {
     | '/goals'
     | '/heatmap'
     | '/more'
-    | '/new-dashboard'
     | '/auth/sign-in'
     | '/auth/sign-up'
     | '/activity/$activityId'
@@ -304,7 +292,6 @@ export interface FileRouteTypes {
     | '/_authenticated/goals'
     | '/_authenticated/heatmap'
     | '/_authenticated/more'
-    | '/_authenticated/new-dashboard'
     | '/_authenticated/settings'
     | '/_authenticated/weekly-summaries'
     | '/auth/sign-in'
@@ -371,13 +358,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/new-dashboard': {
-      id: '/_authenticated/new-dashboard'
-      path: '/new-dashboard'
-      fullPath: '/new-dashboard'
-      preLoaderRoute: typeof AuthenticatedNewDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/more': {
@@ -555,7 +535,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedGoalsRoute: typeof AuthenticatedGoalsRoute
   AuthenticatedHeatmapRoute: typeof AuthenticatedHeatmapRoute
   AuthenticatedMoreRoute: typeof AuthenticatedMoreRoute
-  AuthenticatedNewDashboardRoute: typeof AuthenticatedNewDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWeeklySummariesRoute: typeof AuthenticatedWeeklySummariesRouteWithChildren
   AuthenticatedActivityActivityIdRoute: typeof AuthenticatedActivityActivityIdRoute
@@ -568,7 +547,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedGoalsRoute: AuthenticatedGoalsRoute,
   AuthenticatedHeatmapRoute: AuthenticatedHeatmapRoute,
   AuthenticatedMoreRoute: AuthenticatedMoreRoute,
-  AuthenticatedNewDashboardRoute: AuthenticatedNewDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWeeklySummariesRoute:
     AuthenticatedWeeklySummariesRouteWithChildren,
