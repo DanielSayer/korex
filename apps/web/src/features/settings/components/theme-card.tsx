@@ -22,10 +22,10 @@ function ThemeCard({
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-lg border border-border/60 bg-card text-card-foreground transition-colors",
+        "group relative overflow-hidden rounded-xl border border-border/60 bg-card/55 text-card-foreground text-sm shadow-black/5 shadow-md backdrop-blur transition-colors md:rounded-lg md:bg-card md:shadow-none md:backdrop-blur-none",
         isSelected
-          ? "bg-accent text-accent-foreground ring-1 ring-ring/30"
-          : "hover:border-border hover:bg-accent/30",
+          ? "bg-primary/5 ring-1 ring-primary/20 md:bg-accent md:text-accent-foreground md:ring-ring/30"
+          : "hover:ring-1 hover:ring-border md:hover:bg-accent/30",
         theme.error && "cursor-not-allowed opacity-50",
       )}
     >
@@ -38,9 +38,11 @@ function ThemeCard({
       >
         <div className="min-w-0 flex-1">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h4 className="truncate font-medium text-sm">{theme.name}</h4>
+            <h4 className="truncate font-medium text-foreground text-sm md:text-inherit">
+              {theme.name}
+            </h4>
             {isSelected ? (
-              <CheckCircleIcon className="size-4 flex-shrink-0 text-journal-route" />
+              <CheckCircleIcon className="size-4 flex-shrink-0 text-primary md:text-journal-route" />
             ) : null}
           </div>
 

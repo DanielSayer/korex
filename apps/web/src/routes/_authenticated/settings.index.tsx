@@ -44,7 +44,7 @@ function RouteComponent() {
         >
           {settingsTabs.map((tab, index) => (
             <Link
-              className="group flex min-w-0 items-start gap-4 border-border/40 border-b py-5 transition-colors last:border-b-0 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring/50 lg:px-5 lg:odd:border-r"
+              className="group flex min-w-0 items-start gap-4 border-border/40 border-b py-5 transition-colors last:border-b-0 hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-inset lg:px-5 lg:odd:border-r"
               key={tab.to}
               to={tab.to}
             >
@@ -59,7 +59,7 @@ function RouteComponent() {
                   {tab.description}
                 </span>
               </span>
-              <span className="font-display text-[10px] text-muted-foreground tabular-nums uppercase tracking-[0.18em]">
+              <span className="font-display text-[10px] text-muted-foreground uppercase tabular-nums tracking-[0.18em]">
                 {String(index + 1).padStart(2, "0")}
               </span>
             </Link>
