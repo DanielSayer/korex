@@ -60,6 +60,7 @@ function ActivityCalendarDesktop({
   return (
     <PageLayout>
       <CalendarHeader
+        activities={activities}
         monthLabel={monthGrid.monthLabel}
         onNextMonth={onNextMonth}
         onPreviousMonth={onPreviousMonth}
@@ -90,18 +91,25 @@ function ActivityCalendarDesktop({
 }
 
 function CalendarHeader({
+  activities,
   monthLabel,
   onNextMonth,
   onPreviousMonth,
   onToday,
 }: {
+  activities: ActivityListItem[];
   monthLabel: string;
   onNextMonth: () => void;
   onPreviousMonth: () => void;
   onToday: () => void;
 }) {
+  const monthDistanceMeters = activities.reduce(
+    (total, activity) => total + (activity.distanceMeters ?? 0),
+    0,
+  );
+
   return (
-    <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <header className="grid gap-6 border-border/50 border-b pb-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
       <div className="min-w-0">
         <SectionLabel>Calendar</SectionLabel>
         <h1 className="mt-1 font-display text-4xl lowercase leading-none tracking-tight">
@@ -110,9 +118,27 @@ function CalendarHeader({
         <p className="mt-2 text-muted-foreground text-sm">
           Activities by training week.
         </p>
+        <dl className="mt-6 flex items-end gap-8">
+          <div>
+            <dt className="font-display text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
+              Distance
+            </dt>
+            <dd className="mt-1 font-display text-3xl tabular-nums leading-none tracking-tight">
+              {formatDistance(monthDistanceMeters)}
+            </dd>
+          </div>
+          <div className="border-border/50 border-l pl-8">
+            <dt className="font-display text-[10px] text-muted-foreground uppercase tracking-[0.18em]">
+              Activities
+            </dt>
+            <dd className="mt-1 font-display text-3xl tabular-nums leading-none tracking-tight">
+              {activities.length}
+            </dd>
+          </div>
+        </dl>
       </div>
-      <div className="shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="shrink-0 lg:pb-0.5">
+        <div className="flex items-center gap-1 rounded-lg bg-muted/40 p-1">
           <Button
             type="button"
             variant="outline"
@@ -122,7 +148,7 @@ function CalendarHeader({
           >
             <ChevronLeftIcon />
           </Button>
-          <div className="min-w-36 text-center font-medium text-sm">
+          <div className="min-w-36 text-center font-display text-sm tracking-tight">
             {monthLabel}
           </div>
           <Button
@@ -324,7 +350,7 @@ function ActivityCard({ activity }: { activity: ActivityListItem }) {
     >
       <div className="flex items-start justify-between gap-2">
         <h2 className="line-clamp-1 inline-flex min-w-0 items-center gap-1.5 font-medium text-xs">
-          <WaypointDot className="size-1.5 text-primary" filled />
+          <WaypointDot className="size-1.5 bg-journal-route" filled />
           {activity.name}
         </h2>
         <span className="shrink-0 font-display text-[11px] text-muted-foreground tabular-nums">
