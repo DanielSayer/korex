@@ -1,6 +1,7 @@
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarHeader,
@@ -18,7 +19,7 @@ import {
   useLocation,
   useMatchRoute,
 } from "@tanstack/react-router";
-import { Activity } from "lucide-react";
+import { RouteIcon } from "lucide-react";
 import { WaypointDot } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import {
@@ -39,44 +40,64 @@ function AppLayout() {
 function DesktopAppLayout() {
   const matchRoute = useMatchRoute();
   const isDashboard = Boolean(matchRoute({ to: "/dashboard" }));
+  const primaryNavigationItems = appNavigationItems.filter(
+    (item) => item.id !== "settings",
+  );
+  const settingsNavigationItem = appNavigationItems.find(
+    (item) => item.id === "settings",
+  );
+  const SettingsNavigationIcon = settingsNavigationItem?.icon;
 
   return (
     <SidebarProvider className="h-svh min-h-0 overflow-hidden">
       <Sidebar collapsible="icon">
-        <SidebarHeader className="px-4 pt-5">
+        <SidebarHeader className="px-4 pt-6 group-data-[collapsible=icon]:px-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                className="gap-2.5 px-0 hover:bg-transparent data-active:bg-transparent"
+                className="h-auto gap-3 rounded-none px-1 py-0 hover:bg-transparent data-active:bg-transparent group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:justify-center"
+                render={<Link to="/dashboard" />}
                 size="lg"
                 tooltip="korex"
               >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-none bg-transparent text-sidebar-primary">
-                  <Activity className="size-6" />
+                <div className="grid aspect-square size-10 shrink-0 place-items-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground transition-[width,height] group-data-[collapsible=icon]:size-8">
+                  <RouteIcon className="size-5 group-data-[collapsible=icon]:size-4" />
                 </div>
-                <span className="truncate font-semibold text-2xl tracking-tight">
-                  korex
-                </span>
+                <div className="min-w-0 group-data-[collapsible=icon]:hidden">
+                  <p className="truncate font-display font-semibold text-xl leading-none tracking-tight">
+                    korex
+                  </p>
+                  <p className="mt-1 truncate text-[9px] text-sidebar-foreground/55 uppercase tracking-[0.2em]">
+                    Run your way
+                  </p>
+                </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
-        <SidebarContent className="relative overflow-hidden">
-          <SidebarGroup className="relative z-10 px-3 pt-6">
+        <SidebarContent>
+          <SidebarGroup className="px-3 pt-8 group-data-[collapsible=icon]:px-2">
             <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5">
-                {appNavigationItems.map((item) => {
+              <SidebarMenu className="gap-1">
+                {primaryNavigationItems.map((item) => {
                   const Icon = item.icon;
+                  const isActive = Boolean(matchRoute({ to: item.to }));
 
                   return (
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
-                        isActive={Boolean(matchRoute({ to: item.to }))}
+                        className="h-10 gap-3 rounded-xl px-3 font-normal text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-active:bg-sidebar-primary data-active:font-medium data-active:text-sidebar-primary-foreground data-active:shadow-lg group-data-[collapsible=icon]:justify-center"
+                        isActive={isActive}
                         tooltip={item.label}
                         render={<Link to={item.to} />}
                       >
                         <Icon />
-                        <span>{item.label}</span>
+                        <span className="group-data-[collapsible=icon]:hidden">
+                          {item.label}
+                        </span>
+                        {isActive ? (
+                          <WaypointDot className="ml-auto size-1.5 bg-journal-route group-data-[collapsible=icon]:hidden" />
+                        ) : null}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
@@ -84,13 +105,28 @@ function DesktopAppLayout() {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[58svh] min-h-130 bg-[url('/dashboard/sidebar_mountains.png')] bg-cover bg-position-[center_68%] opacity-100 group-data-[collapsible=icon]:hidden md:block"
-          >
-            <div className="absolute inset-0 bg-linear-to-t from-sidebar/70 via-sidebar/5 to-sidebar/0" />
-          </div>
         </SidebarContent>
+        {settingsNavigationItem && SettingsNavigationIcon ? (
+          <SidebarFooter className="px-3 pb-5 group-data-[collapsible=icon]:px-2">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  className="h-10 gap-3 rounded-xl px-3 font-normal text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-active:bg-sidebar-primary data-active:font-medium data-active:text-sidebar-primary-foreground group-data-[collapsible=icon]:justify-center"
+                  isActive={Boolean(
+                    matchRoute({ to: settingsNavigationItem.to }),
+                  )}
+                  tooltip={settingsNavigationItem.label}
+                  render={<Link to={settingsNavigationItem.to} />}
+                >
+                  <SettingsNavigationIcon />
+                  <span className="group-data-[collapsible=icon]:hidden">
+                    {settingsNavigationItem.label}
+                  </span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        ) : null}
         <SidebarRail />
       </Sidebar>
       <SidebarInset className="min-h-0 overflow-hidden">
