@@ -113,11 +113,11 @@ export function extractThemeColors(
 ): string[] {
   if (!preset) {
     return [
-      "oklch(0.74 0.12 65.8)",
-      "oklch(0.78 0.105 67)",
-      "oklch(0.265 0.018 72)",
-      "oklch(0.145 0.012 205)",
-      "oklch(0.25 0.012 88 / 72%)",
+      "oklch(0.48 0.085 153)",
+      "oklch(0.79 0.09 135)",
+      "oklch(0.91 0.03 125)",
+      "oklch(0.965 0.014 105)",
+      "oklch(0.9 0.02 110)",
     ];
   }
 
