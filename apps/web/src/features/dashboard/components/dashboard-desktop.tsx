@@ -5,7 +5,12 @@ import type {
 } from "@korex/api/modules/activities/activities.types";
 import { Button } from "@korex/ui/components/button";
 import { Link } from "@tanstack/react-router";
-import { UserRoundIcon } from "lucide-react";
+import {
+  ArrowUpRightIcon,
+  ChevronRightIcon,
+  FootprintsIcon,
+  UserRoundIcon,
+} from "lucide-react";
 import { SectionLabel } from "@/components/brand";
 import { ErrorMessage } from "@/components/error-message";
 import { TrainingGoalsDashboardCard } from "@/features/training-goals/components/training-goals-dashboard-card";
@@ -60,11 +65,14 @@ function DashboardDesktop({
         />
       ) : null}
 
-      <WeeklyLead
-        isLoading={isSummaryLoading}
-        thisWeek={thisWeek}
-        weeklyDistance={weeklyDistance}
-      />
+      <div className="mt-10 grid gap-5 xl:grid-cols-[minmax(0,2fr)_minmax(19rem,1fr)]">
+        <WeeklyLead
+          isLoading={isSummaryLoading}
+          thisWeek={thisWeek}
+          weeklyDistance={weeklyDistance}
+        />
+        <PlannedSession />
+      </div>
 
       <section className="mt-8 grid gap-8 border-border border-y py-8 xl:grid-cols-[minmax(0,1.35fr)_minmax(21rem,0.65fr)] xl:divide-x xl:divide-border">
         <div className="min-w-0 xl:pr-8">
@@ -144,7 +152,7 @@ function WeeklyLead({
   const distanceProgress = getDistanceProgress(weeklyDistance);
 
   return (
-    <section className="relative mt-10 min-h-[22rem] overflow-hidden rounded-4xl bg-journal-hero px-8 py-7 text-journal-hero-foreground lg:px-10 lg:py-9">
+    <section className="relative min-h-[22rem] overflow-hidden rounded-4xl bg-journal-hero px-8 py-7 text-journal-hero-foreground lg:px-10 lg:py-9">
       <RouteTexture />
       <div className="relative z-10 max-w-4xl">
         <div className="flex items-start justify-between gap-6">
@@ -222,6 +230,55 @@ function WeeklyLead({
         </div>
       </div>
       <RouteSketch />
+    </section>
+  );
+}
+
+function PlannedSession() {
+  return (
+    <section
+      aria-label="Planned session concept"
+      className="flex min-h-[22rem] flex-col overflow-hidden rounded-4xl bg-journal-plan px-7 py-7 text-journal-plan-foreground lg:px-8 lg:py-8"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <p className="font-display text-[10px] uppercase tracking-[0.2em]">
+          Next on the trail
+        </p>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-current/15 px-2.5 py-1 text-[9px] uppercase tracking-[0.12em]">
+            Concept
+          </span>
+          <ArrowUpRightIcon aria-hidden="true" className="size-4" />
+        </div>
+      </div>
+
+      <div className="mt-10 grid size-16 place-items-center rounded-full border border-current/15">
+        <FootprintsIcon aria-hidden="true" className="size-7" />
+      </div>
+
+      <div className="mt-6">
+        <p className="font-display text-[10px] uppercase tracking-[0.18em]">
+          Tomorrow · 6:00 AM
+        </p>
+        <h2 className="mt-2 font-display text-3xl leading-none tracking-tight">
+          Long aerobic run
+        </h2>
+      </div>
+
+      <div className="mt-auto flex items-end justify-between gap-4 border-current/15 border-t pt-6">
+        <div>
+          <p className="font-display text-2xl tabular-nums tracking-tight">
+            14 km
+          </p>
+          <p className="mt-1 text-xs opacity-70">6:05–6:25 /km</p>
+        </div>
+        <span
+          aria-hidden="true"
+          className="grid size-11 place-items-center rounded-full bg-journal-plan-foreground text-journal-plan"
+        >
+          <ChevronRightIcon className="size-5" />
+        </span>
+      </div>
     </section>
   );
 }

@@ -43,8 +43,8 @@
   --sidebar-ring: oklch(0.56 0.075 142 / 70%);
   --journal-hero: var(--sidebar-primary);
   --journal-hero-foreground: var(--sidebar-primary-foreground);
-  --journal-plan: var(--secondary);
-  --journal-plan-foreground: var(--secondary-foreground);
+  --journal-plan: oklch(0.72 0.16 35);
+  --journal-plan-foreground: oklch(0.2 0.025 35);
   --journal-route: var(--chart-5);
   --font-sans: "Inter Variable", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
@@ -114,8 +114,8 @@
   --sidebar-ring: oklch(0.72 0.12 112 / 72%);
   --journal-hero: var(--sidebar-primary);
   --journal-hero-foreground: var(--sidebar-primary-foreground);
-  --journal-plan: var(--secondary);
-  --journal-plan-foreground: var(--secondary-foreground);
+  --journal-plan: oklch(0.78 0.16 35);
+  --journal-plan-foreground: oklch(0.18 0.025 35);
   --journal-route: var(--chart-5);
   --font-sans: "Inter Variable", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
