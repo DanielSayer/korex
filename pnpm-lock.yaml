@@ -158,6 +158,9 @@ importers:
       '@korex/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@orpc/server':
+        specifier: 'catalog:'
+        version: 1.14.6
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.21

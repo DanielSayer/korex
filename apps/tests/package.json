@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@korex/config": "workspace:*",
+    "@orpc/server": "catalog:",
     "@types/node": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
