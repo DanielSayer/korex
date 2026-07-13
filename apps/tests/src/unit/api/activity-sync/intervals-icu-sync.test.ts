@@ -1,10 +1,11 @@
 import { ActivityImportWriter } from "@korex/api/modules/activity-sync/activity-sync.dependencies";
 import type { ActivitySyncFailure } from "@korex/api/modules/activity-sync/activity-sync.types";
 import { syncIntervalsIcuActivity } from "@korex/api/modules/activity-sync/providers/intervals-icu/intervals-icu-sync";
-import type {
-  IntervalsIcuActivityMap,
-  IntervalsIcuActivityStreams,
-  IntervalsIcuClientService,
+import {
+  type IntervalsIcuActivityMap,
+  type IntervalsIcuActivityStreams,
+  IntervalsIcuClientError,
+  type IntervalsIcuClientService,
 } from "@korex/integrations/intervals-icu/client";
 import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
@@ -17,58 +18,33 @@ describe("syncIntervalsIcuActivity", () => {
     const counters = createCounters();
     const errors: ActivitySyncFailure[] = [];
 
-    await Effect.runPromise(
-      syncIntervalsIcuActivity({
-        activityId: "activity-1",
-        apiKey: "api-key",
-        athleteId: "athlete-1",
-        client: createClient({
-          map: {
-            bounds: [
-              [-27.590372, 153.06575],
-              [-27.58015, 153.07713],
-            ],
-            latlngs: [
-              [-27.581491, 153.06828],
-              [-27.581144, 153.06902],
-            ],
+    await runActivitySync({
+      artifactStore,
+      client: createClient({
+        map: {
+          bounds: [
+            [-27.590372, 153.06575],
+            [-27.58015, 153.07713],
+          ],
+          latlngs: [
+            [-27.581491, 153.06828],
+            [-27.581144, 153.06902],
+          ],
+        },
+        streams: {
+          cadence: {
+            data: [82, 83],
+            type: "cadence",
           },
-          streams: {
-            cadence: {
-              data: [82, 83],
-              type: "cadence",
-            },
-            heartrate: {
-              data: [140, 142],
-              type: "heartrate",
-            },
+          heartrate: {
+            data: [140, 142],
+            type: "heartrate",
           },
-        }),
-        counters,
-        errors,
-        syncRunId: 123,
-        userId: "user-1",
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            artifactStore.layer,
-            Layer.succeed(ActivityImportWriter, {
-              storeExternalActivity: async () => ({
-                activityId: null,
-                created: true,
-                externalActivityId: 10,
-                updated: false,
-              }),
-              storeCoreActivity: async () => ({
-                activityId: 20,
-                created: true,
-              }),
-              unlinkUnsupportedActivity: async () => {},
-            }),
-          ),
-        ),
-      ),
-    );
+        },
+      }),
+      counters,
+      errors,
+    });
 
     expect(errors).toEqual([]);
     expect(counters).toMatchObject({
@@ -116,42 +92,16 @@ describe("syncIntervalsIcuActivity", () => {
     const artifactStore = new InMemoryActivityArtifactStore();
     const errors: ActivitySyncFailure[] = [];
 
-    await Effect.runPromise(
-      syncIntervalsIcuActivity({
-        activityId: "activity-1",
-        apiKey: "api-key",
-        athleteId: "athlete-1",
-        client: createClient({
-          map: {
-            latlngs: [],
-          },
-          streams: null,
-        }),
-        counters: createCounters(),
-        errors,
-        syncRunId: 123,
-        userId: "user-1",
-      }).pipe(
-        Effect.provide(
-          Layer.mergeAll(
-            artifactStore.layer,
-            Layer.succeed(ActivityImportWriter, {
-              storeExternalActivity: async () => ({
-                activityId: null,
-                created: true,
-                externalActivityId: 10,
-                updated: false,
-              }),
-              storeCoreActivity: async () => ({
-                activityId: 20,
-                created: true,
-              }),
-              unlinkUnsupportedActivity: async () => {},
-            }),
-          ),
-        ),
-      ),
-    );
+    await runActivitySync({
+      artifactStore,
+      client: createClient({
+        map: {
+          latlngs: [],
+        },
+        streams: null,
+      }),
+      errors,
+    });
 
     expect(artifactStore.externalMaps.get(10)).toMatchObject({
       rawData: {
@@ -160,6 +110,88 @@ describe("syncIntervalsIcuActivity", () => {
     });
     expect(artifactStore.coreMaps.has(20)).toBe(false);
     expect(errors).toEqual([]);
+  });
+
+  it("records artifact request failures without discarding the core activity", async () => {
+    const artifactStore = new InMemoryActivityArtifactStore();
+    const counters = createCounters();
+    const errors: ActivitySyncFailure[] = [];
+    const client = {
+      ...createClient({ map: null, streams: null }),
+      getActivityMap: () =>
+        Effect.fail(
+          new IntervalsIcuClientError({
+            message: "Map request failed",
+            requestUrl: "https://intervals.icu/api/v1/activity/activity-1/map",
+            status: 502,
+          }),
+        ),
+      getActivityStreams: () =>
+        Effect.fail(
+          new IntervalsIcuClientError({
+            message: "Streams request failed",
+            requestUrl:
+              "https://intervals.icu/api/v1/activity/activity-1/streams.json",
+            status: 502,
+          }),
+        ),
+    } satisfies IntervalsIcuClientService;
+
+    await runActivitySync({ artifactStore, client, counters, errors });
+
+    expect(counters).toMatchObject({
+      activitiesCreated: 1,
+      activitiesStored: 1,
+    });
+    expect(errors).toEqual([
+      expect.objectContaining({
+        activityId: "activity-1",
+        message: "Map request failed",
+        stage: "map",
+      }),
+      expect.objectContaining({
+        activityId: "activity-1",
+        message: "Streams request failed",
+        stage: "streams",
+      }),
+    ]);
+  });
+
+  it("keeps invalid provider streams for diagnosis without replacing core streams", async () => {
+    const artifactStore = new InMemoryActivityArtifactStore();
+    const errors: ActivitySyncFailure[] = [];
+
+    await runActivitySync({
+      artifactStore,
+      client: createClient({
+        map: null,
+        streams: {
+          heartrate: {
+            data: null,
+            type: "heartrate",
+          },
+        },
+      }),
+      errors,
+    });
+
+    expect(artifactStore.externalStreams.get("10:heartrate")).toMatchObject({
+      rawData: {
+        data: null,
+        type: "heartrate",
+      },
+    });
+    expect(artifactStore.coreStreams.has(20)).toBe(false);
+    expect(errors).toEqual([
+      expect.objectContaining({
+        activityId: "activity-1",
+        details: expect.objectContaining({
+          field: "data",
+          streamKey: "heartrate",
+        }),
+        stage: "streams",
+      }),
+    ]);
   });
 });
 
@@ -187,4 +219,48 @@ function createCounters() {
     activitiesStored: 0,
     activitiesUpdated: 0,
   };
+}
+
+function runActivitySync({
+  artifactStore,
+  client,
+  counters = createCounters(),
+  errors,
+}: {
+  artifactStore: InMemoryActivityArtifactStore;
+  client: IntervalsIcuClientService;
+  counters?: ReturnType<typeof createCounters>;
+  errors: ActivitySyncFailure[];
+}) {
+  return Effect.runPromise(
+    syncIntervalsIcuActivity({
+      activityId: "activity-1",
+      apiKey: "api-key",
+      athleteId: "athlete-1",
+      client,
+      counters,
+      errors,
+      syncRunId: 123,
+      userId: "user-1",
+    }).pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          artifactStore.layer,
+          Layer.succeed(ActivityImportWriter, {
+            storeExternalActivity: async () => ({
+              activityId: null,
+              created: true,
+              externalActivityId: 10,
+              updated: false,
+            }),
+            storeCoreActivity: async () => ({
+              activityId: 20,
+              created: true,
+            }),
+            unlinkUnsupportedActivity: async () => {},
+          }),
+        ),
+      ),
+    ),
+  );
 }
