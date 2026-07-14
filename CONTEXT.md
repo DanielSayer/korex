@@ -458,6 +458,9 @@ _Avoid_: Shoe lifespan, mileage limit, max miles
 
 - Korex uses Effect at application and workflow boundaries, where orchestration composes repositories, provider clients, clocks, encryption, transactions, and durable jobs.
 - Repositories stay Promise-based and data-shaped. They expose literal persistence operations such as insert, update, query, claim, mark, replace, enqueue, and delete.
+- Repository modules are a simple data-access layer. They read and write persistence data and return persistence-shaped records or query projections without transforming them into domain results.
+- Repository modules do not calculate metrics, aggregate domain data, build derived read models, translate external data, or compose results from multiple operations. Those responsibilities belong in calculation, Anti-Corruption Layer, read-model, or workflow modules as appropriate.
+- Repository modules may use joins needed to retrieve a persistence-shaped result, but they do not orchestrate other repository operations or decide how retrieved data should be combined into application behaviour.
 - Repositories must not decide downstream workflow behavior such as which derived jobs to enqueue, which snapshots to capture, or which projections to refresh.
 - Pure calculation modules stay plain TypeScript unless they need external dependencies. Effect wraps the workflow that calls them, not the calculation itself.
 - Workflow modules use `*.dependencies.ts` for `Context.Tag` service contracts, `*.service.ts` for Effect-returning functions, and `*.live.ts` for live layer composition.
