@@ -1,10 +1,14 @@
-import { ActivitySyncLive } from "@korex/api/modules/activity-sync/activity-sync.live";
-import { fetchIntervalsIcuActivities } from "@korex/api/modules/activity-sync/activity-sync.service";
+import { activityHeartRateZoneTimeJobName } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-job";
+import {
+  activitySyncRepository,
+  intervalsIcuActivitySync,
+} from "@korex/api/modules/activity-sync/activity-sync.live";
+import { createActivitySyncModule } from "@korex/api/modules/activity-sync/activity-sync.service";
 import { encryptProviderSecret } from "@korex/api/modules/provider-connections/provider-secret-encryption";
+import { providerSessionModule } from "@korex/api/modules/provider-connections/provider-session.live";
 import {
   activities,
   activityHeartRateZoneSnapshots,
-  activityHeartRateZoneTimeCalculationJobs,
   activityLaps,
   activityMaps,
   activityStreams,
@@ -12,12 +16,12 @@ import {
   externalActivities,
   externalActivityMaps,
   externalActivityStreams,
+  jobRuntimeJobs,
   providerConnections,
   syncRuns,
 } from "@korex/db";
-import { IntervalsIcuClientLayer } from "@korex/integrations/intervals-icu/live";
-import { asc, eq } from "drizzle-orm";
-import { Effect, Layer } from "effect";
+import { and, asc, eq } from "drizzle-orm";
+import { createIntervalsIcuClient } from "@korex/integrations/intervals-icu/live";
 import { describe, expect, it } from "vitest";
 import { intervalsIcuActivityHttpClientSuccess } from "../../mocks/integrations/intervals-icu/activity-http-client";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -27,9 +31,7 @@ import { userDataExtensions } from "../../setup/integration/test-data/user-data-
 
 describe("activity sync integration", () => {
   it("syncs one Intervals.icu activity into persisted sync, activity, map, and stream rows", async () => {
-    const encryptedApiKey = await Effect.runPromise(
-      encryptProviderSecret("intervals-api-key"),
-    );
+    const encryptedApiKey = await encryptProviderSecret("intervals-api-key");
     const providerConnection = ProviderConnectionBuilder.initWithUser(
       userDataExtensions.HughJass.id,
     )
@@ -52,13 +54,12 @@ describe("activity sync integration", () => {
       .withHeartRateZones(easyZone, steadyZone)
       .seedAsync();
 
-    const result = await Effect.runPromise(
-      fetchIntervalsIcuActivities({
+    const result =
+      await activitySyncIntegrationModule.fetchIntervalsIcuActivities({
         endDate: new Date("2026-04-02T00:00:00.000Z"),
         startDate: new Date("2026-04-01T00:00:00.000Z"),
         userId: userDataExtensions.HughJass.id,
-      }).pipe(Effect.provide(activitySyncIntegrationLayer)),
-    );
+      });
 
     expect(result).toMatchObject({
       activitiesCreated: 1,
@@ -306,11 +307,11 @@ describe("activity sync integration", () => {
       .orderBy(asc(activityHeartRateZoneSnapshots.position));
     const [zoneTimeJob] = await db
       .select()
-      .from(activityHeartRateZoneTimeCalculationJobs)
+      .from(jobRuntimeJobs)
       .where(
-        eq(
-          activityHeartRateZoneTimeCalculationJobs.activityId,
-          activity.activityId ?? 0,
+        and(
+          eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobName),
+          eq(jobRuntimeJobs.key, String(activity.activityId)),
         ),
       );
 
@@ -331,16 +332,18 @@ describe("activity sync integration", () => {
       }),
     ]);
     expect(zoneTimeJob).toMatchObject({
-      activityId: activity.activityId,
       attemptCount: 0,
-      status: "pending",
+      payload: { activityId: activity.activityId },
+      state: "queued",
     });
   });
 });
 
-const activitySyncIntegrationLayer = Layer.mergeAll(
-  ActivitySyncLive,
-  IntervalsIcuClientLayer.pipe(
-    Layer.provide(intervalsIcuActivityHttpClientSuccess),
+const activitySyncIntegrationModule = createActivitySyncModule({
+  activitySyncRepository,
+  intervalsIcuActivitySync,
+  intervalsIcuClient: createIntervalsIcuClient(
+    intervalsIcuActivityHttpClientSuccess,
   ),
-);
+  providerSession: providerSessionModule,
+});

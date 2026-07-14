@@ -1,42 +1,12 @@
-import { activities, db, weeklyTrainingSummaryGenerationJobs } from "@korex/db";
+import { activities, db, weeklyTrainingSummaries } from "@korex/db";
 import { and, eq, gte, isNull, lt } from "drizzle-orm";
-import {
-  createDurableJobRepository,
-  getDurableJobPendingState,
-} from "../../durable-jobs/durable-job-repository";
-import { getNextTrainingWeekStartAt } from "./training-week";
+import { enqueueJob } from "../../job-runtime/job-runtime";
+import { weeklyTrainingSummaryJobName } from "./weekly-training-summary-job";
 
 type WeeklyTrainingSummaryJobDatabase = Pick<
   typeof db,
-  "insert" | "select" | "transaction" | "update"
+  "insert" | "select" | "selectDistinct"
 >;
-
-export type WeeklyTrainingSummaryGenerationJob = {
-  attemptCount: number;
-  id: number;
-  userId: string;
-  weekStartAt: Date;
-};
-
-const durableJobRepository =
-  createDurableJobRepository<WeeklyTrainingSummaryGenerationJob>({
-    mapClaimedJob: (row) => ({
-      attemptCount: Number(row.attemptCount),
-      id: Number(row.id),
-      userId: String(row.userId),
-      weekStartAt:
-        row.weekStartAt instanceof Date
-          ? row.weekStartAt
-          : new Date(String(row.weekStartAt)),
-    }),
-    returning: {
-      attemptCount: weeklyTrainingSummaryGenerationJobs.attemptCount,
-      id: weeklyTrainingSummaryGenerationJobs.id,
-      userId: weeklyTrainingSummaryGenerationJobs.userId,
-      weekStartAt: weeklyTrainingSummaryGenerationJobs.weekStartAt,
-    },
-    table: weeklyTrainingSummaryGenerationJobs,
-  });
 
 export async function enqueueWeeklyTrainingSummaryGeneration({
   database = db,
@@ -47,32 +17,21 @@ export async function enqueueWeeklyTrainingSummaryGeneration({
   userId: string;
   weekStartAt: Date;
 }) {
-  const now = new Date();
-
-  await database
-    .insert(weeklyTrainingSummaryGenerationJobs)
-    .values({
-      ...getDurableJobPendingState(now),
-      userId,
-      weekStartAt,
-    })
-    .onConflictDoUpdate({
-      target: [
-        weeklyTrainingSummaryGenerationJobs.userId,
-        weeklyTrainingSummaryGenerationJobs.weekStartAt,
-      ],
-      set: {
-        ...getDurableJobPendingState(now),
-        updatedAt: now,
-      },
-    });
+  return enqueueJob({
+    database,
+    key: `${userId}:${weekStartAt.toISOString()}`,
+    name: weeklyTrainingSummaryJobName,
+    payload: { userId, weekStartAt: weekStartAt.toISOString() },
+  });
 }
 
 export async function listUsersWithActivitiesForTrainingWeek({
+  database = db,
   skipSucceeded = false,
   weekEndAt,
   weekStartAt,
 }: {
+  database?: WeeklyTrainingSummaryJobDatabase;
   skipSucceeded?: boolean;
   weekEndAt: Date;
   weekStartAt: Date;
@@ -81,79 +40,21 @@ export async function listUsersWithActivitiesForTrainingWeek({
     gte(activities.startAt, weekStartAt),
     lt(activities.startAt, weekEndAt),
   );
-  const usersQuery = db
+  const usersQuery = database
     .selectDistinct({ userId: activities.userId })
     .from(activities);
 
   const users = skipSucceeded
     ? await usersQuery
         .leftJoin(
-          weeklyTrainingSummaryGenerationJobs,
+          weeklyTrainingSummaries,
           and(
-            eq(weeklyTrainingSummaryGenerationJobs.userId, activities.userId),
-            eq(weeklyTrainingSummaryGenerationJobs.weekStartAt, weekStartAt),
-            eq(weeklyTrainingSummaryGenerationJobs.status, "succeeded"),
+            eq(weeklyTrainingSummaries.userId, activities.userId),
+            eq(weeklyTrainingSummaries.weekStartAt, weekStartAt),
           ),
         )
-        .where(
-          and(
-            activityWeekCondition,
-            isNull(weeklyTrainingSummaryGenerationJobs.id),
-          ),
-        )
+        .where(and(activityWeekCondition, isNull(weeklyTrainingSummaries.id)))
     : await usersQuery.where(activityWeekCondition);
 
   return users.map((user) => user.userId);
-}
-
-export async function claimWeeklyTrainingSummaryGenerationJobs({
-  batchSize,
-  now = new Date(),
-  staleLockedBefore,
-  workerId,
-}: {
-  batchSize: number;
-  now?: Date;
-  staleLockedBefore: Date;
-  workerId: string;
-}): Promise<WeeklyTrainingSummaryGenerationJob[]> {
-  return durableJobRepository.claim({
-    batchSize,
-    now,
-    staleLockedBefore,
-    workerId,
-  });
-}
-
-export async function markWeeklyTrainingSummaryGenerationSucceeded({
-  jobId,
-  now = new Date(),
-}: {
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markSucceeded({
-    jobId,
-    now,
-  });
-}
-
-export async function markWeeklyTrainingSummaryGenerationFailed({
-  error,
-  jobId,
-  now = new Date(),
-}: {
-  error: string;
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markFailed({
-    error,
-    jobId,
-    now,
-  });
-}
-
-export function getTrainingWeekEndAt(weekStartAt: Date) {
-  return getNextTrainingWeekStartAt(weekStartAt);
 }

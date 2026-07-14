@@ -5,11 +5,6 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import { orpc } from "@/utils/orpc";
 
-type SyncResult = {
-  activitiesStored: number;
-  status: string;
-};
-
 function SignUpSyncStep({ onGoToDashboard }: { onGoToDashboard: () => void }) {
   const initialSyncMutation = useMutation(
     orpc.syncs.initial.mutationOptions({
@@ -17,7 +12,7 @@ function SignUpSyncStep({ onGoToDashboard }: { onGoToDashboard: () => void }) {
         toast.error(error.message);
       },
       onSuccess: () => {
-        toast.success("Sync complete");
+        toast.success("Activity sync queued");
       },
     }),
   );
@@ -47,7 +42,7 @@ function SignUpSyncStep({ onGoToDashboard }: { onGoToDashboard: () => void }) {
       </div>
 
       {initialSyncMutation.data ? (
-        <SignUpSyncSummary result={initialSyncMutation.data} />
+        <SignUpSyncSummary />
       ) : initialSyncMutation.isPending ? (
         <SignUpSyncLoader />
       ) : (
@@ -101,35 +96,20 @@ function SignUpSyncStep({ onGoToDashboard }: { onGoToDashboard: () => void }) {
   );
 }
 
-function SignUpSyncSummary({ result }: { result: SyncResult }) {
+function SignUpSyncSummary() {
   return (
     <div className="my-4 flex flex-col items-center gap-3 text-center">
       <div className="flex size-20 items-center justify-center rounded-2xl border bg-muted/30 shadow-sm">
         <CloudSyncIcon className="size-9 text-muted-foreground" />
       </div>
       <div className="space-y-1">
-        <p className="font-medium">
-          {result.activitiesStored} activities synced
-        </p>
+        <p className="font-medium">Your activity sync is queued</p>
         <p className="text-muted-foreground text-sm">
-          Status: {getSyncStatusLabel(result.status)}
+          You can continue to the dashboard while it runs.
         </p>
       </div>
     </div>
   );
-}
-
-function getSyncStatusLabel(status: string) {
-  switch (status) {
-    case "failed":
-      return "Partial";
-    case "partial":
-      return "Partially correct";
-    case "success":
-      return "Completed";
-    default:
-      return status;
-  }
 }
 
 function SignUpSyncLoader() {

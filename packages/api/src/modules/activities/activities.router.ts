@@ -1,5 +1,4 @@
 import { ORPCError } from "@orpc/server";
-import { Effect } from "effect";
 import { protectedProcedure } from "../../index";
 import {
   archiveTrainingGoalInput,
@@ -22,11 +21,7 @@ import {
 } from "./catalog/activity-catalog.repository";
 import { getActivityDetailSummary } from "./catalog/activity-detail-summary.service";
 import { getActivityStreams } from "./catalog/activity-streams.service";
-import { DashboardWeeklyDistanceLive } from "./dashboard/dashboard-weekly-distance.live";
-import {
-  getDashboardThisWeek,
-  getDashboardWeeklyDistance,
-} from "./dashboard/dashboard-weekly-distance.service";
+import { dashboardWeeklyDistanceModule } from "./dashboard/dashboard-weekly-distance.module";
 import { listTrainingGoals } from "./training-goals/training-goal.repository";
 import {
   archiveTrainingGoal,
@@ -68,18 +63,14 @@ export const activitiesRouter = {
       });
     }),
   dashboardWeeklyDistance: protectedProcedure.handler(async ({ context }) => {
-    return Effect.runPromise(
-      getDashboardWeeklyDistance({
-        userId: context.session.user.id,
-      }).pipe(Effect.provide(DashboardWeeklyDistanceLive)),
-    );
+    return dashboardWeeklyDistanceModule.getWeeklyDistance({
+      userId: context.session.user.id,
+    });
   }),
   dashboardThisWeek: protectedProcedure.handler(async ({ context }) => {
-    return Effect.runPromise(
-      getDashboardThisWeek({
-        userId: context.session.user.id,
-      }).pipe(Effect.provide(DashboardWeeklyDistanceLive)),
-    );
+    return dashboardWeeklyDistanceModule.getThisWeek({
+      userId: context.session.user.id,
+    });
   }),
   getWeeklyTrainingSummary: protectedProcedure
     .input(getWeeklyTrainingSummaryInput)

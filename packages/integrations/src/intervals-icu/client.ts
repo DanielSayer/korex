@@ -1,4 +1,3 @@
-import { Context, Data, type Effect } from "effect";
 import type {
   IntervalsIcuActivityDetail,
   IntervalsIcuActivityListItem,
@@ -15,54 +14,68 @@ export type {
   IntervalsIcuAthleteProfile,
 } from "./schemas";
 
-export class IntervalsIcuClientError extends Data.TaggedError(
-  "IntervalsIcuClientError",
-)<{
-  cause?: unknown;
-  details?: unknown;
-  message: string;
-  requestUrl?: string;
-  status?: number;
-}> {}
+export class IntervalsIcuClientError extends Error {
+  readonly _tag = "IntervalsIcuClientError";
+  readonly cause?: unknown;
+  readonly details?: unknown;
+  readonly requestUrl?: string;
+  readonly status?: number;
+
+  constructor({
+    cause,
+    details,
+    message,
+    requestUrl,
+    status,
+  }: {
+    cause?: unknown;
+    details?: unknown;
+    message: string;
+    requestUrl?: string;
+    status?: number;
+  }) {
+    super(message);
+    this.name = "IntervalsIcuClientError";
+    this.cause = cause;
+    this.details = details;
+    this.requestUrl = requestUrl;
+    this.status = status;
+  }
+}
 
 export type GetIntervalsIcuAthleteProfileInput = {
   apiKey: string;
+  signal?: AbortSignal;
 };
 
 export type ListIntervalsIcuActivitiesInput = {
   apiKey: string;
   athleteId: string;
   endDate: Date;
+  signal?: AbortSignal;
   startDate: Date;
 };
 
 export type GetIntervalsIcuActivityInput = {
   activityId: string;
   apiKey: string;
+  signal?: AbortSignal;
 };
 
 export type IntervalsIcuClientService = {
   getAthleteProfile: (
     input: GetIntervalsIcuAthleteProfileInput,
-  ) => Effect.Effect<IntervalsIcuAthleteProfile, IntervalsIcuClientError>;
+  ) => Promise<IntervalsIcuAthleteProfile>;
   getActivityDetail: (
     input: GetIntervalsIcuActivityInput,
-  ) => Effect.Effect<IntervalsIcuActivityDetail, IntervalsIcuClientError>;
+  ) => Promise<IntervalsIcuActivityDetail>;
   getActivityMap: (
     input: GetIntervalsIcuActivityInput,
-  ) => Effect.Effect<IntervalsIcuActivityMap | null, IntervalsIcuClientError>;
+  ) => Promise<IntervalsIcuActivityMap | null>;
   getActivityStreams: (
     input: GetIntervalsIcuActivityInput,
-  ) => Effect.Effect<
-    IntervalsIcuActivityStreams | null,
-    IntervalsIcuClientError
-  >;
+  ) => Promise<IntervalsIcuActivityStreams | null>;
   listActivities: (
     input: ListIntervalsIcuActivitiesInput,
-  ) => Effect.Effect<IntervalsIcuActivityListItem[], IntervalsIcuClientError>;
+  ) => Promise<IntervalsIcuActivityListItem[]>;
 };
-
-export class IntervalsIcuClient extends Context.Tag("IntervalsIcuClient")<
-  IntervalsIcuClient,
-  IntervalsIcuClientService
->() {}

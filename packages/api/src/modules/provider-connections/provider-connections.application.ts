@@ -1,13 +1,11 @@
-import { IntervalsIcuClientLive } from "@korex/integrations/intervals-icu/live";
-import { Effect } from "effect";
-import { runProviderConnectionEffect } from "./provider-connections.errors";
+import { runProviderConnectionOperation } from "./provider-connections.errors";
 import {
   type ConnectIntervalsIcuInput,
-  connectIntervalsIcu,
+  providerConnectionsModule,
 } from "./provider-connections.service";
 
 export function executeConnectIntervalsIcu(input: ConnectIntervalsIcuInput) {
-  return runProviderConnectionEffect(
-    connectIntervalsIcu(input).pipe(Effect.provide(IntervalsIcuClientLive)),
+  return runProviderConnectionOperation(
+    providerConnectionsModule.connectIntervalsIcu(input),
   );
 }

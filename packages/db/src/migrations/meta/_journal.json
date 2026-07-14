@@ -15,6 +15,27 @@
       "when": 1781917276223,
       "tag": "0001_pack_heatmap_contributions",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783997152303,
+      "tag": "0002_sharp_wong",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783997957823,
+      "tag": "0003_nosy_joystick",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1784002543883,
+      "tag": "0004_new_ben_parker",
+      "breakpoints": true
     }
   ]
 }

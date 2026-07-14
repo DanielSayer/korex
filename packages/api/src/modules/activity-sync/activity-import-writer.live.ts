@@ -1,5 +1,4 @@
 import { db } from "@korex/db";
-import { Effect, Layer } from "effect";
 import {
   deleteActivity,
   replaceActivityLaps,
@@ -9,12 +8,12 @@ import { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heat
 import { enqueueCurrentTrainingStreakUpdateForActivity } from "../activities/training-streaks/training-streak.repository";
 import { isTrainingStreakQualifyingSportType } from "../activities/training-streaks/training-streaks";
 import { assignDefaultEquipmentForActivity } from "../equipment/equipment.repository";
-import {
-  type ActivityImportDatabase,
-  ActivityImportRepository,
-  ActivityImportWriter,
-  ActivityRouteHeatmapJobRepository,
-  ExternalActivityRepository,
+import type {
+  ActivityImportDatabase,
+  ActivityImportRepositoryService,
+  ActivityImportWriterService,
+  ActivityRouteHeatmapJobRepositoryService,
+  ExternalActivityRepositoryService,
 } from "./activity-sync.dependencies";
 import {
   clearExternalActivityActivityLink,
@@ -22,105 +21,93 @@ import {
   upsertExternalActivity,
 } from "./repositories/external-activities.repository";
 
-export const ActivityImportRepositoryLive = Layer.succeed(
-  ActivityImportRepository,
+const activityImportRepository: ActivityImportRepositoryService = {
+  deleteActivity,
+  replaceActivityLaps,
+  transaction: (work) =>
+    db.transaction((tx) => work(tx as ActivityImportDatabase)),
+  upsertActivity,
+};
+
+const externalActivityRepository: ExternalActivityRepositoryService = {
+  clearExternalActivityActivityLink,
+  linkExternalActivityToActivity,
+  upsertExternalActivity,
+};
+
+const activityRouteHeatmapJobRepository: ActivityRouteHeatmapJobRepositoryService =
   {
-    deleteActivity,
-    replaceActivityLaps,
-    transaction: (work) =>
-      db.transaction((tx) => work(tx as ActivityImportDatabase)),
-    upsertActivity,
-  },
-);
+    enqueueActivityRouteHeatmapCalculation: async (input) => {
+      await enqueueActivityRouteHeatmapCalculation(input);
+    },
+  };
 
-export const ExternalActivityRepositoryLive = Layer.succeed(
-  ExternalActivityRepository,
-  {
-    clearExternalActivityActivityLink,
-    linkExternalActivityToActivity,
-    upsertExternalActivity,
-  },
-);
+export function createActivityImportWriter({
+  activityImportRepository,
+  externalActivityRepository,
+  routeHeatmapJobRepository,
+}: {
+  activityImportRepository: ActivityImportRepositoryService;
+  externalActivityRepository: ExternalActivityRepositoryService;
+  routeHeatmapJobRepository: ActivityRouteHeatmapJobRepositoryService;
+}): ActivityImportWriterService {
+  return {
+    storeExternalActivity: externalActivityRepository.upsertExternalActivity,
+    storeCoreActivity: ({ activity, activityId, externalActivityId, laps }) =>
+      activityImportRepository.transaction(async (database) => {
+        const upsertedActivity = await activityImportRepository.upsertActivity({
+          activityId,
+          database,
+          input: activity,
+        });
 
-export const ActivityRouteHeatmapJobRepositoryLive = Layer.succeed(
-  ActivityRouteHeatmapJobRepository,
-  {
-    enqueueActivityRouteHeatmapCalculation,
-  },
-);
+        await activityImportRepository.replaceActivityLaps({
+          activityId: upsertedActivity.activityId,
+          database,
+          laps,
+        });
 
-export const ActivityImportWriterLayer = Layer.effect(
-  ActivityImportWriter,
-  Effect.gen(function* () {
-    const activityImportRepository = yield* ActivityImportRepository;
-    const externalActivityRepository = yield* ExternalActivityRepository;
-    const routeHeatmapJobRepository = yield* ActivityRouteHeatmapJobRepository;
+        await externalActivityRepository.linkExternalActivityToActivity({
+          activityId: upsertedActivity.activityId,
+          database,
+          externalActivityId,
+        });
 
-    return {
-      storeExternalActivity: externalActivityRepository.upsertExternalActivity,
-      storeCoreActivity: ({ activity, activityId, externalActivityId, laps }) =>
-        activityImportRepository.transaction(async (database) => {
-          const upsertedActivity =
-            await activityImportRepository.upsertActivity({
-              activityId,
-              database,
-              input: activity,
-            });
+        await assignDefaultEquipmentForActivity({
+          activityId: upsertedActivity.activityId,
+          database,
+          sportType: activity.sportType,
+          userId: activity.userId,
+        });
 
-          await activityImportRepository.replaceActivityLaps({
-            activityId: upsertedActivity.activityId,
+        await routeHeatmapJobRepository.enqueueActivityRouteHeatmapCalculation({
+          activityId: upsertedActivity.activityId,
+          database,
+        });
+
+        if (isTrainingStreakQualifyingSportType(activity.sportType)) {
+          await enqueueCurrentTrainingStreakUpdateForActivity({
+            activityStartAt: activity.startAt,
             database,
-            laps,
-          });
-
-          await externalActivityRepository.linkExternalActivityToActivity({
-            activityId: upsertedActivity.activityId,
-            database,
-            externalActivityId,
-          });
-
-          await assignDefaultEquipmentForActivity({
-            activityId: upsertedActivity.activityId,
-            database,
-            sportType: activity.sportType,
             userId: activity.userId,
           });
+        }
 
-          await routeHeatmapJobRepository.enqueueActivityRouteHeatmapCalculation(
-            {
-              activityId: upsertedActivity.activityId,
-              database,
-            },
-          );
+        return upsertedActivity;
+      }),
+    unlinkUnsupportedActivity: ({ activityId, externalActivityId }) =>
+      activityImportRepository.transaction(async (database) => {
+        await externalActivityRepository.clearExternalActivityActivityLink(
+          externalActivityId,
+          database,
+        );
+        await activityImportRepository.deleteActivity(activityId, database);
+      }),
+  };
+}
 
-          if (isTrainingStreakQualifyingSportType(activity.sportType)) {
-            await enqueueCurrentTrainingStreakUpdateForActivity({
-              activityStartAt: activity.startAt,
-              database,
-              userId: activity.userId,
-            });
-          }
-
-          return upsertedActivity;
-        }),
-      unlinkUnsupportedActivity: ({ activityId, externalActivityId }) =>
-        activityImportRepository.transaction(async (database) => {
-          await externalActivityRepository.clearExternalActivityActivityLink(
-            externalActivityId,
-            database,
-          );
-          await activityImportRepository.deleteActivity(activityId, database);
-        }),
-    };
-  }),
-);
-
-export const ActivityImportWriterLive = ActivityImportWriterLayer.pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      ActivityImportRepositoryLive,
-      ActivityRouteHeatmapJobRepositoryLive,
-      ExternalActivityRepositoryLive,
-    ),
-  ),
-);
+export const activityImportWriter = createActivityImportWriter({
+  activityImportRepository,
+  externalActivityRepository,
+  routeHeatmapJobRepository: activityRouteHeatmapJobRepository,
+});

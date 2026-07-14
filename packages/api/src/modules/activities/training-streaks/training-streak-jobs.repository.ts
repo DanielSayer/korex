@@ -1,39 +1,10 @@
-import { db, trainingStreaks, trainingStreakUpdateJobs } from "@korex/db";
+import { db, trainingStreaks } from "@korex/db";
 import { and, gt, isNotNull, lt } from "drizzle-orm";
-import {
-  createDurableJobRepository,
-  getDurableJobPendingState,
-} from "../../durable-jobs/durable-job-repository";
+import { enqueueJob } from "../../job-runtime/job-runtime";
 import { getCompletedTrainingWeek } from "../weekly-training-summaries/training-week";
+import { trainingStreakJobName } from "./training-streak-job";
 
-type TrainingStreakJobDatabase = Pick<
-  typeof db,
-  "insert" | "select" | "transaction" | "update"
->;
-
-export type TrainingStreakUpdateJob = {
-  attemptCount: number;
-  id: number;
-  userId: string;
-  weekStartAt: Date;
-};
-
-const durableJobRepository =
-  createDurableJobRepository<TrainingStreakUpdateJob>({
-    mapClaimedJob: (row) => ({
-      attemptCount: Number(row.attemptCount),
-      id: Number(row.id),
-      userId: String(row.userId),
-      weekStartAt: row.weekStartAt as Date,
-    }),
-    returning: {
-      attemptCount: trainingStreakUpdateJobs.attemptCount,
-      id: trainingStreakUpdateJobs.id,
-      userId: trainingStreakUpdateJobs.userId,
-      weekStartAt: trainingStreakUpdateJobs.weekStartAt,
-    },
-    table: trainingStreakUpdateJobs,
-  });
+type TrainingStreakJobDatabase = Pick<typeof db, "insert" | "select">;
 
 export async function enqueueTrainingStreakUpdate({
   database = db,
@@ -46,26 +17,13 @@ export async function enqueueTrainingStreakUpdate({
   userId: string;
   weekStartAt: Date;
 }) {
-  const now = new Date();
-  const pendingState = getDurableJobPendingState(runAfter ?? now);
-
-  await database
-    .insert(trainingStreakUpdateJobs)
-    .values({
-      ...pendingState,
-      userId,
-      weekStartAt,
-    })
-    .onConflictDoUpdate({
-      target: [
-        trainingStreakUpdateJobs.userId,
-        trainingStreakUpdateJobs.weekStartAt,
-      ],
-      set: {
-        ...pendingState,
-        updatedAt: now,
-      },
-    });
+  return enqueueJob({
+    database,
+    key: `${userId}:${weekStartAt.toISOString()}`,
+    name: trainingStreakJobName,
+    payload: { userId, weekStartAt: weekStartAt.toISOString() },
+    runAfter,
+  });
 }
 
 export async function enqueueCompletedTrainingStreakUpdates({
@@ -96,52 +54,4 @@ export async function enqueueCompletedTrainingStreakUpdates({
     enqueued: activeStreaks.length,
     weekStartAt,
   };
-}
-
-export async function claimTrainingStreakUpdateJobs({
-  batchSize,
-  now = new Date(),
-  staleLockedBefore,
-  workerId,
-}: {
-  batchSize: number;
-  now?: Date;
-  staleLockedBefore: Date;
-  workerId: string;
-}): Promise<TrainingStreakUpdateJob[]> {
-  return durableJobRepository.claim({
-    batchSize,
-    now,
-    staleLockedBefore,
-    workerId,
-  });
-}
-
-export async function markTrainingStreakUpdateSucceeded({
-  jobId,
-  now = new Date(),
-}: {
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markSucceeded({
-    jobId,
-    now,
-  });
-}
-
-export async function markTrainingStreakUpdateFailed({
-  error,
-  jobId,
-  now = new Date(),
-}: {
-  error: string;
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markFailed({
-    error,
-    jobId,
-    now,
-  });
 }

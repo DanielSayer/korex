@@ -1,35 +1,12 @@
-import { activityHeartRateZoneTimeCalculationJobs, db } from "@korex/db";
-import { eq } from "drizzle-orm";
-import {
-  createDurableJobRepository,
-  getDurableJobPendingState,
-} from "../../durable-jobs/durable-job-repository";
+import { db, jobRuntimeJobs } from "@korex/db";
+import { and, eq } from "drizzle-orm";
+import { enqueueJob } from "../../job-runtime/job-runtime";
+import { activityHeartRateZoneTimeJobName } from "./activity-heart-rate-zone-time-job";
 
 type ActivityHeartRateZoneTimeJobDatabase = Pick<
   typeof db,
-  "delete" | "insert" | "select" | "transaction" | "update"
+  "delete" | "insert" | "select"
 >;
-
-export type ActivityHeartRateZoneTimeCalculationJob = {
-  activityId: number;
-  attemptCount: number;
-  id: number;
-};
-
-const durableJobRepository =
-  createDurableJobRepository<ActivityHeartRateZoneTimeCalculationJob>({
-    mapClaimedJob: (row) => ({
-      activityId: Number(row.activityId),
-      attemptCount: Number(row.attemptCount),
-      id: Number(row.id),
-    }),
-    returning: {
-      activityId: activityHeartRateZoneTimeCalculationJobs.activityId,
-      attemptCount: activityHeartRateZoneTimeCalculationJobs.attemptCount,
-      id: activityHeartRateZoneTimeCalculationJobs.id,
-    },
-    table: activityHeartRateZoneTimeCalculationJobs,
-  });
 
 export async function enqueueActivityHeartRateZoneTimeCalculation({
   activityId,
@@ -38,21 +15,13 @@ export async function enqueueActivityHeartRateZoneTimeCalculation({
   activityId: number;
   database?: ActivityHeartRateZoneTimeJobDatabase;
 }) {
-  const now = new Date();
-
-  await database
-    .insert(activityHeartRateZoneTimeCalculationJobs)
-    .values({
-      activityId,
-      ...getDurableJobPendingState(now),
-    })
-    .onConflictDoUpdate({
-      target: [activityHeartRateZoneTimeCalculationJobs.activityId],
-      set: {
-        ...getDurableJobPendingState(now),
-        updatedAt: now,
-      },
-    });
+  return enqueueJob({
+    database,
+    key: String(activityId),
+    maxAttempts: 3,
+    name: activityHeartRateZoneTimeJobName,
+    payload: { activityId },
+  });
 }
 
 export async function deleteActivityHeartRateZoneTimeCalculationJob({
@@ -63,54 +32,11 @@ export async function deleteActivityHeartRateZoneTimeCalculationJob({
   database?: ActivityHeartRateZoneTimeJobDatabase;
 }) {
   await database
-    .delete(activityHeartRateZoneTimeCalculationJobs)
-    .where(eq(activityHeartRateZoneTimeCalculationJobs.activityId, activityId));
-}
-
-export async function claimActivityHeartRateZoneTimeCalculationJobs({
-  batchSize,
-  now = new Date(),
-  staleLockedBefore,
-  workerId,
-}: {
-  batchSize: number;
-  now?: Date;
-  staleLockedBefore: Date;
-  workerId: string;
-}): Promise<ActivityHeartRateZoneTimeCalculationJob[]> {
-  return durableJobRepository.claim({
-    batchSize,
-    now,
-    staleLockedBefore,
-    workerId,
-  });
-}
-
-export async function markActivityHeartRateZoneTimeCalculationSucceeded({
-  jobId,
-  now = new Date(),
-}: {
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markSucceeded({
-    jobId,
-    now,
-  });
-}
-
-export async function markActivityHeartRateZoneTimeCalculationFailed({
-  error,
-  jobId,
-  now = new Date(),
-}: {
-  error: string;
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markFailed({
-    error,
-    jobId,
-    now,
-  });
+    .delete(jobRuntimeJobs)
+    .where(
+      and(
+        eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobName),
+        eq(jobRuntimeJobs.key, String(activityId)),
+      ),
+    );
 }

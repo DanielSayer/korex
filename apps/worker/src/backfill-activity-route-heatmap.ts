@@ -1,16 +1,17 @@
+import { activityRouteHeatmapJobModule } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-job";
 import { enqueueActivityRouteHeatmapCalculation } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-jobs.repository";
-import { ActivityRouteHeatmapWorkflowLive } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-workflow.live";
-import { runActivityRouteHeatmapWorkerOnce } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-workflow.service";
+import {
+  createJobRuntime,
+  inspectJob,
+} from "@korex/api/modules/job-runtime/job-runtime";
 import {
   activities,
   activityMaps,
-  activityRouteHeatmapCalculationJobs,
   activityRouteHeatmapCells,
   activityRouteHeatmapContributionSets,
   db,
 } from "@korex/db";
-import { and, eq } from "drizzle-orm";
-import { Effect } from "effect";
+import { eq } from "drizzle-orm";
 
 if (!process.argv.includes("--reset")) {
   throw new Error(
@@ -28,46 +29,60 @@ const qualifyingActivities = await db
   .from(activities)
   .innerJoin(activityMaps, eq(activityMaps.activityId, activities.id))
   .where(eq(activities.sportType, "run"));
+const jobs = [];
 
 for (const { activityId } of qualifyingActivities) {
-  await enqueueActivityRouteHeatmapCalculation({ activityId });
+  jobs.push(await enqueueActivityRouteHeatmapCalculation({ activityId }));
 }
 
-while (true) {
-  const result = await Effect.runPromise(
-    runActivityRouteHeatmapWorkerOnce({
-      batchSize: 25,
-      staleLockMs: 60_000,
-      workerId: "activity-route-heatmap-backfill",
-    }).pipe(Effect.provide(ActivityRouteHeatmapWorkflowLive)),
-  );
+const runtime = createJobRuntime({
+  databaseUrl: requiredEnv("DATABASE_URL"),
+  tasks: {
+    [activityRouteHeatmapJobModule.name]: activityRouteHeatmapJobModule.handler,
+  },
+  workerId: "activity-route-heatmap-backfill",
+});
 
-  if (result.processed === 0) {
-    break;
+try {
+  await runtime.start();
+  const terminalJobs = await waitForTerminalJobs(jobs.map((job) => job.id));
+  const failedJobs = terminalJobs.filter((job) => job?.state === "failed");
+
+  if (failedJobs.length > 0) {
+    throw new Error(
+      `Activity Route Heatmap backfill failed for ${failedJobs.length} Activities`,
+    );
   }
-}
-
-const failedJobs = await db
-  .select({ activityId: activityRouteHeatmapCalculationJobs.activityId })
-  .from(activityRouteHeatmapCalculationJobs)
-  .innerJoin(
-    activities,
-    eq(activities.id, activityRouteHeatmapCalculationJobs.activityId),
-  )
-  .innerJoin(activityMaps, eq(activityMaps.activityId, activities.id))
-  .where(
-    and(
-      eq(activities.sportType, "run"),
-      eq(activityRouteHeatmapCalculationJobs.status, "failed"),
-    ),
-  );
-
-if (failedJobs.length > 0) {
-  throw new Error(
-    `Activity Route Heatmap backfill failed for ${failedJobs.length} Activities`,
-  );
+} finally {
+  await runtime.stop();
 }
 
 console.info(
   `Backfilled Activity Route Heatmap data for ${qualifyingActivities.length} Activities`,
 );
+
+async function waitForTerminalJobs(jobIds: string[]) {
+  while (true) {
+    const inspected = await Promise.all(jobIds.map((id) => inspectJob({ id })));
+
+    if (
+      inspected.every(
+        (job) => job?.state === "failed" || job?.state === "succeeded",
+      )
+    ) {
+      return inspected;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+}
+
+function requiredEnv(name: string) {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} is required`);
+  }
+
+  return value;
+}

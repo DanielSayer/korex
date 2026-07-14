@@ -1,7 +1,3 @@
-import { Context, type Effect } from "effect";
-import type { ActiveProviderConnectionNotFoundError } from "./provider-connections.errors";
-import type { ProviderSecretEncryptionError } from "./provider-secret-encryption";
-
 export type Provider = "intervals_icu";
 
 export type ProviderSession = {
@@ -16,18 +12,8 @@ export type ProviderSessionService = {
   getActiveProviderSession: (input: {
     provider: Provider;
     userId: string;
-  }) => Effect.Effect<
-    ProviderSession,
-    ActiveProviderConnectionNotFoundError | ProviderSecretEncryptionError
-  >;
+  }) => Promise<ProviderSession>;
   getActiveProviderSessionForUser: (input: {
     userId: string;
-  }) => Effect.Effect<
-    ProviderSession,
-    ActiveProviderConnectionNotFoundError | ProviderSecretEncryptionError
-  >;
+  }) => Promise<ProviderSession>;
 };
-
-export class ProviderSessionContext extends Context.Tag(
-  "ProviderSessionContext",
-)<ProviderSessionContext, ProviderSessionService>() {}

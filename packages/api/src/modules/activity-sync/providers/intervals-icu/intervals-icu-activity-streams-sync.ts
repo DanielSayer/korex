@@ -3,8 +3,7 @@ import type {
   IntervalsIcuClientService,
 } from "@korex/integrations/intervals-icu/client";
 import { getIntervalsIcuActivityStreamsRequestUrl } from "@korex/integrations/intervals-icu/urls";
-import { Effect, Either } from "effect";
-import { ActivityArtifactStore } from "../../activity-sync.dependencies";
+import type { ActivityArtifactStoreService } from "../../activity-sync.dependencies";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type { ActivitySyncFailure } from "../../activity-sync.types";
 import { toActivityStreamsFromIntervalsIcuStreams } from "./intervals-icu-activity-streams.acl";
@@ -14,98 +13,105 @@ import {
   isRecord,
 } from "./intervals-icu-sync-errors";
 
-export function syncIntervalsIcuActivityStreams({
+export async function syncIntervalsIcuActivityStreams({
   activityId,
   apiKey,
+  artifactStore,
   client,
   coreActivityId,
   errors,
   externalActivityId,
   providerActivityId,
   syncRunId,
+  signal,
   userId,
 }: {
   activityId: string;
   apiKey: string;
+  artifactStore: ActivityArtifactStoreService;
   client: IntervalsIcuClientService;
   coreActivityId: number;
   errors: ActivitySyncFailure[];
   externalActivityId: number;
   providerActivityId: string;
   syncRunId: number;
+  signal?: AbortSignal;
   userId: string;
 }) {
-  return Effect.gen(function* () {
-    const artifactStore = yield* ActivityArtifactStore;
-    const streamsResult = yield* Effect.either(
-      client.getActivityStreams({
-        activityId,
-        apiKey,
-      }),
-    );
-
-    if (Either.isLeft(streamsResult)) {
-      errors.push({
-        activityId,
-        details: streamsResult.left.details,
-        message: streamsResult.left.message,
-        requestUrl: streamsResult.left.requestUrl,
-        stage: "streams",
-      });
-      return;
-    }
-
-    if (streamsResult.right === null) {
-      return;
-    }
-
-    for (const [streamType, rawData] of readRawStreamEntries(
-      streamsResult.right,
-    )) {
-      yield* Effect.tryPromise({
-        try: () =>
-          artifactStore.storeExternalStream({
-            externalActivityId,
-            lastSyncRunId: syncRunId,
-            provider: "intervals_icu",
-            providerActivityId,
-            rawData,
-            streamType,
-            userId,
-          }),
-        catch: (cause) =>
-          new ActivitySyncError({
-            cause,
-            message: "Failed to store external activity stream",
-          }),
-      });
-    }
-
-    const activityStreams = readActivityStreamsAclResult({
+  let streamsResult: Awaited<
+    ReturnType<IntervalsIcuClientService["getActivityStreams"]>
+  >;
+  try {
+    streamsResult = await client.getActivityStreams({
       activityId,
-      errors,
-      requestUrl: getIntervalsIcuActivityStreamsRequestUrl(activityId),
-      streams: streamsResult.right,
+      apiKey,
+      signal,
     });
+  } catch (cause) {
+    signal?.throwIfAborted();
+    errors.push({
+      activityId,
+      details: getErrorDetails(cause),
+      message:
+        cause instanceof Error
+          ? cause.message
+          : "Failed to fetch activity streams",
+      requestUrl: isClientError(cause) ? cause.requestUrl : undefined,
+      stage: "streams",
+    });
+    return;
+  }
 
-    if (!activityStreams) {
-      return;
+  if (streamsResult === null) {
+    return;
+  }
+
+  for (const [streamType, rawData] of readRawStreamEntries(streamsResult)) {
+    try {
+      await artifactStore.storeExternalStream({
+        externalActivityId,
+        lastSyncRunId: syncRunId,
+        provider: "intervals_icu",
+        providerActivityId,
+        rawData,
+        streamType,
+        userId,
+      });
+    } catch (cause) {
+      throw new ActivitySyncError({
+        cause,
+        message: "Failed to store external activity stream",
+      });
     }
+  }
 
-    yield* Effect.tryPromise({
-      try: () =>
-        artifactStore.replaceCoreStreamsAndQueueCalculation({
-          activityId: coreActivityId,
-          streams: activityStreams,
-          userId,
-        }),
-      catch: (cause) =>
-        new ActivitySyncError({
-          cause,
-          message: "Failed to store activity streams",
-        }),
-    });
+  const activityStreams = readActivityStreamsAclResult({
+    activityId,
+    errors,
+    requestUrl: getIntervalsIcuActivityStreamsRequestUrl(activityId),
+    streams: streamsResult,
   });
+
+  if (!activityStreams) {
+    return;
+  }
+
+  try {
+    await artifactStore.replaceCoreStreamsAndQueueCalculation({
+      activityId: coreActivityId,
+      streams: activityStreams,
+      userId,
+    });
+  } catch (cause) {
+    throw new ActivitySyncError({
+      cause,
+      message: "Failed to store activity streams",
+    });
+  }
+}
+
+function isClientError(value: unknown): value is { requestUrl?: string } {
+  return typeof value === "object" && value !== null && "requestUrl" in value;
 }
 
 function readActivityStreamsAclResult({

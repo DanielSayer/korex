@@ -1,5 +1,8 @@
 import type { IntervalsIcuClientService } from "@korex/integrations/intervals-icu/client";
-import { Effect, Either } from "effect";
+import type {
+  ActivityArtifactStoreService,
+  ActivityImportWriterService,
+} from "../../activity-sync.dependencies";
 import type {
   ActivitySyncCounters,
   ActivitySyncFailure,
@@ -8,86 +11,113 @@ import { storeIntervalsIcuActivityImport } from "./intervals-icu-activity-import
 import { syncIntervalsIcuActivityMap } from "./intervals-icu-activity-map-sync";
 import { syncIntervalsIcuActivityStreams } from "./intervals-icu-activity-streams-sync";
 
-export function syncIntervalsIcuActivity({
+export async function syncIntervalsIcuActivity({
   activityId,
+  artifactStore,
   apiKey,
   athleteId,
   client,
   counters,
   errors,
+  signal,
   syncRunId,
   userId,
+  writer,
 }: {
   activityId: string;
+  artifactStore: ActivityArtifactStoreService;
   apiKey: string;
   athleteId: string;
   client: IntervalsIcuClientService;
   counters: ActivitySyncCounters;
   errors: ActivitySyncFailure[];
+  signal?: AbortSignal;
   syncRunId: number;
   userId: string;
+  writer: ActivityImportWriterService;
 }) {
-  return Effect.gen(function* () {
-    const detailResult = yield* Effect.either(
-      client.getActivityDetail({
-        activityId,
-        apiKey,
-      }),
-    );
-
-    if (Either.isLeft(detailResult)) {
-      errors.push({
-        activityId,
-        details: detailResult.left.details,
-        message: detailResult.left.message,
-        requestUrl: detailResult.left.requestUrl,
-        stage: "detail",
-      });
-      return;
-    }
-
-    const storedActivity = yield* storeIntervalsIcuActivityImport({
-      detail: detailResult.right,
-      errors,
-      lastSyncRunId: syncRunId,
-      providerAthleteId: athleteId,
-      userId,
-    });
-
-    counters.activitiesStored += 1;
-
-    if (storedActivity.skipped) {
-      return;
-    }
-
-    if (storedActivity.created) {
-      counters.activitiesCreated += 1;
-    } else if (storedActivity.updated) {
-      counters.activitiesUpdated += 1;
-    }
-
-    yield* syncIntervalsIcuActivityMap({
-      apiKey,
-      coreActivityId: storedActivity.activityId,
-      client,
-      errors,
-      externalActivityId: storedActivity.externalActivityId,
-      providerActivityId: storedActivity.providerActivityId,
-      providerRequestActivityId: activityId,
-      syncRunId,
-      userId,
-    });
-
-    yield* syncIntervalsIcuActivityStreams({
+  let detailResult: Awaited<
+    ReturnType<IntervalsIcuClientService["getActivityDetail"]>
+  >;
+  try {
+    detailResult = await client.getActivityDetail({
       activityId,
       apiKey,
-      client,
-      coreActivityId: storedActivity.activityId,
-      errors,
-      externalActivityId: storedActivity.externalActivityId,
-      providerActivityId: storedActivity.providerActivityId,
-      syncRunId,
-      userId,
+      signal,
     });
+  } catch (cause) {
+    signal?.throwIfAborted();
+    errors.push({
+      activityId,
+      details: readField(cause, "details"),
+      message:
+        cause instanceof Error
+          ? cause.message
+          : "Failed to fetch activity detail",
+      requestUrl: readStringField(cause, "requestUrl"),
+      stage: "detail",
+    });
+    return;
+  }
+
+  const storedActivity = await storeIntervalsIcuActivityImport({
+    detail: detailResult,
+    errors,
+    lastSyncRunId: syncRunId,
+    providerAthleteId: athleteId,
+    userId,
+    writer,
   });
+
+  counters.activitiesStored += 1;
+
+  if (storedActivity.skipped) {
+    return;
+  }
+
+  if (storedActivity.created) {
+    counters.activitiesCreated += 1;
+  } else if (storedActivity.updated) {
+    counters.activitiesUpdated += 1;
+  }
+
+  await syncIntervalsIcuActivityMap({
+    apiKey,
+    artifactStore,
+    coreActivityId: storedActivity.activityId,
+    client,
+    errors,
+    externalActivityId: storedActivity.externalActivityId,
+    providerActivityId: storedActivity.providerActivityId,
+    providerRequestActivityId: activityId,
+    syncRunId,
+    signal,
+    userId,
+  });
+
+  await syncIntervalsIcuActivityStreams({
+    activityId,
+    apiKey,
+    artifactStore,
+    client,
+    coreActivityId: storedActivity.activityId,
+    errors,
+    externalActivityId: storedActivity.externalActivityId,
+    providerActivityId: storedActivity.providerActivityId,
+    syncRunId,
+    signal,
+    userId,
+  });
+}
+
+function readField(cause: unknown, field: "details" | "requestUrl") {
+  if (typeof cause !== "object" || cause === null || !(field in cause)) {
+    return undefined;
+  }
+  return (cause as Record<string, unknown>)[field];
+}
+
+function readStringField(cause: unknown, field: "requestUrl") {
+  const value = readField(cause, field);
+  return typeof value === "string" ? value : undefined;
 }

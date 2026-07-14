@@ -1,7 +1,6 @@
 import type { IntervalsIcuClientService } from "@korex/integrations/intervals-icu/client";
 import { getIntervalsIcuActivityMapRequestUrl } from "@korex/integrations/intervals-icu/urls";
-import { Effect, Either } from "effect";
-import { ActivityArtifactStore } from "../../activity-sync.dependencies";
+import type { ActivityArtifactStoreService } from "../../activity-sync.dependencies";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type { ActivitySyncFailure } from "../../activity-sync.types";
 import { toActivityMapFromIntervalsIcuMap } from "./intervals-icu-activity-map.acl";
@@ -10,8 +9,9 @@ import {
   getProviderPayloadDetails,
 } from "./intervals-icu-sync-errors";
 
-export function syncIntervalsIcuActivityMap({
+export async function syncIntervalsIcuActivityMap({
   apiKey,
+  artifactStore,
   coreActivityId,
   client,
   errors,
@@ -19,9 +19,11 @@ export function syncIntervalsIcuActivityMap({
   providerActivityId,
   providerRequestActivityId,
   syncRunId,
+  signal,
   userId,
 }: {
   apiKey: string;
+  artifactStore: ActivityArtifactStoreService;
   coreActivityId: number;
   client: IntervalsIcuClientService;
   errors: ActivitySyncFailure[];
@@ -29,75 +31,77 @@ export function syncIntervalsIcuActivityMap({
   providerActivityId: string;
   providerRequestActivityId: string;
   syncRunId: number;
+  signal?: AbortSignal;
   userId: string;
 }) {
-  return Effect.gen(function* () {
-    const artifactStore = yield* ActivityArtifactStore;
-    const mapResult = yield* Effect.either(
-      client.getActivityMap({
-        activityId: providerRequestActivityId,
-        apiKey,
-      }),
-    );
-
-    if (Either.isLeft(mapResult)) {
-      errors.push({
-        activityId: providerRequestActivityId,
-        details: mapResult.left.details,
-        message: mapResult.left.message,
-        requestUrl: mapResult.left.requestUrl,
-        stage: "map",
-      });
-      return;
-    }
-
-    if (mapResult.right === null) {
-      return;
-    }
-
-    yield* Effect.tryPromise({
-      try: () =>
-        artifactStore.storeExternalMap({
-          externalActivityId,
-          lastSyncRunId: syncRunId,
-          provider: "intervals_icu",
-          providerActivityId,
-          rawData: mapResult.right,
-          userId,
-        }),
-      catch: (cause) =>
-        new ActivitySyncError({
-          cause,
-          message: "Failed to store external activity map",
-        }),
-    });
-
-    const activityMap = readActivityMapAclResult({
+  let mapResult: Awaited<
+    ReturnType<IntervalsIcuClientService["getActivityMap"]>
+  >;
+  try {
+    mapResult = await client.getActivityMap({
       activityId: providerRequestActivityId,
-      errors,
-      map: mapResult.right,
-      requestUrl: getIntervalsIcuActivityMapRequestUrl(
-        providerRequestActivityId,
-      ),
+      apiKey,
+      signal,
     });
-
-    if (!activityMap) {
-      return;
-    }
-
-    yield* Effect.tryPromise({
-      try: () =>
-        artifactStore.replaceCoreMap({
-          activityId: coreActivityId,
-          map: activityMap,
-        }),
-      catch: (cause) =>
-        new ActivitySyncError({
-          cause,
-          message: "Failed to store activity map",
-        }),
+  } catch (cause) {
+    signal?.throwIfAborted();
+    errors.push({
+      activityId: providerRequestActivityId,
+      details: getErrorDetails(cause),
+      message:
+        cause instanceof Error ? cause.message : "Failed to fetch activity map",
+      requestUrl: isClientError(cause) ? cause.requestUrl : undefined,
+      stage: "map",
     });
+    return;
+  }
+
+  if (mapResult === null) {
+    return;
+  }
+
+  try {
+    await artifactStore.storeExternalMap({
+      externalActivityId,
+      lastSyncRunId: syncRunId,
+      provider: "intervals_icu",
+      providerActivityId,
+      rawData: mapResult,
+      userId,
+    });
+  } catch (cause) {
+    throw new ActivitySyncError({
+      cause,
+      message: "Failed to store external activity map",
+    });
+  }
+
+  const activityMap = readActivityMapAclResult({
+    activityId: providerRequestActivityId,
+    errors,
+    map: mapResult,
+    requestUrl: getIntervalsIcuActivityMapRequestUrl(providerRequestActivityId),
   });
+
+  if (!activityMap) {
+    return;
+  }
+
+  try {
+    await artifactStore.replaceCoreMap({
+      activityId: coreActivityId,
+      map: activityMap,
+    });
+  } catch (cause) {
+    throw new ActivitySyncError({
+      cause,
+      message: "Failed to store activity map",
+    });
+  }
+}
+
+function isClientError(value: unknown): value is { requestUrl?: string } {
+  return typeof value === "object" && value !== null && "requestUrl" in value;
 }
 
 function readActivityMapAclResult({

@@ -6,6 +6,8 @@ import type {
   WeeklyTrainingSummaryListItem,
 } from "./weekly-training-summary.types";
 
+type WeeklyTrainingSummaryDatabase = Pick<typeof db, "insert" | "select">;
+
 export type WeeklyTrainingSummaryActivity = {
   averageSpeedMetersPerSecond: number | null;
   distanceMeters: number | null;
@@ -86,15 +88,17 @@ export async function getWeeklyTrainingSummary({
 }
 
 export async function listActivitiesForTrainingWeek({
+  database = db,
   userId,
   weekEndAt,
   weekStartAt,
 }: {
+  database?: WeeklyTrainingSummaryDatabase;
   userId: string;
   weekEndAt: Date;
   weekStartAt: Date;
 }): Promise<WeeklyTrainingSummaryActivity[]> {
-  return db
+  return database
     .select({
       averageSpeedMetersPerSecond: activities.averageSpeedMetersPerSecond,
       distanceMeters: activities.distanceMeters,
@@ -116,10 +120,11 @@ export async function listActivitiesForTrainingWeek({
 
 export async function upsertWeeklyTrainingSummary(
   input: WeeklyTrainingSummaryInput,
+  database: WeeklyTrainingSummaryDatabase = db,
 ) {
   const now = new Date();
 
-  await db
+  await database
     .insert(weeklyTrainingSummaries)
     .values(input)
     .onConflictDoUpdate({

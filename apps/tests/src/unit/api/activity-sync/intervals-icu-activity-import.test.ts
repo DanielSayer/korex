@@ -2,7 +2,7 @@ import type {
   ActivityInput,
   ActivityLapInput,
 } from "@korex/api/modules/activities/activities.types";
-import { ActivityImportWriter } from "@korex/api/modules/activity-sync/activity-sync.dependencies";
+import type { ActivityImportWriterService } from "@korex/api/modules/activity-sync/activity-sync.dependencies";
 import type { ActivitySyncFailure } from "@korex/api/modules/activity-sync/activity-sync.types";
 import { storeIntervalsIcuActivityImport } from "@korex/api/modules/activity-sync/providers/intervals-icu/intervals-icu-activity-import";
 import type {
@@ -10,7 +10,6 @@ import type {
   UpsertExternalActivityResult,
 } from "@korex/api/modules/activity-sync/repositories/external-activities.repository";
 import type { IntervalsIcuActivityDetail } from "@korex/integrations/intervals-icu/client";
-import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { IntervalsIcuActivityDetailBuilder } from "../../../setup/integration/test-data/intervals-icu-activity-detail-builder";
 
@@ -143,35 +142,31 @@ function runStoreActivityImport({
   errors?: ActivitySyncFailure[];
   upsertedExternalActivity: UpsertExternalActivityResult;
 }) {
-  return Effect.runPromise(
-    storeIntervalsIcuActivityImport({
-      detail,
-      errors,
-      lastSyncRunId: 123,
-      providerAthleteId: "athlete-1",
-      userId: "user-1",
-    }).pipe(
-      Effect.provide(
-        Layer.succeed(ActivityImportWriter, {
-          storeExternalActivity: (input) => {
-            calls.storeExternalActivity.push(input);
-            return Promise.resolve(upsertedExternalActivity);
-          },
-          storeCoreActivity: (input) => {
-            calls.storeCoreActivity.push(input);
-            return Promise.resolve({
-              activityId: 20,
-              created: input.activityId === null,
-            });
-          },
-          unlinkUnsupportedActivity: (input) => {
-            calls.unlinkUnsupportedActivity.push(input);
-            return Promise.resolve();
-          },
-        }),
-      ),
-    ),
-  );
+  const writer: ActivityImportWriterService = {
+    storeExternalActivity: (input) => {
+      calls.storeExternalActivity.push(input);
+      return Promise.resolve(upsertedExternalActivity);
+    },
+    storeCoreActivity: (input) => {
+      calls.storeCoreActivity.push(input);
+      return Promise.resolve({
+        activityId: 20,
+        created: input.activityId === null,
+      });
+    },
+    unlinkUnsupportedActivity: (input) => {
+      calls.unlinkUnsupportedActivity.push(input);
+      return Promise.resolve();
+    },
+  };
+  return storeIntervalsIcuActivityImport({
+    detail,
+    errors,
+    lastSyncRunId: 123,
+    providerAthleteId: "athlete-1",
+    userId: "user-1",
+    writer,
+  });
 }
 
 type WriterCalls = {

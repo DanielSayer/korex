@@ -1,16 +1,17 @@
 import { replaceActivityStreams } from "@korex/api/modules/activities/artifacts/activity-artifacts.repository";
+import { activityBestEffortJobModule } from "@korex/api/modules/activities/best-efforts/activity-best-effort-job";
 import { enqueueActivityBestEffortCalculation } from "@korex/api/modules/activities/best-efforts/activity-best-effort-jobs.repository";
-import { ActivityBestEffortWorkflowLive } from "@korex/api/modules/activities/best-efforts/activity-best-effort-workflow.live";
-import { runActivityBestEffortWorkerOnce } from "@korex/api/modules/activities/best-efforts/activity-best-effort-workflow.service";
+import {
+  createJobRuntime,
+  inspectJob,
+} from "@korex/api/modules/job-runtime/job-runtime";
 import {
   activities,
-  activityBestEffortCalculationJobs,
   activityBestEfforts,
   db,
   personalBestEfforts,
 } from "@korex/db";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -48,21 +49,20 @@ describe("activity best effort workflow", () => {
         { data: [0, 60, 120], streamType: "elapsedTime" },
       ],
     });
-    await enqueueActivityBestEffortCalculation({
+    const slowerJob = await enqueueActivityBestEffortCalculation({
       activityId: slowerActivity.id,
     });
-    await enqueueActivityBestEffortCalculation({
+    const fasterJob = await enqueueActivityBestEffortCalculation({
       activityId: fasterActivity.id,
     });
 
-    const firstResult = await runWorkflow();
+    await runWorkflow([slowerJob.id, fasterJob.id]);
 
     const [personalBest] = await db
       .select()
       .from(personalBestEfforts)
       .where(eq(personalBestEfforts.standardDistanceCode, "400m"));
     const efforts = await db.select().from(activityBestEfforts);
-    expect(firstResult).toEqual({ processed: 2 });
     expect(efforts.length).toBeGreaterThan(0);
     expect(personalBest).toMatchObject({
       activityId: fasterActivity.id,
@@ -74,17 +74,16 @@ describe("activity best effort workflow", () => {
       .update(activities)
       .set({ sportType: "hike" })
       .where(eq(activities.id, fasterActivity.id));
-    await enqueueActivityBestEffortCalculation({
+    const recalculationJob = await enqueueActivityBestEffortCalculation({
       activityId: fasterActivity.id,
     });
 
-    const secondResult = await runWorkflow();
+    await runWorkflow([recalculationJob.id]);
 
     const [refreshedPersonalBest] = await db
       .select()
       .from(personalBestEfforts)
       .where(eq(personalBestEfforts.standardDistanceCode, "400m"));
-    expect(secondResult).toEqual({ processed: 1 });
     expect(refreshedPersonalBest).toMatchObject({
       activityId: slowerActivity.id,
       durationSeconds: 80,
@@ -95,34 +94,50 @@ describe("activity best effort workflow", () => {
       .update(activities)
       .set({ sportType: "hike" })
       .where(eq(activities.id, slowerActivity.id));
-    await enqueueActivityBestEffortCalculation({
+    const finalJob = await enqueueActivityBestEffortCalculation({
       activityId: slowerActivity.id,
     });
 
-    const thirdResult = await runWorkflow();
+    await runWorkflow([finalJob.id]);
 
     const finalPersonalBests = await db.select().from(personalBestEfforts);
-    const [job] = await db
-      .select()
-      .from(activityBestEffortCalculationJobs)
-      .where(
-        eq(activityBestEffortCalculationJobs.activityId, slowerActivity.id),
-      );
-    expect(thirdResult).toEqual({ processed: 1 });
+    const job = await inspectJob({ id: finalJob.id });
     expect(finalPersonalBests).toEqual([]);
     expect(job).toMatchObject({
-      status: "succeeded",
+      state: "succeeded",
     });
   });
 });
 
-function runWorkflow() {
-  return Effect.runPromise(
-    runActivityBestEffortWorkerOnce({
-      batchSize: 10,
-      now: new Date("2026-04-01T00:00:00.000Z"),
-      staleLockMs: 60_000,
-      workerId: "worker-1",
-    }).pipe(Effect.provide(ActivityBestEffortWorkflowLive)),
-  );
+async function runWorkflow(jobIds: string[]) {
+  const runtime = createJobRuntime({
+    databaseUrl: requiredDatabaseUrl(),
+    pollIntervalMs: 5,
+    tasks: {
+      [activityBestEffortJobModule.name]: activityBestEffortJobModule.handler,
+    },
+    workerId: "best-effort-integration",
+  });
+
+  try {
+    await runtime.start();
+    await expect
+      .poll(async () => {
+        const jobs = await Promise.all(jobIds.map((id) => inspectJob({ id })));
+        return jobs.map((job) => `${job?.state}:${job?.lastError}`);
+      })
+      .toEqual(jobIds.map(() => "succeeded:null"));
+  } finally {
+    await runtime.stop();
+  }
+}
+
+function requiredDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required for integration tests");
+  }
+
+  return databaseUrl;
 }

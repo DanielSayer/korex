@@ -1,12 +1,12 @@
 import { replaceActivityStreams } from "@korex/api/modules/activities/artifacts/activity-artifacts.repository";
 import { replaceActivityHeartRateZoneSnapshots } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
+import { activityHeartRateZoneTimeJobModule } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-job";
 import { enqueueActivityHeartRateZoneTimeCalculation } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-jobs.repository";
-import { runActivityHeartRateZoneTimeWorkerOnce } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-worker";
 import {
-  activityHeartRateZoneTimeCalculationJobs,
-  activityHeartRateZoneTimes,
-  db,
-} from "@korex/db";
+  createJobRuntime,
+  inspectJob,
+} from "@korex/api/modules/job-runtime/job-runtime";
+import { activityHeartRateZoneTimes, db } from "@korex/db";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
@@ -53,38 +53,55 @@ describe("activity heart rate zone time worker", () => {
         },
       ],
     });
-    await enqueueActivityHeartRateZoneTimeCalculation({
+    const job = await enqueueActivityHeartRateZoneTimeCalculation({
       activityId: activity.id,
     });
 
-    const result = await runActivityHeartRateZoneTimeWorkerOnce({
-      batchSize: 10,
-      now: new Date("2026-04-01T00:00:00.000Z"),
-      staleLockMs: 60_000,
-      workerId: "worker-1",
+    const runtime = createJobRuntime({
+      databaseUrl: requiredDatabaseUrl(),
+      pollIntervalMs: 5,
+      tasks: {
+        [activityHeartRateZoneTimeJobModule.name]:
+          activityHeartRateZoneTimeJobModule.handler,
+      },
+      workerId: "heart-rate-zone-time-integration",
     });
+
+    try {
+      await runtime.start();
+      await expect
+        .poll(
+          async () =>
+            (
+              await inspectJob({
+                id: job.id,
+              })
+            )?.state,
+        )
+        .toBe("succeeded");
+    } finally {
+      await runtime.stop();
+    }
 
     const times = await db
       .select()
       .from(activityHeartRateZoneTimes)
       .where(eq(activityHeartRateZoneTimes.activityId, activity.id));
-    const [job] = await db
-      .select()
-      .from(activityHeartRateZoneTimeCalculationJobs)
-      .where(
-        eq(activityHeartRateZoneTimeCalculationJobs.activityId, activity.id),
-      );
 
-    expect(result).toEqual({ processed: 1 });
     expect(times).toEqual([
       expect.objectContaining({ position: 1, timeSeconds: 40 }),
       expect.objectContaining({ position: 2, timeSeconds: 40 }),
       expect.objectContaining({ position: 3, timeSeconds: 20 }),
     ]);
-    expect(job).toMatchObject({
-      lockedAt: null,
-      lockedBy: null,
-      status: "succeeded",
-    });
   });
 });
+
+function requiredDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required for integration tests");
+  }
+
+  return databaseUrl;
+}

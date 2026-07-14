@@ -1,4 +1,3 @@
-import { Effect } from "effect";
 import { createBasicAuthHeader } from "./auth";
 import {
   type GetIntervalsIcuActivityInput,
@@ -22,7 +21,13 @@ import {
 } from "./urls";
 
 export function listIntervalsIcuActivitiesLive(
-  { apiKey, athleteId, endDate, startDate }: ListIntervalsIcuActivitiesInput,
+  {
+    apiKey,
+    athleteId,
+    endDate,
+    signal,
+    startDate,
+  }: ListIntervalsIcuActivitiesInput,
   httpClient: IntervalsIcuHttpClientService,
 ) {
   return requestIntervalsIcuJson({
@@ -34,12 +39,13 @@ export function listIntervalsIcuActivitiesLive(
       startDate,
     }),
     schema: intervalsIcuActivityListSchema,
+    signal,
     subject: "activity list",
   });
 }
 
 export function getIntervalsIcuActivityDetailLive(
-  { activityId, apiKey }: GetIntervalsIcuActivityInput,
+  { activityId, apiKey, signal }: GetIntervalsIcuActivityInput,
   httpClient: IntervalsIcuHttpClientService,
 ) {
   return requestIntervalsIcuJson({
@@ -47,12 +53,13 @@ export function getIntervalsIcuActivityDetailLive(
     httpClient,
     path: getIntervalsIcuActivityDetailPath(activityId),
     schema: intervalsIcuActivityDetailSchema,
+    signal,
     subject: "activity detail",
   });
 }
 
 export function getIntervalsIcuActivityMapLive(
-  { activityId, apiKey }: GetIntervalsIcuActivityInput,
+  { activityId, apiKey, signal }: GetIntervalsIcuActivityInput,
   httpClient: IntervalsIcuHttpClientService,
 ) {
   return requestIntervalsIcuJson({
@@ -60,12 +67,13 @@ export function getIntervalsIcuActivityMapLive(
     httpClient,
     path: getIntervalsIcuActivityMapPath(activityId),
     schema: intervalsIcuActivityMapSchema,
+    signal,
     subject: "activity map",
   });
 }
 
 export function getIntervalsIcuActivityStreamsLive(
-  { activityId, apiKey }: GetIntervalsIcuActivityInput,
+  { activityId, apiKey, signal }: GetIntervalsIcuActivityInput,
   httpClient: IntervalsIcuHttpClientService,
 ) {
   return requestIntervalsIcuJson({
@@ -73,79 +81,78 @@ export function getIntervalsIcuActivityStreamsLive(
     httpClient,
     path: getIntervalsIcuActivityStreamsPath(activityId),
     schema: intervalsIcuActivityStreamsSchema,
+    signal,
     subject: "activity streams",
   });
 }
 
-function requestIntervalsIcuJson<A>({
+async function requestIntervalsIcuJson<A>({
   apiKey,
   httpClient,
   path,
   schema,
+  signal,
   subject,
 }: {
   apiKey: string;
   httpClient: IntervalsIcuHttpClientService;
   path: string;
   schema: { parse: (value: unknown) => A };
+  signal?: AbortSignal;
   subject: string;
 }) {
   const requestUrl = getIntervalsIcuRequestUrl(path);
 
-  return Effect.gen(function* () {
-    const response = yield* httpClient
-      .fetch(path, {
-        headers: {
-          Authorization: createBasicAuthHeader(
-            INTERVALS_ICU_BASIC_AUTH_USERNAME,
-            apiKey,
-          ),
-        },
-      })
-      .pipe(
-        Effect.mapError(
-          (cause) =>
-            new IntervalsIcuClientError({
-              cause,
-              message: `Failed to request Intervals.icu ${subject}`,
-              requestUrl,
-            }),
+  let response: Response;
+  try {
+    response = await httpClient.fetch(path, {
+      headers: {
+        Authorization: createBasicAuthHeader(
+          INTERVALS_ICU_BASIC_AUTH_USERNAME,
+          apiKey,
         ),
-      );
-
-    if (!response.ok) {
-      return yield* Effect.fail(
-        new IntervalsIcuClientError({
-          message: `Intervals.icu ${subject} request failed`,
-          requestUrl,
-          status: response.status,
-        }),
-      );
-    }
-
-    const json = yield* Effect.tryPromise({
-      try: () => response.json(),
-      catch: (cause) =>
-        new IntervalsIcuClientError({
-          cause,
-          message: `Failed to parse Intervals.icu ${subject} response`,
-          requestUrl,
-          status: response.status,
-        }),
+      },
+      signal,
     });
-
-    return yield* Effect.try({
-      try: () => schema.parse(json),
-      catch: (cause) =>
-        new IntervalsIcuClientError({
-          cause,
-          details: getInvalidResponseDetails(cause, json),
-          message: `Invalid Intervals.icu ${subject} response`,
-          requestUrl,
-          status: response.status,
-        }),
+  } catch (cause) {
+    throw new IntervalsIcuClientError({
+      cause,
+      message: `Failed to request Intervals.icu ${subject}`,
+      requestUrl,
     });
-  });
+  }
+
+  if (!response.ok) {
+    throw new IntervalsIcuClientError({
+      message: `Intervals.icu ${subject} request failed`,
+      requestUrl,
+      status: response.status,
+    });
+  }
+
+  let json: unknown;
+  try {
+    json = await response.json();
+  } catch (cause) {
+    throw new IntervalsIcuClientError({
+      cause,
+      message: `Failed to parse Intervals.icu ${subject} response`,
+      requestUrl,
+      status: response.status,
+    });
+  }
+
+  try {
+    return schema.parse(json);
+  } catch (cause) {
+    throw new IntervalsIcuClientError({
+      cause,
+      details: getInvalidResponseDetails(cause, json),
+      message: `Invalid Intervals.icu ${subject} response`,
+      requestUrl,
+      status: response.status,
+    });
+  }
 }
 
 function getInvalidResponseDetails(cause: unknown, value: unknown) {

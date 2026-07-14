@@ -1,41 +1,14 @@
 import {
   activities,
   activityMaps,
-  activityRouteHeatmapCalculationJobs,
   activityRouteHeatmapContributionSets,
   db,
 } from "@korex/db";
 import { and, eq, isNull } from "drizzle-orm";
-import {
-  createDurableJobRepository,
-  getDurableJobPendingState,
-} from "../../durable-jobs/durable-job-repository";
+import { enqueueJob } from "../../job-runtime/job-runtime";
+import { activityRouteHeatmapJobName } from "./activity-route-heatmap-job";
 
-type ActivityRouteHeatmapJobDatabase = Pick<
-  typeof db,
-  "insert" | "select" | "transaction" | "update"
->;
-
-export type ActivityRouteHeatmapCalculationJob = {
-  activityId: number;
-  attemptCount: number;
-  id: number;
-};
-
-const durableJobRepository =
-  createDurableJobRepository<ActivityRouteHeatmapCalculationJob>({
-    mapClaimedJob: (row) => ({
-      activityId: Number(row.activityId),
-      attemptCount: Number(row.attemptCount),
-      id: Number(row.id),
-    }),
-    returning: {
-      activityId: activityRouteHeatmapCalculationJobs.activityId,
-      attemptCount: activityRouteHeatmapCalculationJobs.attemptCount,
-      id: activityRouteHeatmapCalculationJobs.id,
-    },
-    table: activityRouteHeatmapCalculationJobs,
-  });
+type ActivityRouteHeatmapJobDatabase = Pick<typeof db, "insert" | "select">;
 
 export async function enqueueActivityRouteHeatmapCalculation({
   activityId,
@@ -44,21 +17,12 @@ export async function enqueueActivityRouteHeatmapCalculation({
   activityId: number;
   database?: ActivityRouteHeatmapJobDatabase;
 }) {
-  const now = new Date();
-
-  await database
-    .insert(activityRouteHeatmapCalculationJobs)
-    .values({
-      activityId,
-      ...getDurableJobPendingState(now),
-    })
-    .onConflictDoUpdate({
-      target: [activityRouteHeatmapCalculationJobs.activityId],
-      set: {
-        ...getDurableJobPendingState(now),
-        updatedAt: now,
-      },
-    });
+  return enqueueJob({
+    database,
+    key: String(activityId),
+    name: activityRouteHeatmapJobName,
+    payload: { activityId },
+  });
 }
 
 export async function enqueueMissingActivityRouteHeatmapCalculations({
@@ -93,52 +57,4 @@ export async function enqueueMissingActivityRouteHeatmapCalculations({
   return {
     enqueued: rows.length,
   };
-}
-
-export async function claimActivityRouteHeatmapCalculationJobs({
-  batchSize,
-  now = new Date(),
-  staleLockedBefore,
-  workerId,
-}: {
-  batchSize: number;
-  now?: Date;
-  staleLockedBefore: Date;
-  workerId: string;
-}): Promise<ActivityRouteHeatmapCalculationJob[]> {
-  return durableJobRepository.claim({
-    batchSize,
-    now,
-    staleLockedBefore,
-    workerId,
-  });
-}
-
-export async function markActivityRouteHeatmapCalculationSucceeded({
-  jobId,
-  now = new Date(),
-}: {
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markSucceeded({
-    jobId,
-    now,
-  });
-}
-
-export async function markActivityRouteHeatmapCalculationFailed({
-  error,
-  jobId,
-  now = new Date(),
-}: {
-  error: string;
-  jobId: number;
-  now?: Date;
-}) {
-  await durableJobRepository.markFailed({
-    error,
-    jobId,
-    now,
-  });
 }

@@ -1,26 +1,52 @@
 import { ORPCError } from "@orpc/server";
-import { Cause, Data, Effect, Exit, Option } from "effect";
 import type { ProviderSecretEncryptionError } from "./provider-secret-encryption";
 
-export class InvalidProviderCredentialError extends Data.TaggedError(
-  "InvalidProviderCredentialError",
-)<{
-  cause?: unknown;
-  message: string;
-}> {}
+export class InvalidProviderCredentialError extends Error {
+  readonly _tag = "InvalidProviderCredentialError";
+  readonly cause?: unknown;
 
-export class ProviderUnavailableError extends Data.TaggedError(
-  "ProviderUnavailableError",
-)<{
-  cause?: unknown;
-  message: string;
-}> {}
+  constructor({
+    cause,
+    message,
+  }: {
+    cause?: unknown;
+    message: string;
+  }) {
+    super(message);
+    this.name = "InvalidProviderCredentialError";
+    this.cause = cause;
+  }
+}
 
-export class ActiveProviderConnectionNotFoundError extends Data.TaggedError(
-  "ActiveProviderConnectionNotFoundError",
-)<{
-  message: string;
-}> {}
+export class ProviderUnavailableError extends Error {
+  readonly _tag = "ProviderUnavailableError";
+  readonly cause?: unknown;
+
+  constructor({
+    cause,
+    message,
+  }: {
+    cause?: unknown;
+    message: string;
+  }) {
+    super(message);
+    this.name = "ProviderUnavailableError";
+    this.cause = cause;
+  }
+}
+
+export class ActiveProviderConnectionNotFoundError extends Error {
+  readonly _tag = "ActiveProviderConnectionNotFoundError";
+
+  constructor({
+    message,
+  }: {
+    message: string;
+  }) {
+    super(message);
+    this.name = "ActiveProviderConnectionNotFoundError";
+  }
+}
 
 type ProviderConnectionError =
   | ActiveProviderConnectionNotFoundError
@@ -57,20 +83,12 @@ const providerConnectionErrorMap = {
   { code: ProviderConnectionOrpcCode; message: string }
 >;
 
-export async function runProviderConnectionEffect<A, E, R>(
-  effect: Effect.Effect<A, E, R>,
-): Promise<A> {
-  const exit = await Effect.runPromiseExit(
-    effect as Effect.Effect<A, E, never>,
-  );
-
-  if (Exit.isSuccess(exit)) {
-    return exit.value;
+export async function runProviderConnectionOperation<A>(operation: Promise<A>) {
+  try {
+    return await operation;
+  } catch (cause) {
+    throw toProviderConnectionOrpcError(cause);
   }
-
-  const failure = Option.getOrUndefined(Cause.failureOption(exit.cause));
-
-  throw toProviderConnectionOrpcError(failure ?? exit.cause);
 }
 
 function toProviderConnectionOrpcError(cause: unknown) {

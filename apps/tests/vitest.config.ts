@@ -7,7 +7,10 @@ export default defineConfig({
       {
         test: {
           name: "unit",
-          exclude: ["src/**/*.integration.test.ts"],
+          exclude: [
+            "src/**/*.integration.test.ts",
+            "src/**/*.operational.test.ts",
+          ],
           include: ["src/**/*.test.ts"],
           setupFiles: ["./src/setup/env.ts"],
         },
@@ -24,6 +27,21 @@ export default defineConfig({
             "./src/setup/env.ts",
             "./src/setup/integration/file-setup.ts",
           ],
+        },
+      },
+      {
+        test: {
+          name: "operational",
+          globals: true,
+          globalSetup: ["./src/setup/operational/global-setup.ts"],
+          hookTimeout: 30000,
+          include: ["src/**/*.operational.test.ts"],
+          pool: "forks",
+          setupFiles: [
+            "./src/setup/env.ts",
+            "./src/setup/operational/file-setup.ts",
+          ],
+          testTimeout: 30000,
         },
       },
     ],

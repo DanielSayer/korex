@@ -1,13 +1,15 @@
+import { weeklyTrainingSummaryJobModule } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-job";
 import { enqueueWeeklyTrainingSummaryGeneration } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-jobs.repository";
+import { weeklyTrainingSummaryScheduleJobName } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-schedule-job";
 import { enqueueCompletedWeeklyTrainingSummaries } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-scheduler.service";
-import { runWeeklyTrainingSummaryWorkerOnce } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-worker";
 import {
-  db,
-  weeklyTrainingSummaries,
-  weeklyTrainingSummaryGenerationJobs,
-} from "@korex/db";
+  createJobRuntime,
+  inspectJob,
+} from "@korex/api/modules/job-runtime/job-runtime";
+import { db, jobRuntimeJobs, weeklyTrainingSummaries } from "@korex/db";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
+import { runWeeklyTrainingSummarySchedulerOnce } from "../../../../worker/src/weekly-training-summary-scheduler";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
 import { userDataExtensions } from "../../setup/integration/test-data/user-data-extensions";
@@ -50,31 +52,21 @@ describe("weekly training summary worker", () => {
     const enqueueResult = await enqueueCompletedWeeklyTrainingSummaries({
       now: new Date("2026-05-15T02:00:00.000Z"),
     });
-    const workerResult = await runWeeklyTrainingSummaryWorkerOnce({
-      batchSize: 10,
-      now: new Date("2026-05-15T02:01:00.000Z"),
-      staleLockMs: 60_000,
-      workerId: "worker-1",
-    });
+    const [job] = await listGenerationJobs();
+    await processJob(requiredJobId(job));
 
     const summaries = await db.select().from(weeklyTrainingSummaries);
-    const jobs = await db.select().from(weeklyTrainingSummaryGenerationJobs);
 
     expect(enqueueResult).toEqual({
       enqueued: 1,
       weekEndAt: new Date("2026-05-10T14:00:00.000Z"),
       weekStartAt: new Date("2026-05-03T14:00:00.000Z"),
     });
-    expect(workerResult).toEqual({ processed: 1 });
-    expect(jobs).toEqual([
-      expect.objectContaining({
-        lockedAt: null,
-        lockedBy: null,
-        status: "succeeded",
-        userId,
-        weekStartAt: new Date("2026-05-03T14:00:00.000Z"),
-      }),
-    ]);
+    await expect(inspectJob({ id: requiredJobId(job) })).resolves.toMatchObject(
+      {
+        state: "succeeded",
+      },
+    );
     expect(summaries).toEqual([
       expect.objectContaining({
         activityCount: 2,
@@ -111,10 +103,8 @@ describe("weekly training summary worker", () => {
       now: new Date("2026-05-15T02:00:00.000Z"),
     });
 
-    const jobs = await db.select().from(weeklyTrainingSummaryGenerationJobs);
-
     expect(result.enqueued).toBe(0);
-    expect(jobs).toEqual([]);
+    await expect(listGenerationJobs()).resolves.toEqual([]);
   });
 
   it("replaces the existing summary when the same user and week are generated again", async () => {
@@ -130,29 +120,20 @@ describe("weekly training summary worker", () => {
         .build(),
     ).seedAsync();
     await enqueueCompletedWeeklyTrainingSummaries({ now });
-    await runWeeklyTrainingSummaryWorkerOnce({
-      batchSize: 10,
-      now,
-      staleLockMs: 60_000,
-      workerId: "worker-1",
-    });
+    const [firstJob] = await listGenerationJobs();
+    await processJob(requiredJobId(firstJob));
 
     await db
       .update(weeklyTrainingSummaries)
-      .set({
-        totalDistanceMeters: 1,
-      })
+      .set({ totalDistanceMeters: 1 })
       .where(eq(weeklyTrainingSummaries.userId, userId));
     await enqueueCompletedWeeklyTrainingSummaries({ now });
-    await runWeeklyTrainingSummaryWorkerOnce({
-      batchSize: 10,
-      now: new Date("2026-05-15T02:01:00.000Z"),
-      staleLockMs: 60_000,
-      workerId: "worker-1",
-    });
+    const secondJob = (await listGenerationJobs()).find(
+      (job) => job.state === "queued",
+    );
+    await processJob(requiredJobId(secondJob));
 
     const summaries = await db.select().from(weeklyTrainingSummaries);
-
     expect(summaries).toHaveLength(1);
     expect(summaries[0]).toMatchObject({
       totalDistanceMeters: 1000,
@@ -160,7 +141,7 @@ describe("weekly training summary worker", () => {
     });
   });
 
-  it("does not re-enqueue a succeeded weekly summary during scheduled generation", async () => {
+  it("does not re-enqueue an existing weekly summary during scheduled generation", async () => {
     const userId = userDataExtensions.HughJass.id;
     const now = new Date("2026-05-15T02:00:00.000Z");
 
@@ -172,38 +153,20 @@ describe("weekly training summary worker", () => {
         .withMovingTimeSeconds(500)
         .build(),
     ).seedAsync();
-
     await enqueueCompletedWeeklyTrainingSummaries({ now });
-    await runWeeklyTrainingSummaryWorkerOnce({
-      batchSize: 10,
-      now,
-      staleLockMs: 60_000,
-      workerId: "worker-1",
-    });
+    const [job] = await listGenerationJobs();
+    await processJob(requiredJobId(job));
 
     const enqueueResult = await enqueueCompletedWeeklyTrainingSummaries({
       now: new Date("2026-05-15T02:01:00.000Z"),
       skipSucceeded: true,
     });
-    const workerResult = await runWeeklyTrainingSummaryWorkerOnce({
-      batchSize: 10,
-      now: new Date("2026-05-15T02:02:00.000Z"),
-      staleLockMs: 60_000,
-      workerId: "worker-1",
-    });
-    const jobs = await db.select().from(weeklyTrainingSummaryGenerationJobs);
 
     expect(enqueueResult.enqueued).toBe(0);
-    expect(workerResult).toEqual({ processed: 0 });
-    expect(jobs).toEqual([
-      expect.objectContaining({
-        status: "succeeded",
-        userId,
-      }),
-    ]);
+    await expect(listGenerationJobs()).resolves.toHaveLength(1);
   });
 
-  it("re-queues a succeeded weekly summary when regeneration is requested", async () => {
+  it("queues a new job when regeneration is requested", async () => {
     const userId = userDataExtensions.HughJass.id;
     const weekStartAt = new Date("2026-05-03T14:00:00.000Z");
 
@@ -216,28 +179,91 @@ describe("weekly training summary worker", () => {
         .build(),
     ).seedAsync();
 
-    await enqueueWeeklyTrainingSummaryGeneration({ userId, weekStartAt });
-    await runWeeklyTrainingSummaryWorkerOnce({
-      batchSize: 10,
-      now: new Date("2026-05-15T02:00:00.000Z"),
-      staleLockMs: 60_000,
-      workerId: "worker-1",
+    const firstJob = await enqueueWeeklyTrainingSummaryGeneration({
+      userId,
+      weekStartAt,
     });
-    await enqueueWeeklyTrainingSummaryGeneration({ userId, weekStartAt });
+    await processJob(firstJob.id);
+    const secondJob = await enqueueWeeklyTrainingSummaryGeneration({
+      userId,
+      weekStartAt,
+    });
 
-    const jobs = await db.select().from(weeklyTrainingSummaryGenerationJobs);
+    await expect(inspectJob({ id: secondJob.id })).resolves.toMatchObject({
+      attemptCount: 0,
+      finishedAt: null,
+      key: `${userId}:${weekStartAt.toISOString()}`,
+      lastError: null,
+      state: "queued",
+    });
+    await expect(listGenerationJobs()).resolves.toHaveLength(2);
+  });
 
-    expect(jobs).toEqual([
-      expect.objectContaining({
-        attemptCount: 0,
-        finishedAt: null,
-        lastError: null,
-        lockedAt: null,
-        lockedBy: null,
-        status: "pending",
-        userId,
-        weekStartAt,
-      }),
+  it("stores one recurring schedule occurrence for a completed week", async () => {
+    const now = new Date("2026-05-17T20:00:00.000Z");
+
+    await runWeeklyTrainingSummarySchedulerOnce({ now });
+    await runWeeklyTrainingSummarySchedulerOnce({ now });
+
+    const scheduleJobs = await db
+      .select({
+        payload: jobRuntimeJobs.payload,
+        scheduleKey: jobRuntimeJobs.scheduleKey,
+      })
+      .from(jobRuntimeJobs)
+      .where(eq(jobRuntimeJobs.name, weeklyTrainingSummaryScheduleJobName));
+
+    expect(scheduleJobs).toEqual([
+      {
+        payload: { weekStartAt: "2026-05-10T14:00:00.000Z" },
+        scheduleKey: "2026-05-10T14:00:00.000Z",
+      },
     ]);
   });
 });
+
+async function listGenerationJobs() {
+  return db
+    .select({ id: jobRuntimeJobs.id, state: jobRuntimeJobs.state })
+    .from(jobRuntimeJobs)
+    .where(eq(jobRuntimeJobs.name, weeklyTrainingSummaryJobModule.name));
+}
+
+async function processJob(jobId: string) {
+  const runtime = createJobRuntime({
+    databaseUrl: requiredDatabaseUrl(),
+    pollIntervalMs: 5,
+    tasks: {
+      [weeklyTrainingSummaryJobModule.name]:
+        weeklyTrainingSummaryJobModule.handler,
+    },
+    workerId: `weekly-summary-${jobId}`,
+  });
+
+  try {
+    await runtime.start();
+    await expect
+      .poll(async () => (await inspectJob({ id: jobId }))?.state)
+      .toBe("succeeded");
+  } finally {
+    await runtime.stop();
+  }
+}
+
+function requiredJobId(job: { id: string } | undefined) {
+  if (!job) {
+    throw new Error("Expected a weekly summary job");
+  }
+
+  return job.id;
+}
+
+function requiredDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required for integration tests");
+  }
+
+  return databaseUrl;
+}

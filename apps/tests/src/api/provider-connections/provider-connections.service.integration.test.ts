@@ -1,13 +1,17 @@
-import { listHeartRateZones } from "@korex/api/modules/heart-rate-zones/heart-rate-zones.repository";
-import { getIntervalsIcuProviderConnectionForUser } from "@korex/api/modules/provider-connections/provider-connections.repository";
-import { connectIntervalsIcu } from "@korex/api/modules/provider-connections/provider-connections.service";
 import {
-  IntervalsIcuClient,
+  listHeartRateZones,
+  seedHeartRateZonesIfEmpty,
+} from "@korex/api/modules/heart-rate-zones/heart-rate-zones.repository";
+import {
+  getIntervalsIcuProviderConnectionForUser,
+  upsertIntervalsIcuProviderConnection,
+} from "@korex/api/modules/provider-connections/provider-connections.repository";
+import { createProviderConnectionsModule } from "@korex/api/modules/provider-connections/provider-connections.service";
+import {
   type IntervalsIcuAthleteProfile,
   IntervalsIcuClientError,
   type IntervalsIcuClientService,
 } from "@korex/integrations/intervals-icu/client";
-import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { userDataExtensions } from "../../setup/integration/test-data/user-data-extensions";
 
@@ -24,18 +28,12 @@ describe("provider connections service", () => {
       ],
     } satisfies IntervalsIcuAthleteProfile;
 
-    const connection = await Effect.runPromise(
-      connectIntervalsIcu({
-        apiKey: "valid-api-key",
-        userId: userDataExtensions.HughJass.id,
-      }).pipe(
-        Effect.provide(
-          createIntervalsIcuClientLayer({
-            getAthleteProfile: () => Effect.succeed(athleteProfile),
-          }),
-        ),
-      ),
-    );
+    const connection = await createProviderConnectionsTestModule({
+      getAthleteProfile: async () => athleteProfile,
+    }).connectIntervalsIcu({
+      apiKey: "valid-api-key",
+      userId: userDataExtensions.HughJass.id,
+    });
 
     expect(connection).toMatchObject({
       provider: "intervals_icu",
@@ -62,80 +60,65 @@ describe("provider connections service", () => {
   });
 
   it("rejects an invalid API key without creating a provider connection", async () => {
-    const result = await Effect.runPromise(
-      Effect.either(
-        connectIntervalsIcu({
-          apiKey: "invalid-api-key",
-          userId: userDataExtensions.HughJass.id,
-        }).pipe(
-          Effect.provide(
-            createIntervalsIcuClientLayer({
-              getAthleteProfile: () =>
-                Effect.fail(
-                  new IntervalsIcuClientError({
-                    message: "Unauthorized",
-                    status: 401,
-                  }),
-                ),
-            }),
-          ),
-        ),
-      ),
-    );
-
-    expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
-        _tag: "InvalidProviderCredentialError",
-      },
-    });
     await expect(
-      getIntervalsIcuProviderConnectionForUser(
-        userDataExtensions.HughJass.id,
-      ),
+      createProviderConnectionsTestModule({
+        getAthleteProfile: async () => {
+          throw new IntervalsIcuClientError({
+            message: "Unauthorized",
+            status: 401,
+          });
+        },
+      }).connectIntervalsIcu({
+        apiKey: "invalid-api-key",
+        userId: userDataExtensions.HughJass.id,
+      }),
+    ).rejects.toMatchObject({ _tag: "InvalidProviderCredentialError" });
+    await expect(
+      getIntervalsIcuProviderConnectionForUser(userDataExtensions.HughJass.id),
     ).resolves.toBeNull();
   });
 
   it("reports provider failures separately from invalid credentials", async () => {
-    const result = await Effect.runPromise(
-      Effect.either(
-        connectIntervalsIcu({
-          apiKey: "valid-api-key",
-          userId: userDataExtensions.HughJass.id,
-        }).pipe(
-          Effect.provide(
-            createIntervalsIcuClientLayer({
-              getAthleteProfile: () =>
-                Effect.fail(
-                  new IntervalsIcuClientError({
-                    message: "Bad gateway",
-                    status: 502,
-                  }),
-                ),
-            }),
-          ),
-        ),
-      ),
-    );
-
-    expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
-        _tag: "ProviderUnavailableError",
-      },
-    });
+    await expect(
+      createProviderConnectionsTestModule({
+        getAthleteProfile: async () => {
+          throw new IntervalsIcuClientError({
+            message: "Bad gateway",
+            status: 502,
+          });
+        },
+      }).connectIntervalsIcu({
+        apiKey: "valid-api-key",
+        userId: userDataExtensions.HughJass.id,
+      }),
+    ).rejects.toMatchObject({ _tag: "ProviderUnavailableError" });
   });
 });
 
-function createIntervalsIcuClientLayer(
+function createProviderConnectionsTestModule(
   overrides: Partial<IntervalsIcuClientService>,
 ) {
-  return Layer.succeed(IntervalsIcuClient, {
-    getActivityDetail: () => Effect.die("unused"),
-    getActivityMap: () => Effect.die("unused"),
-    getActivityStreams: () => Effect.die("unused"),
-    getAthleteProfile: () => Effect.die("unused"),
-    listActivities: () => Effect.die("unused"),
-    ...overrides,
-  } as IntervalsIcuClientService);
+  return createProviderConnectionsModule({
+    encryptProviderSecret: async () => "encrypted-api-key",
+    intervalsIcuClient: {
+      getActivityDetail: async () => {
+        throw new Error("unused");
+      },
+      getActivityMap: async () => {
+        throw new Error("unused");
+      },
+      getActivityStreams: async () => {
+        throw new Error("unused");
+      },
+      getAthleteProfile: async () => {
+        throw new Error("unused");
+      },
+      listActivities: async () => {
+        throw new Error("unused");
+      },
+      ...overrides,
+    },
+    seedHeartRateZonesIfEmpty,
+    upsertIntervalsIcuProviderConnection,
+  });
 }

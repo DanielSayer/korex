@@ -1,0 +1,2 @@
+ALTER TABLE "job_runtime_jobs" ADD COLUMN "schedule_key" text;--> statement-breakpoint
+CREATE UNIQUE INDEX "job_runtime_jobs_schedule_key_idx" ON "job_runtime_jobs" USING btree ("name","schedule_key");

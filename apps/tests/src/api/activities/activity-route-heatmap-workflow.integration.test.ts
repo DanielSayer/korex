@@ -1,6 +1,9 @@
+import { activityRouteHeatmapJobModule } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-job";
 import { enqueueActivityRouteHeatmapCalculation } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-jobs.repository";
-import { ActivityRouteHeatmapWorkflowLive } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-workflow.live";
-import { runActivityRouteHeatmapWorkerOnce } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-workflow.service";
+import {
+  createJobRuntime,
+  inspectJob,
+} from "@korex/api/modules/job-runtime/job-runtime";
 import {
   activities,
   activityRouteHeatmapCells,
@@ -8,7 +11,6 @@ import {
   db,
 } from "@korex/db";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -39,20 +41,19 @@ describe("activity route heatmap workflow", () => {
       firstActivity,
       secondActivity,
     ).seedAsync();
-    await enqueueActivityRouteHeatmapCalculation({
+    const firstJob = await enqueueActivityRouteHeatmapCalculation({
       activityId: firstActivity.id,
     });
-    await enqueueActivityRouteHeatmapCalculation({
+    const secondJob = await enqueueActivityRouteHeatmapCalculation({
       activityId: secondActivity.id,
     });
 
-    const firstResult = await runWorkflow();
+    await runWorkflow([firstJob.id, secondJob.id]);
 
     const firstContributionSets = await db
       .select()
       .from(activityRouteHeatmapContributionSets);
     const firstCells = await db.select().from(activityRouteHeatmapCells);
-    expect(firstResult).toEqual({ processed: 2 });
     expect(firstContributionSets).toHaveLength(24);
     expect(
       firstContributionSets.every(
@@ -66,11 +67,11 @@ describe("activity route heatmap workflow", () => {
       .update(activities)
       .set({ sportType: "hike" })
       .where(eq(activities.id, secondActivity.id));
-    await enqueueActivityRouteHeatmapCalculation({
+    const clearingSecondJob = await enqueueActivityRouteHeatmapCalculation({
       activityId: secondActivity.id,
     });
 
-    const secondResult = await runWorkflow();
+    await runWorkflow([clearingSecondJob.id]);
 
     const secondActivityContributionSets = await db
       .select()
@@ -79,7 +80,6 @@ describe("activity route heatmap workflow", () => {
         eq(activityRouteHeatmapContributionSets.activityId, secondActivity.id),
       );
     const secondCells = await db.select().from(activityRouteHeatmapCells);
-    expect(secondResult).toEqual({ processed: 1 });
     expect(secondActivityContributionSets).toEqual([]);
     expect(secondCells.length).toBeGreaterThan(0);
     expect(secondCells.every((cell) => cell.activityCount === 1)).toBe(true);
@@ -88,29 +88,51 @@ describe("activity route heatmap workflow", () => {
       .update(activities)
       .set({ sportType: "hike" })
       .where(eq(activities.id, firstActivity.id));
-    await enqueueActivityRouteHeatmapCalculation({
+    const clearingFirstJob = await enqueueActivityRouteHeatmapCalculation({
       activityId: firstActivity.id,
     });
 
-    const thirdResult = await runWorkflow();
+    await runWorkflow([clearingFirstJob.id]);
 
     const finalContributionSets = await db
       .select()
       .from(activityRouteHeatmapContributionSets);
     const finalCells = await db.select().from(activityRouteHeatmapCells);
-    expect(thirdResult).toEqual({ processed: 1 });
     expect(finalContributionSets).toEqual([]);
     expect(finalCells).toEqual([]);
   });
 });
 
-function runWorkflow() {
-  return Effect.runPromise(
-    runActivityRouteHeatmapWorkerOnce({
-      batchSize: 10,
-      now: new Date("2026-04-01T00:00:00.000Z"),
-      staleLockMs: 60_000,
-      workerId: "worker-1",
-    }).pipe(Effect.provide(ActivityRouteHeatmapWorkflowLive)),
-  );
+async function runWorkflow(jobIds: string[]) {
+  const runtime = createJobRuntime({
+    databaseUrl: requiredDatabaseUrl(),
+    pollIntervalMs: 5,
+    tasks: {
+      [activityRouteHeatmapJobModule.name]:
+        activityRouteHeatmapJobModule.handler,
+    },
+    workerId: "route-heatmap-integration",
+  });
+
+  try {
+    await runtime.start();
+    await expect
+      .poll(async () => {
+        const jobs = await Promise.all(jobIds.map((id) => inspectJob({ id })));
+        return jobs.map((job) => `${job?.state}:${job?.lastError}`);
+      })
+      .toEqual(jobIds.map(() => "succeeded:null"));
+  } finally {
+    await runtime.stop();
+  }
+}
+
+function requiredDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required for integration tests");
+  }
+
+  return databaseUrl;
 }

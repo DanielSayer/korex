@@ -40,7 +40,7 @@ function ProviderConnectionSettings() {
       onError: (error) => toast.error(error.message),
       onSuccess: async () => {
         await refresh();
-        toast.success("Activities synced");
+        toast.success("Activity sync queued");
       },
     }),
   );
@@ -101,7 +101,7 @@ function ProviderConnectionSettings() {
                     onClick={() => sync.mutate(undefined)}
                     type="button"
                   >
-                    {sync.isPending ? "Syncing..." : "Sync now"}
+                    {sync.isPending ? "Queueing..." : "Sync now"}
                   </Button>
                   <Button
                     disabled={disconnect.isPending}

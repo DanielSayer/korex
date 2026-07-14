@@ -1,5 +1,5 @@
-import { IntervalsIcuHttpClient } from "@korex/integrations/intervals-icu/http-client";
-import { Effect, Either, Layer } from "effect";
+import { IntervalsIcuClientError } from "@korex/integrations/intervals-icu/client";
+import { createIntervalsIcuClient } from "@korex/integrations/intervals-icu/live";
 import { describe, expect, it } from "vitest";
 import { intervalsIcuActivityHttpClientSuccess } from "../../../mocks/integrations/intervals-icu/activity-http-client";
 import {
@@ -11,9 +11,25 @@ import {
 import { runActivityClient, runClient } from "./client-runners";
 
 describe("Intervals.icu client", () => {
+  it("propagates AbortSignal to provider requests", async () => {
+    const controller = new AbortController();
+    const client = createIntervalsIcuClient({
+      fetch: async (_path, init) => {
+        expect(init.signal).toBe(controller.signal);
+        return new Response(JSON.stringify({ id: "123" }), { status: 200 });
+      },
+    });
+
+    await client.getAthleteProfile({
+      apiKey: "test-api-key",
+      signal: controller.signal,
+    });
+  });
+
   it("fetches and parses an athlete profile", async () => {
-    const athleteProfile = await Effect.runPromise(
-      runClient("test-api-key", intervalsIcuHttpClientSuccess),
+    const athleteProfile = await runClient(
+      "test-api-key",
+      intervalsIcuHttpClientSuccess,
     );
 
     expect(athleteProfile).toEqual({
@@ -33,32 +49,33 @@ describe("Intervals.icu client", () => {
   });
 
   it("fails when the athlete profile request is rejected", async () => {
-    const result = await Effect.runPromiseExit(
+    await expect(
       runClient("bad-api-key", intervalsIcuHttpClientUnauthorized),
-    );
-
-    expect(result._tag).toBe("Failure");
+    ).rejects.toMatchObject({
+      _tag: "IntervalsIcuClientError",
+      message: "Intervals.icu athlete profile request failed",
+      status: 401,
+    });
   });
 
   it("fails when the athlete profile response is invalid", async () => {
-    const result = await Effect.runPromiseExit(
+    await expect(
       runClient("test-api-key", intervalsIcuHttpClientInvalidProfile),
-    );
-
-    expect(result._tag).toBe("Failure");
+    ).rejects.toBeInstanceOf(IntervalsIcuClientError);
   });
 
   it("maps http client failures to client failures", async () => {
-    const result = await Effect.runPromiseExit(
+    await expect(
       runClient("test-api-key", intervalsIcuHttpClientNetworkFailure),
-    );
-
-    expect(result._tag).toBe("Failure");
+    ).rejects.toMatchObject({
+      _tag: "IntervalsIcuClientError",
+      message: "Failed to request Intervals.icu athlete profile",
+    });
   });
 
   it("fetches activity detail, map, and streams for a date range", async () => {
-    const result = await Effect.runPromise(
-      runActivityClient(intervalsIcuActivityHttpClientSuccess),
+    const result = await runActivityClient(
+      intervalsIcuActivityHttpClientSuccess,
     );
 
     expect(result.activities).toEqual([{ id: "activity-1", name: "Run" }]);
@@ -113,22 +130,11 @@ describe("Intervals.icu client", () => {
   });
 
   it("includes the requested activity list URL on list failures", async () => {
-    const result = await Effect.runPromise(
-      Effect.either(
-        runActivityClient(
-          Layer.succeed(IntervalsIcuHttpClient, {
-            fetch: () => Effect.succeed(new Response(null, { status: 502 })),
-          }),
-        ),
-      ),
-    );
-
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isRight(result)) {
-      throw new Error("Expected activity list request to fail");
-    }
-
-    expect(result.left).toMatchObject({
+    await expect(
+      runActivityClient({
+        fetch: async () => new Response(null, { status: 502 }),
+      }),
+    ).rejects.toMatchObject({
       message: "Intervals.icu activity list request failed",
       requestUrl:
         "https://intervals.icu/api/v1/athlete/athlete-1/activities?oldest=2026-04-01&newest=2026-04-02",

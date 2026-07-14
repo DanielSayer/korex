@@ -1,5 +1,4 @@
 import type { IntervalsIcuClientService } from "@korex/integrations/intervals-icu/client";
-import { Context, type Effect } from "effect";
 import type {
   ActivityInput,
   ActivityLapInput,
@@ -11,7 +10,6 @@ import type {
   upsertActivity,
 } from "../activities/artifacts/activity-import.repository";
 import type { enqueueActivityRouteHeatmapCalculation } from "../activities/route-heatmap/activity-route-heatmap-jobs.repository";
-import type { ActivitySyncError } from "./activity-sync.errors";
 import type {
   ActivitySyncCounters,
   ActivitySyncFailure,
@@ -47,10 +45,6 @@ export type ActivityImportRepositoryService = {
   ) => ReturnType<typeof upsertActivity>;
 };
 
-export class ActivityImportRepository extends Context.Tag(
-  "ActivityImportRepository",
-)<ActivityImportRepository, ActivityImportRepositoryService>() {}
-
 export type ExternalActivityRepositoryService = {
   clearExternalActivityActivityLink: (
     externalActivityId: number,
@@ -67,10 +61,6 @@ export type ExternalActivityRepositoryService = {
   ) => Promise<UpsertExternalActivityResult>;
 };
 
-export class ExternalActivityRepository extends Context.Tag(
-  "ExternalActivityRepository",
-)<ExternalActivityRepository, ExternalActivityRepositoryService>() {}
-
 export type ActivityRouteHeatmapJobRepositoryService = {
   enqueueActivityRouteHeatmapCalculation: (
     input: Omit<
@@ -79,13 +69,6 @@ export type ActivityRouteHeatmapJobRepositoryService = {
     > & { database?: ActivityImportDatabase },
   ) => Promise<void>;
 };
-
-export class ActivityRouteHeatmapJobRepository extends Context.Tag(
-  "ActivityImportRouteHeatmapJobRepository",
-)<
-  ActivityRouteHeatmapJobRepository,
-  ActivityRouteHeatmapJobRepositoryService
->() {}
 
 export type ActivitySyncRepositoryService = {
   createActivitySyncRun: (input: {
@@ -116,10 +99,6 @@ export type ActivitySyncRepositoryService = {
   }) => Promise<void>;
 };
 
-export class ActivitySyncRepository extends Context.Tag(
-  "ActivitySyncRepository",
-)<ActivitySyncRepository, ActivitySyncRepositoryService>() {}
-
 export type ActivityImportWriterService = {
   storeExternalActivity: (
     input: UpsertExternalActivityInput,
@@ -138,11 +117,6 @@ export type ActivityImportWriterService = {
     externalActivityId: number;
   }) => Promise<void>;
 };
-
-export class ActivityImportWriter extends Context.Tag("ActivityImportWriter")<
-  ActivityImportWriter,
-  ActivityImportWriterService
->() {}
 
 export type ActivityArtifactStoreService = {
   storeExternalMap: (input: {
@@ -173,11 +147,6 @@ export type ActivityArtifactStoreService = {
   }) => Promise<void>;
 };
 
-export class ActivityArtifactStore extends Context.Tag("ActivityArtifactStore")<
-  ActivityArtifactStore,
-  ActivityArtifactStoreService
->() {}
-
 export type IntervalsIcuActivitySyncService = {
   syncActivity: (input: {
     activityId: string;
@@ -188,9 +157,6 @@ export type IntervalsIcuActivitySyncService = {
     errors: ActivitySyncFailure[];
     syncRunId: number;
     userId: string;
-  }) => Effect.Effect<void, ActivitySyncError>;
+    signal?: AbortSignal;
+  }) => Promise<void>;
 };
-
-export class IntervalsIcuActivitySync extends Context.Tag(
-  "IntervalsIcuActivitySync",
-)<IntervalsIcuActivitySync, IntervalsIcuActivitySyncService>() {}

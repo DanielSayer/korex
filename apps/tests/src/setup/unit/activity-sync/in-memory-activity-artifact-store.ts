@@ -2,8 +2,7 @@ import type {
   ActivityMapInput,
   ActivityStreamInput,
 } from "@korex/api/modules/activities/activities.types";
-import { ActivityArtifactStore } from "@korex/api/modules/activity-sync/activity-sync.dependencies";
-import { Layer } from "effect";
+import type { ActivityArtifactStoreService } from "@korex/api/modules/activity-sync/activity-sync.dependencies";
 
 type ExternalMapRecord = {
   externalActivityId: number;
@@ -31,7 +30,7 @@ export class InMemoryActivityArtifactStore {
   readonly externalStreams = new Map<string, ExternalStreamRecord>();
   readonly queuedActivityIds: number[] = [];
 
-  readonly layer = Layer.succeed(ActivityArtifactStore, {
+  readonly adapter: ActivityArtifactStoreService = {
     storeExternalMap: async (input) => {
       this.externalMaps.set(input.externalActivityId, input);
     },
@@ -48,5 +47,5 @@ export class InMemoryActivityArtifactStore {
       this.coreStreams.set(activityId, streams);
       this.queuedActivityIds.push(activityId);
     },
-  });
+  };
 }

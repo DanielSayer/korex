@@ -1,11 +1,5 @@
-import {
-  TrainingStreakJobRepository,
-  TrainingStreakRepository,
-} from "@korex/api/modules/activities/training-streaks/training-streak-workflow.dependencies";
-import { TrainingStreakWorkflowLayer } from "@korex/api/modules/activities/training-streaks/training-streak-workflow.live";
-import { processTrainingStreakUpdateJob } from "@korex/api/modules/activities/training-streaks/training-streak-workflow.service";
-import { TimeProvider } from "@korex/api/modules/time-provider.dependencies";
-import { Effect, Layer } from "effect";
+import { createTrainingStreakJobModule } from "@korex/api/modules/activities/training-streaks/training-streak-job";
+import { db } from "@korex/db";
 import { describe, expect, it } from "vitest";
 
 describe("training streak workflow", () => {
@@ -114,54 +108,34 @@ async function processJob({
 }) {
   const writes: {
     streaks: Array<ExistingStreak & { userId: string }>;
-    succeededJobs: number[];
   } = {
     streaks: [],
-    succeededJobs: [],
   };
 
-  const layer = TrainingStreakWorkflowLayer.pipe(
-    Layer.provide(
-      Layer.mergeAll(
-        Layer.succeed(TimeProvider, {
-          now: () => new Date("2026-05-22T00:00:00.000Z"),
-        }),
-        Layer.succeed(TrainingStreakRepository, {
-          getTrainingStreakProjectionInputs: async () => ({
-            hasQualifyingActivity,
-            streak: streak
-              ? {
-                  ...streak,
-                  updatedAt: new Date("2026-05-21T00:00:00.000Z"),
-                  userId: "user-1",
-                }
-              : null,
-          }),
-          upsertTrainingStreak: async (input) => {
-            writes.streaks.push(input);
-          },
-        }),
-        Layer.succeed(TrainingStreakJobRepository, {
-          claimTrainingStreakUpdateJobs: async () => [],
-          markTrainingStreakUpdateFailed: async () => {},
-          markTrainingStreakUpdateSucceeded: async ({ jobId }) => {
-            writes.succeededJobs.push(jobId);
-          },
-        }),
-      ),
-    ),
-  );
+  const module = createTrainingStreakJobModule({
+    getInputs: async () => ({
+      hasQualifyingActivity,
+      streak: streak
+        ? {
+            ...streak,
+            updatedAt: new Date("2026-05-21T00:00:00.000Z"),
+            userId: "user-1",
+          }
+        : null,
+    }),
+    upsertStreak: async (input) => {
+      writes.streaks.push(input);
+    },
+  });
 
-  await Effect.runPromise(
-    processTrainingStreakUpdateJob({
-      attemptCount: 0,
-      id: 123,
-      userId: "user-1",
-      weekStartAt,
-    }).pipe(Effect.provide(layer)),
+  await module.handler(
+    { userId: "user-1", weekStartAt: weekStartAt.toISOString() },
+    {
+      database: db,
+      jobId: "training-streak-job",
+      signal: new AbortController().signal,
+    },
   );
-
-  expect(writes.succeededJobs).toEqual([123]);
 
   return writes;
 }

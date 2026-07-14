@@ -1,14 +1,12 @@
-import { createDb } from "@korex/db";
+import { type Database, db } from "@korex/db";
 import * as schema from "@korex/db/schema/auth";
 import { env } from "@korex/env/server";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 
-export function createAuth() {
-  const db = createDb();
-
+export function createAuth({ database }: { database: Database }) {
   return betterAuth({
-    database: drizzleAdapter(db, {
+    database: drizzleAdapter(database, {
       provider: "pg",
 
       schema: schema,
@@ -30,4 +28,6 @@ export function createAuth() {
   });
 }
 
-export const auth = createAuth();
+export type Auth = ReturnType<typeof createAuth>;
+
+export const auth = createAuth({ database: db });

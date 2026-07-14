@@ -1,18 +1,114 @@
+import { enqueueActivitySyncRun } from "@korex/api/modules/activity-sync/activity-sync.live";
 import {
+  claimActivitySyncRun,
   createActivitySyncRun,
+  createQueuedActivitySyncRun,
   finishActivitySyncRun,
+  getActivitySyncRunForTask,
   getLatestIncrementalActivitySyncRunForUser,
   getLatestSuccessfulActivitySyncRunForUser,
   hasSuccessfulActivitySyncRunForUser,
+  resetActivitySyncRunForRetry,
 } from "@korex/api/modules/activity-sync/repositories/sync-runs.repository";
-import { db, syncRuns } from "@korex/db";
-import { eq } from "drizzle-orm";
+import { db, jobRuntimeJobs, syncRuns } from "@korex/db";
+import { and, eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
 import { SyncRunBuilder } from "../../setup/integration/test-data/sync-run-builder";
 import { userDataExtensions } from "../../setup/integration/test-data/user-data-extensions";
 
 describe("sync runs repository", () => {
+  it("creates the queued Sync Run and job atomically", async () => {
+    await db.execute(sql`
+      CREATE FUNCTION fail_activity_sync_job_insert()
+      RETURNS trigger AS $$
+      BEGIN
+        RAISE EXCEPTION 'forced activity sync job insert failure';
+      END;
+      $$ LANGUAGE plpgsql
+    `);
+    await db.execute(sql`
+      CREATE TRIGGER fail_activity_sync_job_insert
+      BEFORE INSERT ON job_runtime_jobs
+      FOR EACH ROW EXECUTE FUNCTION fail_activity_sync_job_insert()
+    `);
+
+    try {
+      await expect(
+        enqueueActivitySyncRun({
+          provider: "intervals_icu",
+          syncType: "initial",
+          userId: userDataExtensions.HughJass.id,
+        }),
+      ).rejects.toThrow();
+    } finally {
+      await db.execute(sql`
+        DROP TRIGGER fail_activity_sync_job_insert ON job_runtime_jobs
+      `);
+      await db.execute(sql`DROP FUNCTION fail_activity_sync_job_insert()`);
+    }
+
+    const queuedRuns = await db
+      .select()
+      .from(syncRuns)
+      .where(
+        and(
+          eq(syncRuns.userId, userDataExtensions.HughJass.id),
+          eq(syncRuns.status, "pending"),
+        ),
+      );
+    const jobs = await db.select().from(jobRuntimeJobs);
+
+    expect(queuedRuns).toEqual([]);
+    expect(jobs).toEqual([]);
+  });
+
+  it("allows only one concurrent claim of a queued Sync Run", async () => {
+    const queued = await createQueuedActivitySyncRun({
+      provider: "intervals_icu",
+      syncType: "initial",
+      userId: userDataExtensions.HughJass.id,
+    });
+
+    const claims = await Promise.all([
+      claimActivitySyncRun(queued.id),
+      claimActivitySyncRun(queued.id),
+    ]);
+
+    expect(claims.sort()).toEqual([false, true]);
+    await expect(getActivitySyncRunForTask(queued.id)).resolves.toMatchObject({
+      id: queued.id,
+      status: "running",
+      syncType: "initial",
+      userId: userDataExtensions.HughJass.id,
+    });
+  });
+
+  it("makes a failed Sync Run claimable for retry", async () => {
+    const queued = await createQueuedActivitySyncRun({
+      provider: "intervals_icu",
+      syncType: "initial",
+      userId: userDataExtensions.HughJass.id,
+    });
+    await claimActivitySyncRun(queued.id);
+    await finishActivitySyncRun({
+      activitiesCreated: 0,
+      activitiesSeen: 0,
+      activitiesUpdated: 0,
+      errorCode: "list",
+      errorMessage: "temporary failure",
+      status: "failed",
+      syncRunId: queued.id,
+    });
+
+    await resetActivitySyncRunForRetry(queued.id);
+
+    await expect(getActivitySyncRunForTask(queued.id)).resolves.toMatchObject({
+      status: "pending",
+    });
+    await expect(claimActivitySyncRun(queued.id)).resolves.toBe(true);
+  });
+
   it("creates and finishes an activity sync run", async () => {
     const created = await createActivitySyncRun({
       provider: "intervals_icu",

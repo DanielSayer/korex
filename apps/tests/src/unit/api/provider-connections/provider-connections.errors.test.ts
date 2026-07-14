@@ -1,10 +1,9 @@
 import {
   InvalidProviderCredentialError,
   ProviderUnavailableError,
-  runProviderConnectionEffect,
+  runProviderConnectionOperation,
 } from "@korex/api/modules/provider-connections/provider-connections.errors";
 import { ProviderSecretEncryptionError } from "@korex/api/modules/provider-connections/provider-secret-encryption";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 
 describe("provider connection error mapping", () => {
@@ -27,9 +26,9 @@ describe("provider connection error mapping", () => {
       }),
       "INTERNAL_SERVER_ERROR",
     ],
-  ])("maps %s to %s", async (effectError, expectedCode) => {
+  ])("maps %s to %s", async (operationError, expectedCode) => {
     await expect(
-      runProviderConnectionEffect(Effect.fail(effectError)),
+      runProviderConnectionOperation(Promise.reject(operationError)),
     ).rejects.toMatchObject({
       code: expectedCode,
     });
@@ -37,7 +36,7 @@ describe("provider connection error mapping", () => {
 
   it("maps unexpected errors to internal server errors", async () => {
     await expect(
-      runProviderConnectionEffect(Effect.fail(new Error("Unexpected"))),
+      runProviderConnectionOperation(Promise.reject(new Error("Unexpected"))),
     ).rejects.toMatchObject({
       code: "INTERNAL_SERVER_ERROR",
     });

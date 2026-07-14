@@ -1,6 +1,5 @@
 import type { IntervalsIcuActivityDetail } from "@korex/integrations/intervals-icu/client";
-import { Effect } from "effect";
-import { ActivityImportWriter } from "../../activity-sync.dependencies";
+import type { ActivityImportWriterService } from "../../activity-sync.dependencies";
 import { ActivitySyncError } from "../../activity-sync.errors";
 import type { ActivitySyncFailure } from "../../activity-sync.types";
 import { toActivityFromIntervalsIcuDetail } from "./intervals-icu-activity.acl";
@@ -21,108 +20,110 @@ export type StoreIntervalsIcuActivityImportResult =
       skipped: true;
     };
 
-export function storeIntervalsIcuActivityImport({
+export async function storeIntervalsIcuActivityImport({
   detail,
   errors,
   lastSyncRunId,
   providerAthleteId,
+  writer,
   userId,
 }: {
   detail: IntervalsIcuActivityDetail;
   errors: ActivitySyncFailure[];
   lastSyncRunId: number;
   providerAthleteId: string;
+  writer: ActivityImportWriterService;
   userId: string;
 }) {
-  return Effect.gen(function* () {
-    const writer = yield* ActivityImportWriter;
-    const upsertedExternalActivity = yield* Effect.tryPromise({
-      try: () =>
-        writer.storeExternalActivity(
-          toExternalActivityUpsertInput({
-            detail,
-            lastSyncRunId,
-            providerAthleteId,
-            userId,
-          }),
-        ),
-      catch: (cause) =>
-        new ActivitySyncError({
+  let upsertedExternalActivity: Awaited<
+    ReturnType<ActivityImportWriterService["storeExternalActivity"]>
+  >;
+  try {
+    upsertedExternalActivity = await writer.storeExternalActivity(
+      toExternalActivityUpsertInput({
+        detail,
+        lastSyncRunId,
+        providerAthleteId,
+        userId,
+      }),
+    );
+  } catch (cause) {
+    throw new ActivitySyncError({
+      cause,
+      message: "Failed to store external activity",
+    });
+  }
+
+  const activityResult = readActivityAclResult({
+    detail,
+    errors,
+    userId,
+  });
+
+  if (!activityResult) {
+    return {
+      externalActivityId: upsertedExternalActivity.externalActivityId,
+      skipped: true,
+    } satisfies StoreIntervalsIcuActivityImportResult;
+  }
+
+  if (activityResult.type === "unsupported_sport_type") {
+    const existingActivityId = upsertedExternalActivity.activityId;
+
+    if (existingActivityId) {
+      try {
+        await writer.unlinkUnsupportedActivity({
+          activityId: existingActivityId,
+          externalActivityId: upsertedExternalActivity.externalActivityId,
+        });
+      } catch (cause) {
+        throw new ActivitySyncError({
           cause,
-          message: "Failed to store external activity",
-        }),
-    });
-
-    const activityResult = readActivityAclResult({
-      detail,
-      errors,
-      userId,
-    });
-
-    if (!activityResult) {
-      return {
-        externalActivityId: upsertedExternalActivity.externalActivityId,
-        skipped: true,
-      } satisfies StoreIntervalsIcuActivityImportResult;
-    }
-
-    if (activityResult.type === "unsupported_sport_type") {
-      const existingActivityId = upsertedExternalActivity.activityId;
-
-      if (existingActivityId) {
-        yield* Effect.tryPromise({
-          try: () =>
-            writer.unlinkUnsupportedActivity({
-              activityId: existingActivityId,
-              externalActivityId: upsertedExternalActivity.externalActivityId,
-            }),
-          catch: (cause) =>
-            new ActivitySyncError({
-              cause,
-              message: "Failed to unlink unsupported activity",
-            }),
+          message: "Failed to unlink unsupported activity",
         });
       }
-
-      return {
-        externalActivityId: upsertedExternalActivity.externalActivityId,
-        skipped: true,
-      } satisfies StoreIntervalsIcuActivityImportResult;
     }
-
-    const activityLaps = readActivityLapAclResult({ detail, errors });
-
-    if (!activityLaps) {
-      return {
-        externalActivityId: upsertedExternalActivity.externalActivityId,
-        skipped: true,
-      } satisfies StoreIntervalsIcuActivityImportResult;
-    }
-
-    const activityUpsert = yield* Effect.tryPromise({
-      try: () =>
-        writer.storeCoreActivity({
-          activity: activityResult.activity,
-          activityId: upsertedExternalActivity.activityId,
-          externalActivityId: upsertedExternalActivity.externalActivityId,
-          laps: activityLaps,
-        }),
-      catch: (cause) =>
-        new ActivitySyncError({
-          cause,
-          message: "Failed to store activity",
-        }),
-    });
 
     return {
-      activityId: activityUpsert.activityId,
-      created: activityUpsert.created,
       externalActivityId: upsertedExternalActivity.externalActivityId,
-      providerActivityId: String(detail.id),
-      skipped: false,
-      updated: !activityUpsert.created && upsertedExternalActivity.updated,
+      skipped: true,
     } satisfies StoreIntervalsIcuActivityImportResult;
-  });
+  }
+
+  const activityLaps = readActivityLapAclResult({ detail, errors });
+
+  if (!activityLaps) {
+    return {
+      externalActivityId: upsertedExternalActivity.externalActivityId,
+      skipped: true,
+    } satisfies StoreIntervalsIcuActivityImportResult;
+  }
+
+  let activityUpsert: Awaited<
+    ReturnType<ActivityImportWriterService["storeCoreActivity"]>
+  >;
+  try {
+    activityUpsert = await writer.storeCoreActivity({
+      activity: activityResult.activity,
+      activityId: upsertedExternalActivity.activityId,
+      externalActivityId: upsertedExternalActivity.externalActivityId,
+      laps: activityLaps,
+    });
+  } catch (cause) {
+    throw new ActivitySyncError({
+      cause,
+      message: "Failed to store activity",
+    });
+  }
+
+  return {
+    activityId: activityUpsert.activityId,
+    created: activityUpsert.created,
+    externalActivityId: upsertedExternalActivity.externalActivityId,
+    providerActivityId: String(detail.id),
+    skipped: false,
+    updated: !activityUpsert.created && upsertedExternalActivity.updated,
+  } satisfies StoreIntervalsIcuActivityImportResult;
 }
 
 function readActivityLapAclResult({

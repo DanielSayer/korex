@@ -1,13 +1,17 @@
 export type FetchIntervalsIcuActivitiesInput = {
   endDate: Date;
+  signal?: AbortSignal;
   startDate: Date;
+  syncRunId?: number;
   syncType?: "initial" | "incremental" | "manual";
   userId: string;
 };
 
 export type SyncUserActivitiesInput = {
   endDate: Date;
+  signal?: AbortSignal;
   startDate: Date;
+  syncRunId?: number;
   syncType: "initial" | "incremental";
   userId: string;
 };

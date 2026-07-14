@@ -12,9 +12,9 @@
     "@korex/api": "workspace:*",
     "@korex/db": "workspace:*",
     "@korex/integrations": "workspace:*",
-    "drizzle-orm": "catalog:",
     "dotenv": "catalog:",
-    "effect": "catalog:"
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:"
   },
   "devDependencies": {
     "@korex/config": "workspace:*",

@@ -18,11 +18,12 @@
     "@orpc/server": "catalog:",
     "dotenv": "catalog:",
     "drizzle-orm": "catalog:",
-    "effect": "catalog:",
+    "pg": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@korex/config": "workspace:*",
+    "@types/pg": "catalog:",
     "hono": "catalog:",
     "typescript": "catalog:"
   }

@@ -1,4 +1,4 @@
-import { ActivityImportWriter } from "@korex/api/modules/activity-sync/activity-sync.dependencies";
+import type { ActivityImportWriterService } from "@korex/api/modules/activity-sync/activity-sync.dependencies";
 import type { ActivitySyncFailure } from "@korex/api/modules/activity-sync/activity-sync.types";
 import { syncIntervalsIcuActivity } from "@korex/api/modules/activity-sync/providers/intervals-icu/intervals-icu-sync";
 import {
@@ -7,7 +7,6 @@ import {
   IntervalsIcuClientError,
   type IntervalsIcuClientService,
 } from "@korex/integrations/intervals-icu/client";
-import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";
 import { IntervalsIcuActivityDetailBuilder } from "../../../setup/integration/test-data/intervals-icu-activity-detail-builder";
 import { InMemoryActivityArtifactStore } from "../../../setup/unit/activity-sync/in-memory-activity-artifact-store";
@@ -118,23 +117,21 @@ describe("syncIntervalsIcuActivity", () => {
     const errors: ActivitySyncFailure[] = [];
     const client = {
       ...createClient({ map: null, streams: null }),
-      getActivityMap: () =>
-        Effect.fail(
-          new IntervalsIcuClientError({
-            message: "Map request failed",
-            requestUrl: "https://intervals.icu/api/v1/activity/activity-1/map",
-            status: 502,
-          }),
-        ),
-      getActivityStreams: () =>
-        Effect.fail(
-          new IntervalsIcuClientError({
-            message: "Streams request failed",
-            requestUrl:
-              "https://intervals.icu/api/v1/activity/activity-1/streams.json",
-            status: 502,
-          }),
-        ),
+      getActivityMap: async () => {
+        throw new IntervalsIcuClientError({
+          message: "Map request failed",
+          requestUrl: "https://intervals.icu/api/v1/activity/activity-1/map",
+          status: 502,
+        });
+      },
+      getActivityStreams: async () => {
+        throw new IntervalsIcuClientError({
+          message: "Streams request failed",
+          requestUrl:
+            "https://intervals.icu/api/v1/activity/activity-1/streams.json",
+          status: 502,
+        });
+      },
     } satisfies IntervalsIcuClientService;
 
     await runActivitySync({ artifactStore, client, counters, errors });
@@ -203,13 +200,17 @@ function createClient({
   streams: IntervalsIcuActivityStreams | null;
 }): IntervalsIcuClientService {
   return {
-    getActivityDetail: () =>
-      Effect.succeed(IntervalsIcuActivityDetailBuilder.init().build()),
-    getActivityMap: () => Effect.succeed(map),
-    getActivityStreams: () => Effect.succeed(streams),
-    getAthleteProfile: () => Effect.die("unused"),
-    listActivities: () => Effect.die("unused"),
-  } as IntervalsIcuClientService;
+    getActivityDetail: async () =>
+      IntervalsIcuActivityDetailBuilder.init().build(),
+    getActivityMap: async () => map,
+    getActivityStreams: async () => streams,
+    getAthleteProfile: async () => {
+      throw new Error("unused");
+    },
+    listActivities: async () => {
+      throw new Error("unused");
+    },
+  };
 }
 
 function createCounters() {
@@ -232,35 +233,29 @@ function runActivitySync({
   counters?: ReturnType<typeof createCounters>;
   errors: ActivitySyncFailure[];
 }) {
-  return Effect.runPromise(
-    syncIntervalsIcuActivity({
-      activityId: "activity-1",
-      apiKey: "api-key",
-      athleteId: "athlete-1",
-      client,
-      counters,
-      errors,
-      syncRunId: 123,
-      userId: "user-1",
-    }).pipe(
-      Effect.provide(
-        Layer.mergeAll(
-          artifactStore.layer,
-          Layer.succeed(ActivityImportWriter, {
-            storeExternalActivity: async () => ({
-              activityId: null,
-              created: true,
-              externalActivityId: 10,
-              updated: false,
-            }),
-            storeCoreActivity: async () => ({
-              activityId: 20,
-              created: true,
-            }),
-            unlinkUnsupportedActivity: async () => {},
-          }),
-        ),
-      ),
-    ),
-  );
+  const writer: ActivityImportWriterService = {
+    storeExternalActivity: async () => ({
+      activityId: null,
+      created: true,
+      externalActivityId: 10,
+      updated: false,
+    }),
+    storeCoreActivity: async () => ({
+      activityId: 20,
+      created: true,
+    }),
+    unlinkUnsupportedActivity: async () => {},
+  };
+  return syncIntervalsIcuActivity({
+    activityId: "activity-1",
+    artifactStore: artifactStore.adapter,
+    apiKey: "api-key",
+    athleteId: "athlete-1",
+    client,
+    counters,
+    errors,
+    syncRunId: 123,
+    userId: "user-1",
+    writer,
+  });
 }

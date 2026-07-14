@@ -12,6 +12,7 @@
     "@hono/node-server": "catalog:",
     "@korex/api": "workspace:*",
     "@korex/auth": "workspace:*",
+    "@korex/db": "workspace:*",
     "@korex/env": "workspace:*",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",

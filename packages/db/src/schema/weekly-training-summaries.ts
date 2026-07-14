@@ -4,7 +4,6 @@ import {
   index,
   integer,
   jsonb,
-  pgEnum,
   pgTable,
   serial,
   text,
@@ -31,11 +30,6 @@ export type WeeklyTrainingSummaryPayloadJson = {
     weekStartAt: string;
   };
 };
-
-export const weeklyTrainingSummaryGenerationJobStatus = pgEnum(
-  "weekly_training_summary_generation_job_status",
-  ["pending", "processing", "succeeded", "failed"],
-);
 
 export const weeklyTrainingSummaries = pgTable(
   "weekly_training_summaries",
@@ -87,57 +81,11 @@ export const weeklyTrainingSummaries = pgTable(
   ],
 );
 
-export const weeklyTrainingSummaryGenerationJobs = pgTable(
-  "weekly_training_summary_generation_jobs",
-  {
-    id: serial("id").primaryKey(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    weekStartAt: timestamp("week_start_at").notNull(),
-    status: weeklyTrainingSummaryGenerationJobStatus("status")
-      .default("pending")
-      .notNull(),
-    attemptCount: integer("attempt_count").default(0).notNull(),
-    lastError: text("last_error"),
-    runAfter: timestamp("run_after").defaultNow().notNull(),
-    lockedAt: timestamp("locked_at"),
-    lockedBy: text("locked_by"),
-    finishedAt: timestamp("finished_at"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at")
-      .defaultNow()
-      .$onUpdate(() => /* @__PURE__ */ new Date())
-      .notNull(),
-  },
-  (table) => [
-    uniqueIndex("weekly_training_summary_jobs_user_week_idx").on(
-      table.userId,
-      table.weekStartAt,
-    ),
-    index("weekly_training_summary_jobs_status_run_after_idx").on(
-      table.status,
-      table.runAfter,
-    ),
-    index("weekly_training_summary_jobs_locked_at_idx").on(table.lockedAt),
-  ],
-);
-
 export const weeklyTrainingSummariesRelations = relations(
   weeklyTrainingSummaries,
   ({ one }) => ({
     user: one(user, {
       fields: [weeklyTrainingSummaries.userId],
-      references: [user.id],
-    }),
-  }),
-);
-
-export const weeklyTrainingSummaryGenerationJobsRelations = relations(
-  weeklyTrainingSummaryGenerationJobs,
-  ({ one }) => ({
-    user: one(user, {
-      fields: [weeklyTrainingSummaryGenerationJobs.userId],
       references: [user.id],
     }),
   }),

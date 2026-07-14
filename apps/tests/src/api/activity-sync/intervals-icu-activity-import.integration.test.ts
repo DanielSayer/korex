@@ -1,4 +1,4 @@
-import { ActivityImportWriterLive } from "@korex/api/modules/activity-sync/activity-import-writer.live";
+import { activityImportWriter } from "@korex/api/modules/activity-sync/activity-import-writer.live";
 import { storeIntervalsIcuActivityImport } from "@korex/api/modules/activity-sync/providers/intervals-icu/intervals-icu-activity-import";
 import {
   linkExternalActivityToActivity,
@@ -7,7 +7,6 @@ import {
 import { createActivitySyncRun } from "@korex/api/modules/activity-sync/repositories/sync-runs.repository";
 import { activities, db, externalActivities } from "@korex/db";
 import { eq } from "drizzle-orm";
-import { Effect } from "effect";
 import { describe, expect, it } from "vitest";
 import { ActivityBuilder } from "../../setup/integration/test-data/activity-builder";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -42,17 +41,14 @@ describe("Intervals.icu activity import integration", () => {
       userId: userDataExtensions.HughJass.id,
     });
 
-    const result = await Effect.runPromise(
-      storeIntervalsIcuActivityImport({
-        detail: IntervalsIcuActivityDetailBuilder.init()
-          .withType("Ride")
-          .build(),
-        errors: [],
-        lastSyncRunId: secondSyncRun.id,
-        providerAthleteId: "athlete-1",
-        userId: userDataExtensions.HughJass.id,
-      }).pipe(Effect.provide(ActivityImportWriterLive)),
-    );
+    const result = await storeIntervalsIcuActivityImport({
+      detail: IntervalsIcuActivityDetailBuilder.init().withType("Ride").build(),
+      errors: [],
+      lastSyncRunId: secondSyncRun.id,
+      providerAthleteId: "athlete-1",
+      userId: userDataExtensions.HughJass.id,
+      writer: activityImportWriter,
+    });
 
     const [storedExternalActivity] = await db
       .select()
@@ -81,15 +77,14 @@ describe("Intervals.icu activity import integration", () => {
       syncType: "manual",
       userId: userDataExtensions.HughJass.id,
     });
-    const firstResult = await Effect.runPromise(
-      storeIntervalsIcuActivityImport({
-        detail: IntervalsIcuActivityDetailBuilder.init().build(),
-        errors: [],
-        lastSyncRunId: firstSyncRun.id,
-        providerAthleteId: "athlete-1",
-        userId: userDataExtensions.HughJass.id,
-      }).pipe(Effect.provide(ActivityImportWriterLive)),
-    );
+    const firstResult = await storeIntervalsIcuActivityImport({
+      detail: IntervalsIcuActivityDetailBuilder.init().build(),
+      errors: [],
+      lastSyncRunId: firstSyncRun.id,
+      providerAthleteId: "athlete-1",
+      userId: userDataExtensions.HughJass.id,
+      writer: activityImportWriter,
+    });
 
     if (firstResult.skipped) {
       throw new Error("Expected initial import to create an activity");
@@ -100,17 +95,16 @@ describe("Intervals.icu activity import integration", () => {
       syncType: "manual",
       userId: userDataExtensions.HughJass.id,
     });
-    const secondResult = await Effect.runPromise(
-      storeIntervalsIcuActivityImport({
-        detail: IntervalsIcuActivityDetailBuilder.init()
-          .withName("Evening Run")
-          .build(),
-        errors: [],
-        lastSyncRunId: secondSyncRun.id,
-        providerAthleteId: "athlete-1",
-        userId: userDataExtensions.HughJass.id,
-      }).pipe(Effect.provide(ActivityImportWriterLive)),
-    );
+    const secondResult = await storeIntervalsIcuActivityImport({
+      detail: IntervalsIcuActivityDetailBuilder.init()
+        .withName("Evening Run")
+        .build(),
+      errors: [],
+      lastSyncRunId: secondSyncRun.id,
+      providerAthleteId: "athlete-1",
+      userId: userDataExtensions.HughJass.id,
+      writer: activityImportWriter,
+    });
 
     if (secondResult.skipped) {
       throw new Error("Expected updated import to update an activity");

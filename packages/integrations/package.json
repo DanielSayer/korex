@@ -13,7 +13,6 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -1,103 +1,119 @@
-import { Effect, Layer } from "effect";
-import { ActivityStreamReplacementWorkflow } from "../activities/activity-stream-replacement/activity-stream-replacement.dependencies";
-import { ActivityStreamReplacementWorkflowLive } from "../activities/activity-stream-replacement/activity-stream-replacement.live";
-import { ActivityArtifactWorkflow } from "../activities/artifacts/activity-artifact-workflow.dependencies";
-import { ActivityArtifactWorkflowLive } from "../activities/artifacts/activity-artifact-workflow.live";
-import { ActivityHeartRateZoneTimeWorkflowLive } from "../activities/heart-rate-zone-times/activity-heart-rate-zone-time-workflow.live";
+import { db } from "@korex/db";
+import { intervalsIcuClient } from "@korex/integrations/intervals-icu/live";
+import { activityStreamReplacementModule } from "../activities/activity-stream-replacement/activity-stream-replacement.module";
+import { activityArtifactModule } from "../activities/artifacts/activity-artifact.module";
+import { enqueueJob } from "../job-runtime/job-runtime";
 import { markProviderConnectionSynced } from "../provider-connections/provider-connections.repository";
-import { ProviderSessionLive } from "../provider-connections/provider-session.live";
-import { ActivityImportWriterLive } from "./activity-import-writer.live";
-import {
-  ActivityArtifactStore,
-  ActivityImportWriter,
-  ActivitySyncRepository,
-  IntervalsIcuActivitySync,
+import { providerSessionModule } from "../provider-connections/provider-session.live";
+import { activityImportWriter } from "./activity-import-writer.live";
+import type {
+  ActivitySyncRepositoryService,
+  IntervalsIcuActivitySyncService,
 } from "./activity-sync.dependencies";
+import { createActivitySyncModule } from "./activity-sync.service";
+import {
+  activitySyncJobName,
+  createActivitySyncCommandModule,
+  createActivitySyncJobModule,
+  createActivitySyncTaskModule,
+} from "./activity-sync-durable";
 import { syncIntervalsIcuActivity } from "./providers/intervals-icu/intervals-icu-sync";
 import {
   upsertExternalActivityMap,
   upsertExternalActivityStream,
 } from "./repositories/external-activities.repository";
 import {
+  claimActivitySyncRun,
   createActivitySyncRun,
+  createQueuedActivitySyncRun,
   finishActivitySyncRun,
+  getActivitySyncRunForTask,
   getLatestIncrementalActivitySyncRunForUser,
   getLatestSuccessfulActivitySyncRunForUser,
   hasSuccessfulActivitySyncRunForUser,
+  markActivitySyncRunExecutionFailed,
+  resetActivitySyncRunForRetry,
 } from "./repositories/sync-runs.repository";
 
-const ActivitySyncRepositoryLive = Layer.succeed(ActivitySyncRepository, {
+export const activitySyncRepository: ActivitySyncRepositoryService = {
   createActivitySyncRun,
   finishActivitySyncRun,
   getLatestIncrementalActivitySyncRunForUser,
   getLatestSuccessfulActivitySyncRunForUser,
   hasSuccessfulActivitySyncRunForUser,
   markProviderConnectionSynced,
+};
+
+export const intervalsIcuActivitySync: IntervalsIcuActivitySyncService = {
+  syncActivity: (input) =>
+    syncIntervalsIcuActivity({
+      ...input,
+      artifactStore: {
+        replaceCoreMap:
+          activityArtifactModule.replaceActivityMapAndQueueHeatmapCalculation,
+        replaceCoreStreamsAndQueueCalculation:
+          activityStreamReplacementModule.replaceActivityStreamsAndInvalidateDerivedData,
+        storeExternalMap: upsertExternalActivityMap,
+        storeExternalStream: upsertExternalActivityStream,
+      },
+      writer: activityImportWriter,
+    }),
+};
+
+export const activitySyncModule = createActivitySyncModule({
+  activitySyncRepository,
+  intervalsIcuActivitySync,
+  intervalsIcuClient,
+  providerSession: providerSessionModule,
 });
 
-const ActivityArtifactStoreLive = Layer.effect(
-  ActivityArtifactStore,
-  Effect.gen(function* () {
-    const activityArtifactWorkflow = yield* ActivityArtifactWorkflow;
-    const activityStreamReplacementWorkflow =
-      yield* ActivityStreamReplacementWorkflow;
+const activitySyncDurableRepository = {
+  claimActivitySyncRun,
+  enqueueActivitySyncRun,
+  getActivitySyncRunForTask,
+  getLatestIncrementalActivitySyncRunForUser,
+  getLatestSuccessfulActivitySyncRunForUser,
+  hasSuccessfulActivitySyncRunForUser,
+  markActivitySyncRunExecutionFailed,
+  resetActivitySyncRunForRetry,
+};
 
-    return {
-      storeExternalMap: upsertExternalActivityMap,
-      replaceCoreMap: (input) =>
-        Effect.runPromise(
-          activityArtifactWorkflow.replaceActivityMapAndQueueHeatmapCalculation(
-            input,
-          ),
-        ),
-      storeExternalStream: upsertExternalActivityStream,
-      replaceCoreStreamsAndQueueCalculation: (input) =>
-        Effect.runPromise(
-          activityStreamReplacementWorkflow.replaceActivityStreamsAndInvalidateDerivedData(
-            input,
-          ),
-        ),
-    };
-  }),
-);
+export async function enqueueActivitySyncRun({
+  provider,
+  syncType,
+  userId,
+}: {
+  provider: "intervals_icu";
+  syncType: "initial" | "incremental";
+  userId: string;
+}) {
+  return db.transaction(async (database) => {
+    const syncRun = await createQueuedActivitySyncRun({
+      database,
+      provider,
+      syncType,
+      userId,
+    });
+    await enqueueJob({
+      database,
+      key: String(syncRun.id),
+      name: activitySyncJobName,
+      payload: { syncRunId: syncRun.id, userId },
+    });
+    return syncRun;
+  });
+}
 
-const IntervalsIcuActivitySyncLive = Layer.effect(
-  IntervalsIcuActivitySync,
-  Effect.gen(function* () {
-    const activityArtifactStore = yield* ActivityArtifactStore;
-    const activityImportWriter = yield* ActivityImportWriter;
+export const activitySyncCommandModule = createActivitySyncCommandModule({
+  now: () => new Date(),
+  repository: activitySyncDurableRepository,
+});
 
-    return {
-      syncActivity: (input) =>
-        syncIntervalsIcuActivity(input).pipe(
-          Effect.provideService(ActivityArtifactStore, activityArtifactStore),
-          Effect.provideService(ActivityImportWriter, activityImportWriter),
-        ),
-    };
-  }),
-);
+export const activitySyncTaskModule = createActivitySyncTaskModule({
+  activitySync: activitySyncModule,
+  repository: activitySyncDurableRepository,
+});
 
-const IntervalsIcuActivitySyncWithDependenciesLive =
-  IntervalsIcuActivitySyncLive.pipe(
-    Layer.provide(
-      Layer.mergeAll(ActivityArtifactStoreLive, ActivityImportWriterLive),
-    ),
-  );
-
-export const ActivitySyncLayer = Layer.mergeAll(
-  ActivityArtifactStoreLive,
-  ActivityImportWriterLive,
-  ActivitySyncRepositoryLive,
-  ProviderSessionLive,
-  IntervalsIcuActivitySyncWithDependenciesLive,
-);
-
-export const ActivitySyncLive = ActivitySyncLayer.pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      ActivityArtifactWorkflowLive,
-      ActivityStreamReplacementWorkflowLive,
-      ActivityHeartRateZoneTimeWorkflowLive,
-    ),
-  ),
+export const activitySyncJobModule = createActivitySyncJobModule(
+  activitySyncTaskModule,
 );

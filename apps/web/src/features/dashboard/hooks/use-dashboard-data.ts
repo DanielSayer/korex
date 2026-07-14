@@ -49,8 +49,8 @@ function useDashboardData(): DashboardData {
       onError: (error) => {
         toast.error(error.message);
       },
-      onSuccess: (result) => {
-        toast.success(`${result.activitiesStored} activities synced`);
+      onSuccess: () => {
+        toast.success("Activity sync queued");
         for (const query of [
           recentActivitiesQuery,
           trainingStreakQuery,

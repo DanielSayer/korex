@@ -17,11 +17,13 @@ type TrainingStreakDatabase = Pick<
 >;
 
 export async function getTrainingStreak({
+  database = db,
   userId,
 }: {
+  database?: TrainingStreakDatabase;
   userId: string;
 }): Promise<TrainingStreak | null> {
-  const [streak] = await db
+  const [streak] = await database
     .select({
       currentStreak: trainingStreaks.currentStreak,
       lastQualifiedWeekStartAt: trainingStreaks.lastQualifiedWeekStartAt,
@@ -36,17 +38,19 @@ export async function getTrainingStreak({
 }
 
 export async function getTrainingStreakProjectionInputs({
+  database = db,
   userId,
   weekStartAt,
 }: {
+  database?: TrainingStreakDatabase;
   userId: string;
   weekStartAt: Date;
 }) {
   const weekEndAt = getNextTrainingWeekStartAt(weekStartAt);
 
   const [streak, qualifyingActivity] = await Promise.all([
-    getTrainingStreak({ userId }),
-    db
+    getTrainingStreak({ database, userId }),
+    database
       .select({ id: activities.id })
       .from(activities)
       .where(

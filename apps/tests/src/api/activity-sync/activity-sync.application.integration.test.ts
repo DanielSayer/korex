@@ -1,7 +1,5 @@
-import {
-  executeIncrementalSync,
-  executeInitialSync,
-} from "@korex/api/modules/activity-sync/activity-sync.application";
+import { createDurableActivitySyncApplication } from "@korex/api/modules/activity-sync/activity-sync.application";
+import { activitySyncCommandModule } from "@korex/api/modules/activity-sync/activity-sync.live";
 import {
   createActivitySyncRun,
   finishActivitySyncRun,
@@ -28,7 +26,7 @@ describe("activity sync application", () => {
     });
 
     await expect(
-      executeInitialSync(userDataExtensions.HughJass.id),
+      application.executeInitialSync(userDataExtensions.HughJass.id),
     ).rejects.toMatchObject({
       code: "CONFLICT",
     });
@@ -36,7 +34,7 @@ describe("activity sync application", () => {
 
   it("fails incremental sync before provider dispatch when the user has no successful sync", async () => {
     await expect(
-      executeIncrementalSync(userDataExtensions.HughJass.id),
+      application.executeIncrementalSync(userDataExtensions.HughJass.id),
     ).rejects.toMatchObject({
       code: "CONFLICT",
     });
@@ -66,10 +64,14 @@ describe("activity sync application", () => {
     });
 
     await expect(
-      executeIncrementalSync(userDataExtensions.HughJass.id),
+      application.executeIncrementalSync(userDataExtensions.HughJass.id),
     ).rejects.toMatchObject({
       code: "TOO_MANY_REQUESTS",
-      message: expect.stringContaining("about"),
+      message: expect.stringContaining("rate limited"),
     });
   });
 });
+
+const application = createDurableActivitySyncApplication(
+  activitySyncCommandModule,
+);

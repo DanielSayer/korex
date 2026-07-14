@@ -1,9 +1,10 @@
-import {
-  IntervalsIcuClient,
-  type IntervalsIcuClientError,
+import type {
+  IntervalsIcuAthleteProfile,
+  IntervalsIcuClientError,
+  IntervalsIcuClientService,
 } from "@korex/integrations/intervals-icu/client";
 import { INTERVALS_ICU_BASIC_AUTH_USERNAME } from "@korex/integrations/intervals-icu/constants";
-import { Effect } from "effect";
+import { intervalsIcuClient } from "@korex/integrations/intervals-icu/live";
 import { toHeartRateZoneSeedInputsFromIntervalsIcuProfile } from "../heart-rate-zones/anti-corruption/intervals-icu-profile.acl";
 import { seedHeartRateZonesIfEmpty } from "../heart-rate-zones/heart-rate-zones.repository";
 import {
@@ -18,41 +19,64 @@ export type ConnectIntervalsIcuInput = {
   apiKey: string;
 };
 
-export function connectIntervalsIcu({
-  apiKey,
-  userId,
-}: ConnectIntervalsIcuInput) {
-  return Effect.gen(function* () {
-    const intervalsIcuClient = yield* IntervalsIcuClient;
-    const athleteProfile = yield* intervalsIcuClient
-      .getAthleteProfile({
-        apiKey,
-      })
-      .pipe(Effect.mapError(mapIntervalsIcuClientError));
-    const encryptedApiKey = yield* encryptProviderSecret(apiKey);
+export type ProviderConnectionsModule = {
+  connectIntervalsIcu: (
+    input: ConnectIntervalsIcuInput,
+  ) => ReturnType<typeof connectIntervalsIcu>;
+};
 
-    const providerConnection = yield* Effect.promise(() =>
-      upsertIntervalsIcuProviderConnection({
-        authSecretEncrypted: encryptedApiKey,
-        authUsername: INTERVALS_ICU_BASIC_AUTH_USERNAME,
-        metadata: athleteProfile,
-        providerUserId: athleteProfile.id,
-        providerUserName: athleteProfile.name ?? null,
-        userId,
-      }),
-    );
+type ProviderConnectionsDependencies = {
+  encryptProviderSecret: typeof encryptProviderSecret;
+  intervalsIcuClient: IntervalsIcuClientService;
+  seedHeartRateZonesIfEmpty: typeof seedHeartRateZonesIfEmpty;
+  upsertIntervalsIcuProviderConnection: typeof upsertIntervalsIcuProviderConnection;
+};
 
-    yield* Effect.promise(() =>
-      seedHeartRateZonesIfEmpty({
-        userId,
-        zones: toHeartRateZoneSeedInputsFromIntervalsIcuProfile(
-          athleteProfile,
-        ),
-      }),
-    );
+export function createProviderConnectionsModule(
+  dependencies: ProviderConnectionsDependencies,
+): ProviderConnectionsModule {
+  return {
+    connectIntervalsIcu: (input) => connectIntervalsIcu(input, dependencies),
+  };
+}
 
-    return providerConnection;
+export const providerConnectionsModule = createProviderConnectionsModule({
+  encryptProviderSecret,
+  intervalsIcuClient,
+  seedHeartRateZonesIfEmpty,
+  upsertIntervalsIcuProviderConnection,
+});
+
+async function connectIntervalsIcu(
+  { apiKey, userId }: ConnectIntervalsIcuInput,
+  dependencies: ProviderConnectionsDependencies,
+) {
+  let athleteProfile: IntervalsIcuAthleteProfile;
+  try {
+    athleteProfile = await dependencies.intervalsIcuClient.getAthleteProfile({
+      apiKey,
+    });
+  } catch (cause) {
+    throw mapIntervalsIcuClientError(cause as IntervalsIcuClientError);
+  }
+  const encryptedApiKey = await dependencies.encryptProviderSecret(apiKey);
+
+  const providerConnection =
+    await dependencies.upsertIntervalsIcuProviderConnection({
+      authSecretEncrypted: encryptedApiKey,
+      authUsername: INTERVALS_ICU_BASIC_AUTH_USERNAME,
+      metadata: athleteProfile,
+      providerUserId: athleteProfile.id,
+      providerUserName: athleteProfile.name ?? null,
+      userId,
+    });
+
+  await dependencies.seedHeartRateZonesIfEmpty({
+    userId,
+    zones: toHeartRateZoneSeedInputsFromIntervalsIcuProfile(athleteProfile),
   });
+
+  return providerConnection;
 }
 
 function mapIntervalsIcuClientError(cause: IntervalsIcuClientError) {
