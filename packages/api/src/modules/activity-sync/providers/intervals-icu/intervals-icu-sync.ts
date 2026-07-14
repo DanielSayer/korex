@@ -81,33 +81,22 @@ export async function syncIntervalsIcuActivity({
     counters.activitiesUpdated += 1;
   }
 
-  await syncIntervalsIcuActivityMap({
-    apiKey,
-    artifactStore,
-    coreActivityId: storedActivity.activityId,
-    client,
-    errors,
-    externalActivityId: storedActivity.externalActivityId,
-    providerActivityId: storedActivity.providerActivityId,
-    providerRequestActivityId: activityId,
-    syncRunId,
-    signal,
-    userId,
-  });
-
-  await syncIntervalsIcuActivityStreams({
+  const artifactSyncInput = {
     activityId,
     apiKey,
     artifactStore,
-    client,
     coreActivityId: storedActivity.activityId,
+    client,
     errors,
     externalActivityId: storedActivity.externalActivityId,
     providerActivityId: storedActivity.providerActivityId,
     syncRunId,
     signal,
     userId,
-  });
+  };
+
+  await syncIntervalsIcuActivityMap(artifactSyncInput);
+  await syncIntervalsIcuActivityStreams(artifactSyncInput);
 }
 
 function readField(cause: unknown, field: "details" | "requestUrl") {

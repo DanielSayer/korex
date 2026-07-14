@@ -28,22 +28,27 @@ export class InMemoryActivityArtifactStore {
   readonly coreStreams = new Map<number, ActivityStreamInput[]>();
   readonly externalMaps = new Map<number, ExternalMapRecord>();
   readonly externalStreams = new Map<string, ExternalStreamRecord>();
+  readonly operations: string[] = [];
   readonly queuedActivityIds: number[] = [];
 
   readonly adapter: ActivityArtifactStoreService = {
     storeExternalMap: async (input) => {
+      this.operations.push("external:map");
       this.externalMaps.set(input.externalActivityId, input);
     },
     replaceCoreMap: async ({ activityId, map }) => {
+      this.operations.push("core:map");
       this.coreMaps.set(activityId, map);
     },
     storeExternalStream: async (input) => {
+      this.operations.push(`external:stream:${input.streamType}`);
       this.externalStreams.set(
         `${input.externalActivityId}:${input.streamType}`,
         input,
       );
     },
     replaceCoreStreamsAndQueueCalculation: async ({ activityId, streams }) => {
+      this.operations.push("core:streams");
       this.coreStreams.set(activityId, streams);
       this.queuedActivityIds.push(activityId);
     },

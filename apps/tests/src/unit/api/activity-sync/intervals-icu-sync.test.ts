@@ -85,6 +85,13 @@ describe("syncIntervalsIcuActivity", () => {
       ]),
     );
     expect(artifactStore.queuedActivityIds).toEqual([20]);
+    expect(artifactStore.operations).toEqual([
+      "external:map",
+      "core:map",
+      "external:stream:cadence",
+      "external:stream:heartrate",
+      "core:streams",
+    ]);
   });
 
   it("keeps raw external map data and skips core map storage when coordinates are empty", async () => {
@@ -144,11 +151,14 @@ describe("syncIntervalsIcuActivity", () => {
       expect.objectContaining({
         activityId: "activity-1",
         message: "Map request failed",
+        requestUrl: "https://intervals.icu/api/v1/activity/activity-1/map",
         stage: "map",
       }),
       expect.objectContaining({
         activityId: "activity-1",
         message: "Streams request failed",
+        requestUrl:
+          "https://intervals.icu/api/v1/activity/activity-1/streams.json",
         stage: "streams",
       }),
     ]);
@@ -186,9 +196,142 @@ describe("syncIntervalsIcuActivity", () => {
           field: "data",
           streamKey: "heartrate",
         }),
+        requestUrl:
+          "https://intervals.icu/api/v1/activity/activity-1/streams.json",
         stage: "streams",
       }),
     ]);
+  });
+
+  it.each([
+    "map",
+    "streams",
+  ] as const)("preserves an existing core %s when its provider payload is missing", async (missingArtifact) => {
+    const artifactStore = new InMemoryActivityArtifactStore();
+    const existingMap = {
+      bounds: null,
+      coordinates: [{ latitude: -27.58, longitude: 153.07 }],
+    };
+    const existingStreams = [
+      { data: [135, 140], streamType: "heartRate" as const },
+    ];
+    artifactStore.coreMaps.set(20, existingMap);
+    artifactStore.coreStreams.set(20, existingStreams);
+
+    await runActivitySync({
+      artifactStore,
+      client: createClient({
+        map: missingArtifact === "map" ? null : { latlngs: [[-27.59, 153.08]] },
+        streams:
+          missingArtifact === "streams"
+            ? null
+            : { heartrate: { data: [145], type: "heartrate" } },
+      }),
+      errors: [],
+    });
+
+    if (missingArtifact === "map") {
+      expect(artifactStore.coreMaps.get(20)).toBe(existingMap);
+      expect(artifactStore.operations).not.toContain("core:map");
+    } else {
+      expect(artifactStore.coreStreams.get(20)).toBe(existingStreams);
+      expect(artifactStore.operations).not.toContain("core:streams");
+    }
+  });
+
+  it("keeps a malformed provider map for diagnosis without replacing the Activity Map", async () => {
+    const artifactStore = new InMemoryActivityArtifactStore();
+    const existingMap = {
+      bounds: null,
+      coordinates: [{ latitude: -27.58, longitude: 153.07 }],
+    };
+    const errors: ActivitySyncFailure[] = [];
+    artifactStore.coreMaps.set(20, existingMap);
+
+    await runActivitySync({
+      artifactStore,
+      client: createClient({
+        map: { latlngs: [[-91, 153.08]] },
+        streams: null,
+      }),
+      errors,
+    });
+
+    expect(artifactStore.externalMaps.get(10)).toMatchObject({
+      rawData: { latlngs: [[-91, 153.08]] },
+    });
+    expect(artifactStore.coreMaps.get(20)).toBe(existingMap);
+    expect(artifactStore.operations).toEqual(["external:map"]);
+    expect(errors).toEqual([
+      expect.objectContaining({
+        activityId: "activity-1",
+        requestUrl: "https://intervals.icu/api/v1/activity/activity-1/map",
+        stage: "map",
+      }),
+    ]);
+  });
+
+  it("propagates aborts instead of recording an artifact failure", async () => {
+    const artifactStore = new InMemoryActivityArtifactStore();
+    const controller = new AbortController();
+    const errors: ActivitySyncFailure[] = [];
+    controller.abort();
+    const client = {
+      ...createClient({ map: null, streams: null }),
+      getActivityMap: async () => {
+        throw new Error("request aborted");
+      },
+    } satisfies IntervalsIcuClientService;
+
+    await expect(
+      runActivitySync({
+        artifactStore,
+        client,
+        errors,
+        signal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+    expect(errors).toEqual([]);
+  });
+
+  it.each([
+    [
+      "external map",
+      "storeExternalMap",
+      "Failed to store external activity map",
+    ],
+    ["core map", "replaceCoreMap", "Failed to store activity map"],
+    [
+      "external stream",
+      "storeExternalStream",
+      "Failed to store external activity stream",
+    ],
+    [
+      "core streams",
+      "replaceCoreStreamsAndQueueCalculation",
+      "Failed to store activity streams",
+    ],
+  ] as const)("treats %s persistence failures as fatal", async (_label, method, message) => {
+    const artifactStore = new InMemoryActivityArtifactStore();
+    artifactStore.adapter[method] = async () => {
+      throw new Error("database unavailable");
+    };
+
+    await expect(
+      runActivitySync({
+        artifactStore,
+        client: createClient({
+          map: method.includes("Map") ? { latlngs: [[-27.59, 153.08]] } : null,
+          streams: method.includes("Stream")
+            ? { heartrate: { data: [145], type: "heartrate" } }
+            : null,
+        }),
+        errors: [],
+      }),
+    ).rejects.toMatchObject({
+      message,
+      name: "ActivitySyncError",
+    });
   });
 });
 
@@ -227,11 +370,13 @@ function runActivitySync({
   client,
   counters = createCounters(),
   errors,
+  signal,
 }: {
   artifactStore: InMemoryActivityArtifactStore;
   client: IntervalsIcuClientService;
   counters?: ReturnType<typeof createCounters>;
   errors: ActivitySyncFailure[];
+  signal?: AbortSignal;
 }) {
   const writer: ActivityImportWriterService = {
     storeExternalActivity: async () => ({
@@ -254,6 +399,7 @@ function runActivitySync({
     client,
     counters,
     errors,
+    signal,
     syncRunId: 123,
     userId: "user-1",
     writer,
