@@ -7,12 +7,13 @@ import {
   getActivityRouteHeatmapMaxActivityCount,
   listActivityRouteHeatmapAggregateCellsForTile,
 } from "./activity-route-heatmap.repository";
+import { getActivityRouteHeatmapColor } from "./activity-route-heatmap-color-ramp";
 
 const tileSize = 256;
 const minRouteHeatmapZoom = Math.min(...activityRouteHeatmapZoomLevels);
 const maxRouteHeatmapZoom = Math.max(...activityRouteHeatmapZoomLevels);
 
-export type RenderActivityRouteHeatmapTileInput = {
+type RenderActivityRouteHeatmapTileInput = {
   displayMode?: ActivityRouteHeatmapDisplayMode;
   tileX: number;
   tileY: number;
@@ -20,23 +21,15 @@ export type RenderActivityRouteHeatmapTileInput = {
   zoom: number;
 };
 
-export type ActivityRouteHeatmapTileInput = {
+type ActivityRouteHeatmapTileInput = {
   tileX: number;
   tileY: number;
   zoom: number;
 };
 
-export type ActivityRouteHeatmapTileCell = {
-  activityCount: number;
-  cellX: number;
-  cellY: number;
-  tileX: number;
-  tileY: number;
-};
+const activityRouteHeatmapDisplayModes = ["density", "visited"] as const;
 
-export const activityRouteHeatmapDisplayModes = ["density", "visited"] as const;
-
-export type ActivityRouteHeatmapDisplayMode =
+type ActivityRouteHeatmapDisplayMode =
   (typeof activityRouteHeatmapDisplayModes)[number];
 
 export class ActivityRouteHeatmapTileInputError extends Error {
@@ -102,7 +95,7 @@ export function readActivityRouteHeatmapTileInput({
   });
 }
 
-export function normalizeActivityRouteHeatmapTileInput({
+function normalizeActivityRouteHeatmapTileInput({
   tileX,
   tileY,
   zoom,
@@ -147,7 +140,7 @@ export async function renderActivityRouteHeatmapTile({
   ]);
 
   return encodePng(
-    renderActivityRouteHeatmapTilePixels({
+    renderTilePixels({
       cells,
       displayMode,
       maxActivityCount,
@@ -161,68 +154,6 @@ export async function renderActivityRouteHeatmapTile({
 
 export function renderEmptyActivityRouteHeatmapTile() {
   return encodePng(new Uint8Array(tileSize * tileSize * 4), tileSize, tileSize);
-}
-
-export function renderActivityRouteHeatmapTileImage({
-  cells,
-  displayMode = "density",
-  maxActivityCount,
-  tileX,
-  tileY,
-}: {
-  cells: ActivityRouteHeatmapTileCell[];
-  displayMode?: ActivityRouteHeatmapDisplayMode;
-  maxActivityCount: number;
-  tileX: number;
-  tileY: number;
-}) {
-  return encodePng(
-    renderActivityRouteHeatmapTilePixels({
-      cells,
-      displayMode,
-      maxActivityCount,
-      tileX,
-      tileY,
-    }),
-    tileSize,
-    tileSize,
-  );
-}
-
-export function renderActivityRouteHeatmapTilePixels({
-  cells,
-  displayMode = "density",
-  maxActivityCount,
-  tileX,
-  tileY,
-}: {
-  cells: ActivityRouteHeatmapTileCell[];
-  displayMode?: ActivityRouteHeatmapDisplayMode;
-  maxActivityCount: number;
-  tileX: number;
-  tileY: number;
-}) {
-  return renderTilePixels({
-    cells,
-    displayMode,
-    maxActivityCount,
-    tileX,
-    tileY,
-  });
-}
-
-export function getActivityRouteHeatmapTileIntensity({
-  activityCount,
-  maxActivityCount,
-}: {
-  activityCount: number;
-  maxActivityCount: number;
-}) {
-  if (activityCount <= 0 || maxActivityCount <= 0) {
-    return 0;
-  }
-
-  return Math.log1p(activityCount) / Math.log1p(maxActivityCount);
 }
 
 function assertTileInput({
@@ -306,7 +237,7 @@ function renderTilePixels({
       continue;
     }
 
-    const color = getRampColor(intensity);
+    const color = getActivityRouteHeatmapColor(intensity);
     const centerX =
       ((cell.tileX - tileX) * activityRouteHeatmapCellsPerTile +
         cell.cellX +
@@ -376,50 +307,11 @@ function getIntensity({
     return activityCount > 0 ? 1 : 0;
   }
 
-  return getActivityRouteHeatmapTileIntensity({
-    activityCount,
-    maxActivityCount,
-  });
-}
-
-function getRampColor(intensity: number) {
-  const clamped = clamp(intensity, 0, 1);
-
-  if (clamped < 0.35) {
-    return interpolateRgb(
-      { b: 18, g: 55, r: 190 },
-      { b: 0, g: 132, r: 249 },
-      clamped / 0.35,
-    );
+  if (activityCount <= 0 || maxActivityCount <= 0) {
+    return 0;
   }
 
-  if (clamped < 0.7) {
-    return interpolateRgb(
-      { b: 0, g: 132, r: 249 },
-      { b: 21, g: 204, r: 250 },
-      (clamped - 0.35) / 0.35,
-    );
-  }
-
-  return interpolateRgb(
-    { b: 21, g: 204, r: 250 },
-    { b: 232, g: 248, r: 255 },
-    (clamped - 0.7) / 0.3,
-  );
-}
-
-function interpolateRgb(
-  from: { b: number; g: number; r: number },
-  to: { b: number; g: number; r: number },
-  amount: number,
-) {
-  const t = clamp(amount, 0, 1);
-
-  return {
-    b: Math.round(from.b + (to.b - from.b) * t),
-    g: Math.round(from.g + (to.g - from.g) * t),
-    r: Math.round(from.r + (to.r - from.r) * t),
-  };
+  return Math.log1p(activityCount) / Math.log1p(maxActivityCount);
 }
 
 function encodePng(pixels: Uint8Array, width: number, height: number) {
@@ -489,8 +381,4 @@ function crc32(buffer: Buffer) {
   }
 
   return (crc ^ 0xffffffff) >>> 0;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }

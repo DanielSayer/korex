@@ -1,14 +1,36 @@
+import { inflateSync } from "node:zlib";
 import {
-  getActivityRouteHeatmapTileIntensity,
+  activityRouteHeatmapColorStops,
+  getActivityRouteHeatmapColor,
+} from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-color-ramp";
+import {
   readActivityRouteHeatmapDisplayMode,
   readActivityRouteHeatmapTileInput,
-  renderActivityRouteHeatmapTileImage,
-  renderActivityRouteHeatmapTilePixels,
+  renderActivityRouteHeatmapTile,
   renderEmptyActivityRouteHeatmapTile,
 } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-tile";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { getRouteHeatmapRampCss } from "../../../../../web/src/features/route-heatmap/utils/route-heatmap-style";
+
+const repository = vi.hoisted(() => ({
+  getMaxActivityCount: vi.fn(),
+  listCells: vi.fn(),
+}));
+
+vi.mock(
+  "@korex/api/modules/activities/route-heatmap/activity-route-heatmap.repository",
+  () => ({
+    getActivityRouteHeatmapMaxActivityCount: repository.getMaxActivityCount,
+    listActivityRouteHeatmapAggregateCellsForTile: repository.listCells,
+  }),
+);
 
 describe("activity route heatmap tiles", () => {
+  beforeEach(() => {
+    repository.getMaxActivityCount.mockReset().mockResolvedValue(10);
+    repository.listCells.mockReset().mockResolvedValue([]);
+  });
+
   it("normalizes leaflet tile parameters into supported materialized tiles", () => {
     expect(
       readActivityRouteHeatmapTileInput({
@@ -78,114 +100,91 @@ describe("activity route heatmap tiles", () => {
     expect(readActivityRouteHeatmapDisplayMode("visited")).toBe("visited");
   });
 
-  it("uses log intensity so dense cells do not dominate the whole ramp", () => {
-    expect(
-      getActivityRouteHeatmapTileIntensity({
-        activityCount: 0,
-        maxActivityCount: 100,
-      }),
-    ).toBe(0);
-    expect(
-      getActivityRouteHeatmapTileIntensity({
-        activityCount: 10,
-        maxActivityCount: 100,
-      }),
-    ).toBeCloseTo(Math.log1p(10) / Math.log1p(100));
-    expect(
-      getActivityRouteHeatmapTileIntensity({
-        activityCount: 100,
-        maxActivityCount: 100,
-      }),
-    ).toBe(1);
+  it("preserves the exact shared color stops and interpolation", () => {
+    expect(activityRouteHeatmapColorStops).toEqual([
+      { color: { b: 18, g: 55, r: 190 }, intensity: 0 },
+      { color: { b: 0, g: 132, r: 249 }, intensity: 0.35 },
+      { color: { b: 21, g: 204, r: 250 }, intensity: 0.7 },
+      { color: { b: 232, g: 248, r: 255 }, intensity: 1 },
+    ]);
+    expect(getActivityRouteHeatmapColor(-1)).toEqual({ b: 18, g: 55, r: 190 });
+    expect(getActivityRouteHeatmapColor(0.12)).toEqual({
+      b: 12,
+      g: 81,
+      r: 210,
+    });
+    expect(getActivityRouteHeatmapColor(2)).toEqual({
+      b: 232,
+      g: 248,
+      r: 255,
+    });
   });
 
-  it("renders visible alpha for matching aggregate cells", () => {
-    const pixels = renderActivityRouteHeatmapTilePixels({
-      cells: [
-        {
-          activityCount: 10,
-          cellX: 10,
-          cellY: 12,
-          tileX: 3,
-          tileY: 4,
-        },
-      ],
-      maxActivityCount: 10,
-      tileX: 3,
-      tileY: 4,
-    });
-    const alphaValues = readAlphaValues(pixels);
-
-    expect(alphaValues.some((alpha) => alpha > 0)).toBe(true);
+  it("uses the shared server color ramp for the web legend", () => {
+    expect(getRouteHeatmapRampCss()).toBe(
+      "rgba(190,55,18,0), rgb(210, 81, 12), rgb(249, 132, 0), rgb(250, 204, 21), rgb(255, 248, 232)",
+    );
   });
 
-  it("renders visited cells with constant intensity regardless of activity count", () => {
-    const lowCountPixels = renderActivityRouteHeatmapTilePixels({
-      cells: [
-        {
-          activityCount: 1,
-          cellX: 10,
-          cellY: 12,
-          tileX: 3,
-          tileY: 4,
-        },
-      ],
-      displayMode: "visited",
-      maxActivityCount: 100,
-      tileX: 3,
-      tileY: 4,
-    });
-    const highCountPixels = renderActivityRouteHeatmapTilePixels({
-      cells: [
-        {
-          activityCount: 100,
-          cellX: 10,
-          cellY: 12,
-          tileX: 3,
-          tileY: 4,
-        },
-      ],
-      displayMode: "visited",
-      maxActivityCount: 100,
-      tileX: 3,
-      tileY: 4,
-    });
+  it("renders visible RGBA output for matching aggregate cells", async () => {
+    repository.listCells.mockResolvedValue([routeHeatmapCell(10)]);
 
-    expect(readMaxAlpha(lowCountPixels)).toBe(readMaxAlpha(highCountPixels));
+    const pixels = readPngPixels(await renderTile());
+    const mostOpaquePixel = readMostOpaquePixel(pixels);
+
+    expect(mostOpaquePixel).toEqual({ alpha: 75, b: 69, g: 73, r: 75 });
   });
 
-  it("keeps empty or zero-count tiles transparent", () => {
+  it("renders visited cells with constant intensity regardless of activity count", async () => {
+    repository.listCells.mockResolvedValue([routeHeatmapCell(1)]);
+    const lowCountPixels = readPngPixels(
+      await renderTile({ displayMode: "visited" }),
+    );
+
+    repository.listCells.mockResolvedValue([routeHeatmapCell(100)]);
+    const highCountPixels = readPngPixels(
+      await renderTile({ displayMode: "visited" }),
+    );
+
+    expect(lowCountPixels).toEqual(highCountPixels);
+  });
+
+  it("uses log-scaled density intensity", async () => {
+    repository.getMaxActivityCount.mockResolvedValue(100);
+    repository.listCells.mockResolvedValue([routeHeatmapCell(1)]);
+    const lowCountPixels = readPngPixels(await renderTile());
+
+    repository.listCells.mockResolvedValue([routeHeatmapCell(100)]);
+    const highCountPixels = readPngPixels(await renderTile());
+
+    expect(readMostOpaquePixel(lowCountPixels)).toEqual({
+      alpha: 27,
+      b: 1,
+      g: 9,
+      r: 23,
+    });
+    expect(readMostOpaquePixel(highCountPixels)).toEqual({
+      alpha: 75,
+      b: 69,
+      g: 73,
+      r: 75,
+    });
+  });
+
+  it("keeps empty or zero-count tiles transparent", async () => {
     expect(
-      readAlphaValues(
-        renderActivityRouteHeatmapTilePixels({
-          cells: [],
-          maxActivityCount: 10,
-          tileX: 3,
-          tileY: 4,
-        }),
-      ).every((alpha) => alpha === 0),
+      readPngPixels(await renderTile()).every((value) => value === 0),
     ).toBe(true);
+
+    repository.getMaxActivityCount.mockResolvedValue(0);
+    repository.listCells.mockResolvedValue([routeHeatmapCell(10)]);
+
     expect(
-      readAlphaValues(
-        renderActivityRouteHeatmapTilePixels({
-          cells: [
-            {
-              activityCount: 10,
-              cellX: 10,
-              cellY: 12,
-              tileX: 3,
-              tileY: 4,
-            },
-          ],
-          maxActivityCount: 0,
-          tileX: 3,
-          tileY: 4,
-        }),
-      ).every((alpha) => alpha === 0),
+      readPngPixels(await renderTile()).every((value) => value === 0),
     ).toBe(true);
   });
 
-  it("encodes heatmap tiles as 256px RGBA PNGs", () => {
+  it("encodes heatmap tiles as 256px RGBA PNGs", async () => {
     expect(readPngHeader(renderEmptyActivityRouteHeatmapTile())).toEqual({
       bitDepth: 8,
       colorType: 6,
@@ -193,24 +192,10 @@ describe("activity route heatmap tiles", () => {
       signature: "89504e470d0a1a0a",
       width: 256,
     });
-    expect(
-      readPngHeader(
-        renderActivityRouteHeatmapTileImage({
-          cells: [
-            {
-              activityCount: 10,
-              cellX: 10,
-              cellY: 12,
-              tileX: 3,
-              tileY: 4,
-            },
-          ],
-          maxActivityCount: 10,
-          tileX: 3,
-          tileY: 4,
-        }),
-      ),
-    ).toEqual({
+
+    repository.listCells.mockResolvedValue([routeHeatmapCell(10)]);
+
+    expect(readPngHeader(await renderTile())).toEqual({
       bitDepth: 8,
       colorType: 6,
       height: 256,
@@ -220,18 +205,75 @@ describe("activity route heatmap tiles", () => {
   });
 });
 
-function readAlphaValues(pixels: Uint8Array) {
-  const alphaValues: number[] = [];
-
-  for (let index = 3; index < pixels.length; index += 4) {
-    alphaValues.push(pixels[index] ?? 0);
-  }
-
-  return alphaValues;
+function renderTile({
+  displayMode,
+}: {
+  displayMode?: "density" | "visited";
+} = {}) {
+  return renderActivityRouteHeatmapTile({
+    displayMode,
+    tileX: 3,
+    tileY: 4,
+    userId: "user-1",
+    zoom: 4,
+  });
 }
 
-function readMaxAlpha(pixels: Uint8Array) {
-  return Math.max(...readAlphaValues(pixels));
+function routeHeatmapCell(activityCount: number) {
+  return {
+    activityCount,
+    cellX: 10,
+    cellY: 12,
+    tileX: 3,
+    tileY: 4,
+  };
+}
+
+function readMostOpaquePixel(pixels: Uint8Array) {
+  let offset = 0;
+
+  for (let index = 4; index < pixels.length; index += 4) {
+    if ((pixels[index + 3] ?? 0) > (pixels[offset + 3] ?? 0)) {
+      offset = index;
+    }
+  }
+
+  return {
+    alpha: pixels[offset + 3],
+    b: pixels[offset + 2],
+    g: pixels[offset + 1],
+    r: pixels[offset],
+  };
+}
+
+function readPngPixels(buffer: Buffer) {
+  const idatChunks: Buffer[] = [];
+  let offset = 8;
+
+  while (offset < buffer.length) {
+    const length = buffer.readUInt32BE(offset);
+    const type = buffer.subarray(offset + 4, offset + 8).toString("ascii");
+
+    if (type === "IDAT") {
+      idatChunks.push(buffer.subarray(offset + 8, offset + 8 + length));
+    }
+
+    offset += 12 + length;
+  }
+
+  const raw = inflateSync(Buffer.concat(idatChunks));
+  const pixels = new Uint8Array(256 * 256 * 4);
+  const rowLength = 256 * 4 + 1;
+
+  for (let y = 0; y < 256; y += 1) {
+    expect(raw[y * rowLength]).toBe(0);
+    pixels.set(
+      raw.subarray(y * rowLength + 1, (y + 1) * rowLength),
+      y * 256 * 4,
+    );
+  }
+
+  return pixels;
 }
 
 function readPngHeader(buffer: Buffer) {
