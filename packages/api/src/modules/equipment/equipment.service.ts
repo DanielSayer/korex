@@ -249,7 +249,7 @@ export async function bulkAssignEquipment({
       throw new EquipmentNotFoundError();
     }
 
-    return bulkAssignEquipmentToActivities({
+    const assignment = await bulkAssignEquipmentToActivities({
       database,
       endAt,
       equipmentId,
@@ -259,6 +259,8 @@ export async function bulkAssignEquipment({
       unassignedOnly,
       userId,
     });
+
+    return { assignedCount: assignment.rowCount ?? 0 };
   });
 }
 

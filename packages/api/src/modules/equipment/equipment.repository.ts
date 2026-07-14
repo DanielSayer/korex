@@ -16,7 +16,7 @@ import type {
 
 export type EquipmentDatabase = Pick<
   typeof db,
-  "delete" | "insert" | "select" | "transaction" | "update"
+  "delete" | "execute" | "insert" | "select" | "transaction" | "update"
 >;
 
 export async function transaction<T>(
@@ -403,46 +403,29 @@ export async function assignDefaultEquipmentForActivity({
   sportType: SportType;
   userId: string;
 }) {
-  const defaults = await database
-    .select({
-      equipmentId: defaultEquipment.equipmentId,
-      equipmentType: defaultEquipment.equipmentType,
-    })
-    .from(defaultEquipment)
-    .innerJoin(equipment, eq(equipment.id, defaultEquipment.equipmentId))
-    .where(
-      and(
-        eq(defaultEquipment.userId, userId),
-        eq(defaultEquipment.sportType, sportType),
-        isNull(defaultEquipment.clearedAt),
-        isNull(equipment.retiredAt),
-      ),
-    );
-
-  for (const defaultItem of defaults) {
-    const [existingUse] = await database
-      .select({ id: activityEquipmentUses.id })
-      .from(activityEquipmentUses)
-      .where(
-        and(
-          eq(activityEquipmentUses.activityId, activityId),
-          eq(activityEquipmentUses.equipmentType, defaultItem.equipmentType),
-          eq(activityEquipmentUses.userId, userId),
-        ),
-      )
-      .limit(1);
-
-    if (existingUse) {
-      continue;
-    }
-
-    await database.insert(activityEquipmentUses).values({
-      activityId,
-      equipmentId: defaultItem.equipmentId,
-      equipmentType: defaultItem.equipmentType,
-      userId,
-    });
-  }
+  return database.execute(sql`
+    insert into ${activityEquipmentUses} (
+      ${sql.identifier(activityEquipmentUses.userId.name)}, ${sql.identifier(activityEquipmentUses.activityId.name)},
+      ${sql.identifier(activityEquipmentUses.equipmentId.name)},
+      ${sql.identifier(activityEquipmentUses.equipmentType.name)}
+    )
+    select ${defaultEquipment.userId}, ${activities.id}, ${defaultEquipment.equipmentId},
+      ${defaultEquipment.equipmentType}
+    from ${defaultEquipment}
+    inner join ${equipment} on ${equipment.id} = ${defaultEquipment.equipmentId}
+      and ${equipment.userId} = ${defaultEquipment.userId}
+      and ${equipment.equipmentType} = ${defaultEquipment.equipmentType}
+    inner join ${activities} on ${activities.id} = ${activityId}
+      and ${activities.userId} = ${defaultEquipment.userId}
+      and ${activities.sportType} = ${defaultEquipment.sportType}
+    where ${defaultEquipment.userId} = ${userId}
+      and ${defaultEquipment.sportType} = ${sportType}
+      and ${defaultEquipment.clearedAt} is null
+      and ${equipment.retiredAt} is null
+    on conflict (${sql.identifier(activityEquipmentUses.activityId.name)},
+      ${sql.identifier(activityEquipmentUses.equipmentType.name)})
+      do nothing
+  `);
 }
 
 export async function bulkAssignEquipmentToActivities({
@@ -464,46 +447,30 @@ export async function bulkAssignEquipmentToActivities({
   unassignedOnly: boolean;
   userId: string;
 }) {
-  const candidateActivities = await database
-    .select({
-      activityId: activities.id,
-      existingUseId: activityEquipmentUses.id,
-    })
-    .from(activities)
-    .leftJoin(
-      activityEquipmentUses,
-      and(
-        eq(activityEquipmentUses.activityId, activities.id),
-        eq(activityEquipmentUses.equipmentType, equipmentType),
-      ),
+  const conflictAction = unassignedOnly
+    ? sql`do nothing`
+    : sql`do update set
+        ${sql.identifier(activityEquipmentUses.equipmentId.name)} = excluded.${sql.identifier(activityEquipmentUses.equipmentId.name)},
+        ${sql.identifier(activityEquipmentUses.updatedAt.name)} = now()`;
+  return database.execute(sql`
+    insert into ${activityEquipmentUses} (
+      ${sql.identifier(activityEquipmentUses.userId.name)}, ${sql.identifier(activityEquipmentUses.activityId.name)},
+      ${sql.identifier(activityEquipmentUses.equipmentId.name)},
+      ${sql.identifier(activityEquipmentUses.equipmentType.name)}
     )
-    .where(
-      and(
-        eq(activities.userId, userId),
-        eq(activities.sportType, sportType),
-        gte(activities.startAt, startAt),
-        lt(activities.startAt, endAt),
-      ),
-    );
-
-  let assignedCount = 0;
-
-  for (const candidate of candidateActivities) {
-    if (unassignedOnly && candidate.existingUseId) {
-      continue;
-    }
-
-    await upsertActivityEquipmentUse({
-      activityId: candidate.activityId,
-      database,
-      equipmentId,
-      equipmentType,
-      userId,
-    });
-    assignedCount += 1;
-  }
-
-  return { assignedCount };
+    select ${activities.userId}, ${activities.id}, ${equipment.id}, ${equipment.equipmentType}
+    from ${activities}
+    inner join ${equipment} on ${equipment.id} = ${equipmentId}
+      and ${equipment.equipmentType} = ${equipmentType}
+      and ${equipment.userId} = ${userId}
+    where ${activities.userId} = ${userId}
+      and ${activities.sportType} = ${sportType}
+      and ${gte(activities.startAt, startAt)}
+      and ${lt(activities.startAt, endAt)}
+    on conflict (${sql.identifier(activityEquipmentUses.activityId.name)},
+      ${sql.identifier(activityEquipmentUses.equipmentType.name)})
+      ${conflictAction}
+  `);
 }
 
 function equipmentUsageQuery(database: EquipmentDatabase) {

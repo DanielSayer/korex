@@ -5,6 +5,7 @@ import {
 } from "@korex/api/modules/equipment/equipment.repository";
 import {
   assignActivityEquipment,
+  assignDefaultEquipmentToImportedActivity,
   bulkAssignEquipment,
   createEquipment,
   retireEquipment,
@@ -192,6 +193,108 @@ describe("equipment service", () => {
         }),
       ]),
     );
+  });
+
+  it("bulk replaces matching Equipment Types and reports every matching Activity", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    const shoes = await createEquipment({
+      equipmentType: "shoes",
+      name: "Replacement shoes",
+      userId,
+    });
+    const otherShoes = await createEquipment({
+      equipmentType: "shoes",
+      name: "Previously assigned shoes",
+      userId,
+    });
+
+    await DataSeedAsync.withActivities(
+      ActivityBuilder.initWithUser(userId)
+        .withId(9125)
+        .withStartAt(new Date("2026-05-01T00:00:00.000Z"))
+        .withDistanceMeters(4000)
+        .build(),
+      ActivityBuilder.initWithUser(userId)
+        .withId(9126)
+        .withStartAt(new Date("2026-05-02T00:00:00.000Z"))
+        .withDistanceMeters(6000)
+        .build(),
+    ).seedAsync();
+    await assignActivityEquipment({
+      activityId: 9126,
+      equipmentId: otherShoes.id,
+      userId,
+    });
+
+    await expect(
+      bulkAssignEquipment({
+        endAt: new Date("2026-05-31T00:00:00.000Z"),
+        equipmentId: shoes.id,
+        sportType: "run",
+        startAt: new Date("2026-05-01T00:00:00.000Z"),
+        unassignedOnly: false,
+        userId,
+      }),
+    ).resolves.toEqual({ assignedCount: 2 });
+
+    await expect(listEquipment({ userId })).resolves.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: shoes.id,
+          activityCount: 2,
+          usageDistanceMeters: 10_000,
+        }),
+        expect.objectContaining({
+          id: otherShoes.id,
+          activityCount: 0,
+          usageDistanceMeters: 0,
+        }),
+      ]),
+    );
+  });
+
+  it("concurrent Default Equipment assignment creates one Activity Equipment Use", async () => {
+    const userId = userDataExtensions.HughJass.id;
+
+    const shoes = await createEquipment({
+      equipmentType: "shoes",
+      name: "Concurrent default shoes",
+      userId,
+    });
+
+    await setDefaultEquipment({
+      equipmentId: shoes.id,
+      sportType: "run",
+      userId,
+    });
+    await DataSeedAsync.withActivities(
+      ActivityBuilder.initWithUser(userId)
+        .withId(9127)
+        .withDistanceMeters(5000)
+        .build(),
+    ).seedAsync();
+
+    await Promise.all([
+      assignDefaultEquipmentToImportedActivity({
+        activityId: 9127,
+        sportType: "run",
+        userId,
+      }),
+      assignDefaultEquipmentToImportedActivity({
+        activityId: 9127,
+        sportType: "run",
+        userId,
+      }),
+    ]);
+
+    await expect(listEquipment({ userId })).resolves.toEqual([
+      expect.objectContaining({
+        id: shoes.id,
+        activityCount: 1,
+        usageDistanceMeters: 5000,
+      }),
+    ]);
   });
 
   it("retiring Equipment clears it as Default Equipment but keeps historical use", async () => {

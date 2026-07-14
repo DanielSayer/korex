@@ -4,7 +4,7 @@ import type { ActivityInput, ActivityLapInput } from "../activities.types";
 
 type ActivityDatabase = Pick<
   typeof db,
-  "delete" | "insert" | "select" | "transaction" | "update"
+  "delete" | "execute" | "insert" | "select" | "transaction" | "update"
 >;
 
 export type UpsertActivityResult = {
