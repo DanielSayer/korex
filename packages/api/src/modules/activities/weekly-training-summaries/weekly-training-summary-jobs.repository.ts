@@ -1,7 +1,7 @@
 import { activities, db, weeklyTrainingSummaries } from "@korex/db";
 import { and, eq, gte, isNull, lt } from "drizzle-orm";
 import { enqueueJob } from "../../job-runtime/job-runtime";
-import { weeklyTrainingSummaryJobName } from "./weekly-training-summary-job";
+import { weeklyTrainingSummaryJobDefinition } from "../activity-job-definitions";
 
 type WeeklyTrainingSummaryJobDatabase = Pick<
   typeof db,
@@ -20,7 +20,7 @@ export async function enqueueWeeklyTrainingSummaryGeneration({
   return enqueueJob({
     database,
     key: `${userId}:${weekStartAt.toISOString()}`,
-    name: weeklyTrainingSummaryJobName,
+    name: weeklyTrainingSummaryJobDefinition.name,
     payload: { userId, weekStartAt: weekStartAt.toISOString() },
   });
 }

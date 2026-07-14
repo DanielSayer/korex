@@ -6,7 +6,7 @@ import {
 } from "@korex/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { enqueueJob } from "../../job-runtime/job-runtime";
-import { activityRouteHeatmapJobName } from "./activity-route-heatmap-job";
+import { activityRouteHeatmapJobDefinition } from "../activity-job-definitions";
 
 type ActivityRouteHeatmapJobDatabase = Pick<typeof db, "insert" | "select">;
 
@@ -20,7 +20,7 @@ export async function enqueueActivityRouteHeatmapCalculation({
   return enqueueJob({
     database,
     key: String(activityId),
-    name: activityRouteHeatmapJobName,
+    name: activityRouteHeatmapJobDefinition.name,
     payload: { activityId },
   });
 }

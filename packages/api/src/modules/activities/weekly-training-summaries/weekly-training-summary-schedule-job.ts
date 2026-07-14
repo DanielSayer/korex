@@ -1,45 +1,13 @@
-import type { JobHandler } from "../../job-runtime/job-runtime";
+import { weeklyTrainingSummaryScheduleJobDefinition } from "../activity-job-definitions";
 import { enqueueWeeklyTrainingSummariesForWeek } from "./weekly-training-summary-scheduler.service";
 
-export const weeklyTrainingSummaryScheduleJobName =
-  "weekly-training-summary.schedule";
-
-type WeeklyTrainingSummaryScheduleJobDependencies = {
-  enqueueForWeek: typeof enqueueWeeklyTrainingSummariesForWeek;
-};
-
-export function createWeeklyTrainingSummaryScheduleJobModule(
-  dependencies: WeeklyTrainingSummaryScheduleJobDependencies,
-) {
-  return {
-    handler: async (
-      payload: Record<string, unknown>,
-      context: Parameters<JobHandler>[1],
-    ) => {
-      context.signal.throwIfAborted();
-      await dependencies.enqueueForWeek({
+export const weeklyTrainingSummaryScheduleJobModule =
+  weeklyTrainingSummaryScheduleJobDefinition.implement(
+    async ({ weekStartAt }, context) => {
+      await enqueueWeeklyTrainingSummariesForWeek({
         database: context.database,
         skipSucceeded: true,
-        weekStartAt: requiredWeekStartAt(payload),
+        weekStartAt,
       });
     },
-    name: weeklyTrainingSummaryScheduleJobName,
-  };
-}
-
-export const weeklyTrainingSummaryScheduleJobModule =
-  createWeeklyTrainingSummaryScheduleJobModule({
-    enqueueForWeek: enqueueWeeklyTrainingSummariesForWeek,
-  });
-
-function requiredWeekStartAt(payload: Record<string, unknown>) {
-  const weekStartAt = new Date(String(payload.weekStartAt));
-
-  if (Number.isNaN(weekStartAt.getTime())) {
-    throw new Error(
-      "Weekly Training Summary schedule job requires a valid weekStartAt",
-    );
-  }
-
-  return weekStartAt;
-}
+  );

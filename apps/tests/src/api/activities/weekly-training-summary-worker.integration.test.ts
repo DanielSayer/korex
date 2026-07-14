@@ -1,6 +1,6 @@
 import { weeklyTrainingSummaryJobModule } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-job";
 import { enqueueWeeklyTrainingSummaryGeneration } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-jobs.repository";
-import { weeklyTrainingSummaryScheduleJobName } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-schedule-job";
+import { weeklyTrainingSummaryScheduleJobModule } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-schedule-job";
 import { enqueueCompletedWeeklyTrainingSummaries } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-scheduler.service";
 import {
   createJobRuntime,
@@ -211,7 +211,9 @@ describe("weekly training summary worker", () => {
         scheduleKey: jobRuntimeJobs.scheduleKey,
       })
       .from(jobRuntimeJobs)
-      .where(eq(jobRuntimeJobs.name, weeklyTrainingSummaryScheduleJobName));
+      .where(
+        eq(jobRuntimeJobs.name, weeklyTrainingSummaryScheduleJobModule.name),
+      );
 
     expect(scheduleJobs).toEqual([
       {

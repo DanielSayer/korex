@@ -1,8 +1,8 @@
 import { db, trainingStreaks } from "@korex/db";
 import { and, gt, isNotNull, lt } from "drizzle-orm";
 import { enqueueJob } from "../../job-runtime/job-runtime";
+import { trainingStreakJobDefinition } from "../activity-job-definitions";
 import { getCompletedTrainingWeek } from "../weekly-training-summaries/training-week";
-import { trainingStreakJobName } from "./training-streak-job";
 
 type TrainingStreakJobDatabase = Pick<typeof db, "insert" | "select">;
 
@@ -20,7 +20,7 @@ export async function enqueueTrainingStreakUpdate({
   return enqueueJob({
     database,
     key: `${userId}:${weekStartAt.toISOString()}`,
-    name: trainingStreakJobName,
+    name: trainingStreakJobDefinition.name,
     payload: { userId, weekStartAt: weekStartAt.toISOString() },
     runAfter,
   });

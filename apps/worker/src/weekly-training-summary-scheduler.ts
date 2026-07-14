@@ -1,5 +1,5 @@
+import { weeklyTrainingSummaryScheduleJobDefinition } from "@korex/api/modules/activities/activity-job-definitions";
 import { getCompletedTrainingWeek } from "@korex/api/modules/activities/weekly-training-summaries/training-week";
-import { weeklyTrainingSummaryScheduleJobName } from "@korex/api/modules/activities/weekly-training-summaries/weekly-training-summary-schedule-job";
 import { enqueueRecurringJob } from "@korex/api/modules/job-runtime/job-runtime";
 
 const brisbaneUtcOffsetHours = 10;
@@ -28,7 +28,7 @@ export async function runWeeklyTrainingSummarySchedulerOnce({
 
   const { weekStartAt } = getCompletedTrainingWeek(now);
   const job = await enqueueOccurrence({
-    name: weeklyTrainingSummaryScheduleJobName,
+    name: weeklyTrainingSummaryScheduleJobDefinition.name,
     payload: { weekStartAt: weekStartAt.toISOString() },
     scheduleKey: weekStartAt.toISOString(),
   });

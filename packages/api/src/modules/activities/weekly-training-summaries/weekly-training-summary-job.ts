@@ -1,4 +1,4 @@
-import type { JobHandler } from "../../job-runtime/job-runtime";
+import { weeklyTrainingSummaryJobDefinition } from "../activity-job-definitions";
 import {
   getNextTrainingWeekStartAt,
   getPreviousTrainingWeekStartAt,
@@ -9,36 +9,20 @@ import {
   type WeeklyTrainingSummaryActivity,
 } from "./weekly-training-summary.repository";
 
-export const weeklyTrainingSummaryJobName = "weekly-training-summary.generate";
-
-type WeeklyTrainingSummaryJobDependencies = {
-  listActivities: typeof listActivitiesForTrainingWeek;
-  now: () => Date;
-  upsertSummary: typeof upsertWeeklyTrainingSummary;
-};
-
-export function createWeeklyTrainingSummaryJobModule(
-  dependencies: WeeklyTrainingSummaryJobDependencies,
-) {
-  return {
-    handler: async (
-      payload: Record<string, unknown>,
-      context: Parameters<JobHandler>[1],
-    ) => {
-      context.signal.throwIfAborted();
-      const userId = requiredUserId(payload);
-      const weekStartAt = requiredWeekStartAt(payload);
+export const weeklyTrainingSummaryJobModule =
+  weeklyTrainingSummaryJobDefinition.implement(
+    async ({ userId, weekStartAt }, context) => {
       const weekEndAt = getNextTrainingWeekStartAt(weekStartAt);
       const previousWeekStartAt = getPreviousTrainingWeekStartAt(weekStartAt);
 
       const [currentActivities, previousActivities] = await Promise.all([
-        dependencies.listActivities({
+        listActivitiesForTrainingWeek({
           database: context.database,
           userId,
           weekEndAt,
           weekStartAt,
         }),
-        dependencies.listActivities({
+        listActivitiesForTrainingWeek({
           database: context.database,
           userId,
           weekEndAt: weekStartAt,
@@ -63,12 +47,12 @@ export function createWeeklyTrainingSummaryJobModule(
             previousTotals.averageSpeedMetersPerSecond;
 
       context.signal.throwIfAborted();
-      await dependencies.upsertSummary(
+      await upsertWeeklyTrainingSummary(
         {
           activityCount: currentTotals.activityCount,
           averageSpeedMetersPerSecond:
             currentTotals.averageSpeedMetersPerSecond,
-          generatedAt: dependencies.now(),
+          generatedAt: new Date(),
           longestActivityId: longestActivity?.id ?? null,
           payload: {
             highlights: {
@@ -108,16 +92,7 @@ export function createWeeklyTrainingSummaryJobModule(
         context.database,
       );
     },
-    name: weeklyTrainingSummaryJobName,
-  };
-}
-
-export const weeklyTrainingSummaryJobModule =
-  createWeeklyTrainingSummaryJobModule({
-    listActivities: listActivitiesForTrainingWeek,
-    now: () => new Date(),
-    upsertSummary: upsertWeeklyTrainingSummary,
-  });
+  );
 
 function summarizeActivities(activities: WeeklyTrainingSummaryActivity[]) {
   const totalDistanceMeters = activities.reduce(
@@ -153,22 +128,4 @@ function findLongestActivity(activities: WeeklyTrainingSummaryActivity[]) {
     },
     null,
   );
-}
-
-function requiredUserId(payload: Record<string, unknown>) {
-  if (typeof payload.userId !== "string" || payload.userId.length === 0) {
-    throw new Error("Weekly Training Summary job requires a userId");
-  }
-
-  return payload.userId;
-}
-
-function requiredWeekStartAt(payload: Record<string, unknown>) {
-  const weekStartAt = new Date(String(payload.weekStartAt));
-
-  if (Number.isNaN(weekStartAt.getTime())) {
-    throw new Error("Weekly Training Summary job requires a valid weekStartAt");
-  }
-
-  return weekStartAt;
 }

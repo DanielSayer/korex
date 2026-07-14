@@ -1,6 +1,6 @@
 import { db } from "@korex/db";
 import { enqueueJob } from "../../job-runtime/job-runtime";
-import { activityBestEffortJobName } from "./activity-best-effort-job";
+import { activityBestEffortJobDefinition } from "../activity-job-definitions";
 
 type ActivityBestEffortJobDatabase = Pick<typeof db, "insert" | "select">;
 
@@ -14,7 +14,7 @@ export async function enqueueActivityBestEffortCalculation({
   return enqueueJob({
     database,
     key: String(activityId),
-    name: activityBestEffortJobName,
+    name: activityBestEffortJobDefinition.name,
     payload: { activityId },
   });
 }

@@ -1,8 +1,8 @@
 import { activityStreamReplacementModule } from "@korex/api/modules/activities/activity-stream-replacement/activity-stream-replacement.module";
 import { replaceActivityStreams } from "@korex/api/modules/activities/artifacts/activity-artifacts.repository";
-import { activityBestEffortJobName } from "@korex/api/modules/activities/best-efforts/activity-best-effort-job";
+import { activityBestEffortJobModule } from "@korex/api/modules/activities/best-efforts/activity-best-effort-job";
 import { replaceActivityHeartRateZoneTimes } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time.repository";
-import { activityHeartRateZoneTimeJobName } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-job";
+import { activityHeartRateZoneTimeJobModule } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-job";
 import { replaceActivityHeartRateZoneSnapshotsAndQueueCalculation } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-snapshots";
 import {
   activityHeartRateZoneSnapshots,
@@ -307,7 +307,7 @@ describe("activity heart rate zone time workflow", () => {
       .from(jobRuntimeJobs)
       .where(
         and(
-          eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobName),
+          eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobModule.name),
           eq(jobRuntimeJobs.key, String(activity.id)),
         ),
       );
@@ -316,7 +316,7 @@ describe("activity heart rate zone time workflow", () => {
       .from(jobRuntimeJobs)
       .where(
         and(
-          eq(jobRuntimeJobs.name, activityBestEffortJobName),
+          eq(jobRuntimeJobs.name, activityBestEffortJobModule.name),
           eq(jobRuntimeJobs.key, String(activity.id)),
         ),
       );
@@ -337,7 +337,7 @@ async function getJob(activityId: number) {
     .from(jobRuntimeJobs)
     .where(
       and(
-        eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobName),
+        eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobModule.name),
         eq(jobRuntimeJobs.key, String(activityId)),
       ),
     );

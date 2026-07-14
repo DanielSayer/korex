@@ -1,4 +1,4 @@
-import { activityHeartRateZoneTimeJobName } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-job";
+import { activityHeartRateZoneTimeJobModule } from "@korex/api/modules/activities/heart-rate-zone-times/activity-heart-rate-zone-time-job";
 import {
   activitySyncRepository,
   intervalsIcuActivitySync,
@@ -20,8 +20,8 @@ import {
   providerConnections,
   syncRuns,
 } from "@korex/db";
-import { and, asc, eq } from "drizzle-orm";
 import { createIntervalsIcuClient } from "@korex/integrations/intervals-icu/live";
+import { and, asc, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { intervalsIcuActivityHttpClientSuccess } from "../../mocks/integrations/intervals-icu/activity-http-client";
 import { DataSeedAsync } from "../../setup/integration/test-data/data-seed";
@@ -310,7 +310,7 @@ describe("activity sync integration", () => {
       .from(jobRuntimeJobs)
       .where(
         and(
-          eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobName),
+          eq(jobRuntimeJobs.name, activityHeartRateZoneTimeJobModule.name),
           eq(jobRuntimeJobs.key, String(activity.activityId)),
         ),
       );

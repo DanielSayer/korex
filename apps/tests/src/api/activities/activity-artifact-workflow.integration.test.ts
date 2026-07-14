@@ -1,6 +1,6 @@
 import { activityArtifactModule } from "@korex/api/modules/activities/artifacts/activity-artifact.module";
 import { replaceActivityMap } from "@korex/api/modules/activities/artifacts/activity-artifacts.repository";
-import { activityRouteHeatmapJobName } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-job";
+import { activityRouteHeatmapJobModule } from "@korex/api/modules/activities/route-heatmap/activity-route-heatmap-job";
 import { activityMaps, db, jobRuntimeJobs } from "@korex/db";
 import { and, eq, sql } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
@@ -35,7 +35,7 @@ describe("activity artifact workflow", () => {
       .from(jobRuntimeJobs)
       .where(
         and(
-          eq(jobRuntimeJobs.name, activityRouteHeatmapJobName),
+          eq(jobRuntimeJobs.name, activityRouteHeatmapJobModule.name),
           eq(jobRuntimeJobs.key, String(activity.id)),
         ),
       );
@@ -108,7 +108,7 @@ describe("activity artifact workflow", () => {
       .from(jobRuntimeJobs)
       .where(
         and(
-          eq(jobRuntimeJobs.name, activityRouteHeatmapJobName),
+          eq(jobRuntimeJobs.name, activityRouteHeatmapJobModule.name),
           eq(jobRuntimeJobs.key, String(activity.id)),
         ),
       );
