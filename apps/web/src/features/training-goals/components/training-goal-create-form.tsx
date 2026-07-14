@@ -1,5 +1,4 @@
 import { Button } from "@korex/ui/components/button";
-import { Input } from "@korex/ui/components/input";
 import {
   Sheet,
   SheetContent,
@@ -15,8 +14,9 @@ import { toast } from "sonner";
 import { RouteAccent, SectionLabel } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
+import { TrainingGoalTargetField } from "./training-goal-form";
+import { type GoalMetric, toTargetValue } from "./training-goal-target";
 
-type GoalMetric = "distance" | "activityCount";
 type GoalPeriod = "trainingWeek" | "calendarMonth";
 
 type TrainingGoalCreateFormProps = {
@@ -187,23 +187,13 @@ function GoalCreateFormFields({
           density === "default" && "sm:flex-col",
         )}
       >
-        <div className="min-w-0 flex-1">
-          <label
-            className="mb-1.5 block font-medium text-muted-foreground text-xs"
-            htmlFor="training-goal-target"
-          >
-            Target {metric === "distance" ? "km" : "runs"}
-          </label>
-          <Input
-            id="training-goal-target"
-            inputMode="decimal"
-            min="0"
-            onChange={(event) => onTargetChange(event.target.value)}
-            step={metric === "distance" ? "0.1" : "1"}
-            type="number"
-            value={target}
-          />
-        </div>
+        <TrainingGoalTargetField
+          id="training-goal-target"
+          label="Target"
+          metric={metric}
+          onChange={onTargetChange}
+          target={target}
+        />
         <Button
           className={cn(
             "w-full self-end sm:w-auto",
@@ -255,22 +245,6 @@ function SegmentedControl<TValue extends string>({
       </div>
     </div>
   );
-}
-
-function toTargetValue({
-  metric,
-  target,
-}: {
-  metric: GoalMetric;
-  target: string;
-}) {
-  const value = Number(target);
-
-  if (!Number.isFinite(value) || value <= 0) {
-    return null;
-  }
-
-  return metric === "distance" ? Math.round(value * 1000) : Math.round(value);
 }
 
 export { TrainingGoalCreateForm };

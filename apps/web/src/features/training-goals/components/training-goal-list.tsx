@@ -1,6 +1,5 @@
 import type { TrainingGoalProgress } from "@korex/api/modules/activities/training-goals/training-goal.types";
 import { Button } from "@korex/ui/components/button";
-import { Input } from "@korex/ui/components/input";
 import {
   Sheet,
   SheetContent,
@@ -10,17 +9,10 @@ import {
   SheetTrigger,
 } from "@korex/ui/components/sheet";
 import { cn } from "@korex/ui/lib/utils";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  ArchiveIcon,
-  CheckIcon,
-  MoreHorizontalIcon,
-  SaveIcon,
-} from "lucide-react";
+import { CheckIcon, MoreHorizontalIcon } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { RouteProgress } from "@/components/brand";
-import { orpc } from "@/utils/orpc";
+import { TrainingGoalEditForm } from "./training-goal-form";
 import {
   formatGoalPeriod,
   formatGoalProgress,
@@ -173,134 +165,19 @@ function TrainingGoalRow({
 }
 
 function TrainingGoalActions({ goal }: { goal: TrainingGoalProgress }) {
-  const queryClient = useQueryClient();
-  const progressQueryOptions =
-    orpc.activities.trainingGoalProgress.queryOptions();
-  const [target, setTarget] = useState(() => toDisplayTarget(goal));
-  const targetValue = toTargetValue({ goal, target });
-  const updateMutation = useMutation(
-    orpc.activities.updateTrainingGoal.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Training goal updated");
-        await queryClient.invalidateQueries({
-          queryKey: progressQueryOptions.queryKey,
-        });
-      },
-    }),
-  );
-  const archiveMutation = useMutation(
-    orpc.activities.archiveTrainingGoal.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Training goal archived");
-        await queryClient.invalidateQueries({
-          queryKey: progressQueryOptions.queryKey,
-        });
-      },
-    }),
-  );
-
   return (
-    <form
-      className="mt-5 flex flex-col gap-3 rounded-lg bg-muted/50 p-4 sm:flex-row"
-      onSubmit={(event) => {
-        event.preventDefault();
-
-        if (targetValue === null) {
-          toast.error("Enter a target greater than zero.");
-          return;
-        }
-
-        updateMutation.mutate({
-          id: goal.id,
-          targetValue,
-        });
-      }}
-    >
-      <div className="min-w-0 flex-1">
-        <label
-          className="mb-1.5 block font-medium text-muted-foreground text-xs"
-          htmlFor={`training-goal-${goal.id}-target`}
-        >
-          Next target {goal.metric === "distance" ? "km" : "runs"}
-        </label>
-        <Input
-          id={`training-goal-${goal.id}-target`}
-          inputMode="decimal"
-          min="0"
-          onChange={(event) => setTarget(event.target.value)}
-          step={goal.metric === "distance" ? "0.1" : "1"}
-          type="number"
-          value={target}
-        />
-      </div>
-      <div className="flex gap-2 self-end">
-        <Button
-          disabled={targetValue === null}
-          loading={updateMutation.isPending}
-          loadingText="Saving"
-          size="sm"
-          type="submit"
-        >
-          <SaveIcon className="size-4" />
-          Save
-        </Button>
-        <Button
-          loading={archiveMutation.isPending}
-          loadingText="Archiving"
-          onClick={() => archiveMutation.mutate({ id: goal.id })}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          <ArchiveIcon className="size-4" />
-          Archive
-        </Button>
-      </div>
-    </form>
+    <TrainingGoalEditForm
+      actionsClassName="flex gap-2 self-end"
+      buttonSize="sm"
+      fieldId={`training-goal-${goal.id}-target`}
+      formClassName="mt-5 flex flex-col gap-3 rounded-lg bg-muted/50 p-4 sm:flex-row"
+      goal={goal}
+    />
   );
 }
 
 function TrainingGoalMobileActions({ goal }: { goal: TrainingGoalProgress }) {
-  const queryClient = useQueryClient();
-  const progressQueryOptions =
-    orpc.activities.trainingGoalProgress.queryOptions();
   const [open, setOpen] = useState(false);
-  const [target, setTarget] = useState(() => toDisplayTarget(goal));
-  const targetValue = toTargetValue({ goal, target });
-  const updateMutation = useMutation(
-    orpc.activities.updateTrainingGoal.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Training goal updated");
-        setOpen(false);
-        await queryClient.invalidateQueries({
-          queryKey: progressQueryOptions.queryKey,
-        });
-      },
-    }),
-  );
-  const archiveMutation = useMutation(
-    orpc.activities.archiveTrainingGoal.mutationOptions({
-      onError: (error) => {
-        toast.error(error.message);
-      },
-      onSuccess: async () => {
-        toast.success("Training goal archived");
-        setOpen(false);
-        await queryClient.invalidateQueries({
-          queryKey: progressQueryOptions.queryKey,
-        });
-      },
-    }),
-  );
 
   return (
     <Sheet onOpenChange={setOpen} open={open}>
@@ -326,90 +203,16 @@ function TrainingGoalMobileActions({ goal }: { goal: TrainingGoalProgress }) {
             {formatGoalTitle(goal)} · {formatGoalPeriod(goal.period)}
           </SheetDescription>
         </SheetHeader>
-        <form
-          className="grid gap-4 p-5"
-          onSubmit={(event) => {
-            event.preventDefault();
-
-            if (targetValue === null) {
-              toast.error("Enter a target greater than zero.");
-              return;
-            }
-
-            updateMutation.mutate({
-              id: goal.id,
-              targetValue,
-            });
-          }}
-        >
-          <div>
-            <label
-              className="mb-1.5 block font-medium text-muted-foreground text-xs"
-              htmlFor={`training-goal-${goal.id}-target-mobile`}
-            >
-              Next target {goal.metric === "distance" ? "km" : "runs"}
-            </label>
-            <Input
-              id={`training-goal-${goal.id}-target-mobile`}
-              inputMode="decimal"
-              min="0"
-              onChange={(event) => setTarget(event.target.value)}
-              step={goal.metric === "distance" ? "0.1" : "1"}
-              type="number"
-              value={target}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              disabled={targetValue === null}
-              loading={updateMutation.isPending}
-              loadingText="Saving"
-              type="submit"
-            >
-              <SaveIcon className="size-4" />
-              Save
-            </Button>
-            <Button
-              loading={archiveMutation.isPending}
-              loadingText="Archiving"
-              onClick={() => archiveMutation.mutate({ id: goal.id })}
-              type="button"
-              variant="outline"
-            >
-              <ArchiveIcon className="size-4" />
-              Archive
-            </Button>
-          </div>
-        </form>
+        <TrainingGoalEditForm
+          actionsClassName="grid grid-cols-2 gap-2"
+          fieldId={`training-goal-${goal.id}-target-mobile`}
+          formClassName="grid gap-4 p-5"
+          goal={goal}
+          onSuccess={() => setOpen(false)}
+        />
       </SheetContent>
     </Sheet>
   );
-}
-
-function toDisplayTarget(goal: TrainingGoalProgress) {
-  if (goal.metric === "activityCount") {
-    return goal.targetValue.toString();
-  }
-
-  return (goal.targetValue / 1000).toString();
-}
-
-function toTargetValue({
-  goal,
-  target,
-}: {
-  goal: TrainingGoalProgress;
-  target: string;
-}) {
-  const value = Number(target);
-
-  if (!Number.isFinite(value) || value <= 0) {
-    return null;
-  }
-
-  return goal.metric === "distance"
-    ? Math.round(value * 1000)
-    : Math.round(value);
 }
 
 export { TrainingGoalList };
