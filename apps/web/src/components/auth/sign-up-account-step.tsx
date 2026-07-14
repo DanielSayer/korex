@@ -1,6 +1,4 @@
 import { Button } from "@korex/ui/components/button";
-import { Input } from "@korex/ui/components/input";
-import { Label } from "@korex/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
@@ -8,8 +6,8 @@ import { motion } from "motion/react";
 import { toast } from "sonner";
 import z from "zod";
 import { RouteAccent } from "@/components/brand";
-import { ErrorMessage } from "@/components/error-message";
 import { authClient } from "@/lib/auth-client";
+import { AccountField } from "./account-field";
 
 const accountSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -78,99 +76,29 @@ function SignUpAccountStep({ onComplete }: { onComplete: () => void }) {
       >
         <form.Field name="name">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor={field.name}>Name</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                placeholder="Test User"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
-                aria-describedby={
-                  field.state.meta.errors.length > 0
-                    ? `${field.name}-error`
-                    : undefined
-                }
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-              />
-              {field.state.meta.errors.length > 0 ? (
-                <div id={`${field.name}-error`}>
-                  {field.state.meta.errors.map((error) => (
-                    <ErrorMessage
-                      key={error?.message}
-                      message={error?.message}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            <AccountField field={field} label="Name" placeholder="Test User" />
           )}
         </form.Field>
 
         <form.Field name="email">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor={field.name}>Email</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                type="email"
-                placeholder="hello@korex.com"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
-                aria-describedby={
-                  field.state.meta.errors.length > 0
-                    ? `${field.name}-error`
-                    : undefined
-                }
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-              />
-              {field.state.meta.errors.length > 0 ? (
-                <div id={`${field.name}-error`}>
-                  {field.state.meta.errors.map((error) => (
-                    <ErrorMessage
-                      key={error?.message}
-                      message={error?.message}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            <AccountField
+              field={field}
+              label="Email"
+              type="email"
+              placeholder="hello@korex.com"
+            />
           )}
         </form.Field>
 
         <form.Field name="password">
           {(field) => (
-            <div className="space-y-2">
-              <Label htmlFor={field.name}>Password</Label>
-              <Input
-                id={field.name}
-                name={field.name}
-                type="password"
-                placeholder="Enter at least 8 characters"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
-                aria-describedby={
-                  field.state.meta.errors.length > 0
-                    ? `${field.name}-error`
-                    : undefined
-                }
-                onBlur={field.handleBlur}
-                onChange={(event) => field.handleChange(event.target.value)}
-              />
-              {field.state.meta.errors.length > 0 ? (
-                <div id={`${field.name}-error`}>
-                  {field.state.meta.errors.map((error) => (
-                    <ErrorMessage
-                      key={error?.message}
-                      message={error?.message}
-                    />
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            <AccountField
+              field={field}
+              label="Password"
+              type="password"
+              placeholder="Enter at least 8 characters"
+            />
           )}
         </form.Field>
 

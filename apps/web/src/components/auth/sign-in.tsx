@@ -1,6 +1,4 @@
 import { Button } from "@korex/ui/components/button";
-import { Input } from "@korex/ui/components/input";
-import { Label } from "@korex/ui/components/label";
 import { useForm } from "@tanstack/react-form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
@@ -8,7 +6,7 @@ import { toast } from "sonner";
 import z from "zod";
 import { RouteAccent } from "@/components/brand";
 import { authClient } from "@/lib/auth-client";
-import { ErrorMessage } from "../error-message";
+import { AccountField } from "./account-field";
 
 const SignUpSchema = z.object({
   email: z.email("Invalid email address"),
@@ -91,34 +89,12 @@ function SignIn() {
             >
               <form.Field name="email">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Email</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="email"
-                      placeholder="hello@korex.com"
-                      value={field.state.value}
-                      aria-invalid={field.state.meta.errors.length > 0}
-                      aria-describedby={
-                        field.state.meta.errors.length > 0
-                          ? `${field.name}-error`
-                          : undefined
-                      }
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                    />
-                    {field.state.meta.errors.length > 0 ? (
-                      <div id={`${field.name}-error`}>
-                        {field.state.meta.errors.map((error) => (
-                          <ErrorMessage
-                            key={error?.message}
-                            message={error?.message}
-                          />
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
+                  <AccountField
+                    field={field}
+                    label="Email"
+                    type="email"
+                    placeholder="hello@korex.com"
+                  />
                 )}
               </form.Field>
             </motion.div>
@@ -129,34 +105,12 @@ function SignIn() {
             >
               <form.Field name="password">
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Password</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="password"
-                      placeholder="••••••••••••"
-                      value={field.state.value}
-                      aria-invalid={field.state.meta.errors.length > 0}
-                      aria-describedby={
-                        field.state.meta.errors.length > 0
-                          ? `${field.name}-error`
-                          : undefined
-                      }
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                    />
-                    {field.state.meta.errors.length > 0 ? (
-                      <div id={`${field.name}-error`}>
-                        {field.state.meta.errors.map((error) => (
-                          <ErrorMessage
-                            key={error?.message}
-                            message={error?.message}
-                          />
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
+                  <AccountField
+                    field={field}
+                    label="Password"
+                    type="password"
+                    placeholder="••••••••••••"
+                  />
                 )}
               </form.Field>
             </motion.div>
